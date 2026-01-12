@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { useTasks } from "@/hooks/use-tasks";
 import { 
   BarChart, 
@@ -18,13 +20,105 @@ import {
 } from "@/components/ui/card";
 import { CheckCircle2, Clock, ListTodo, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function Dashboard() {
+  const [, setLocation] = useLocation();
+  const [me, setMe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [adminDialogOpen, setAdminDialogOpen] = useState(false);
+  const [adminCreating, setAdminCreating] = useState(false);
+  const [adminForm, setAdminForm] = useState({ name: "", email: "", password: "" });
   const { data: tasks, isLoading } = useTasks();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        const user = await res.json();
+        setMe(user);
+
+        // Check if user is admin
+        if (!user || user.role !== "admin") {
+          // Redirect to posts if not admin
+          console.log("User is not admin, redirecting to posts. User:", user);
+          setTimeout(() => setLocation("/posts"), 100);
+          return;
+        }
+        console.log("Admin access granted for user:", user);
+      } catch (err) {
+        console.error("Auth check error:", err);
+        setTimeout(() => setLocation("/posts"), 100);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, [setLocation]);
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!me || me.role !== "admin") {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Access Denied</h2>
+          <p className="text-muted-foreground">
+            You need to be logged in as an admin to access this dashboard.
+          </p>
+          <Button onClick={() => setLocation("/posts")}>
+            Go to Posts
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="p-8 flex items-center justify-center h-full">Loading dashboard...</div>;
   }
+
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminCreating(true);
+    try {
+      const response = await fetch("/api/auth/admin/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(adminForm),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create admin");
+      }
+
+      alert("Admin account created successfully!");
+      setAdminForm({ name: "", email: "", password: "" });
+      setAdminDialogOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to create admin");
+    } finally {
+      setAdminCreating(false);
+    }
+  };
 
   const allTasks = tasks || [];
   const completed = allTasks.filter(t => t.status === "done").length;
@@ -60,8 +154,77 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-display font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground text-lg">Here's what's happening with your projects.</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-display font-bold text-foreground">Dashboard</h1>
+            <p className="text-muted-foreground text-lg">Here's what's happening with your projects.</p>
+          </div>
+          <Dialog open={adminDialogOpen} onOpenChange={setAdminDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-orange-600 hover:bg-orange-700">
+                Create Admin
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New Admin Account</DialogTitle>
+                <DialogDescription>
+                  Add a new administrator to the system
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCreateAdmin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-name">Full Name</Label>
+                  <Input
+                    id="admin-name"
+                    type="text"
+                    placeholder="Admin Name"
+                    value={adminForm.name}
+                    onChange={(e) =>
+                      setAdminForm({ ...adminForm, name: e.target.value })
+                    }
+                    disabled={adminCreating}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="admin-email">Email</Label>
+                  <Input
+                    id="admin-email"
+                    type="email"
+                    placeholder="admin@email.com"
+                    value={adminForm.email}
+                    onChange={(e) =>
+                      setAdminForm({ ...adminForm, email: e.target.value })
+                    }
+                    disabled={adminCreating}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password">Password</Label>
+                  <Input
+                    id="admin-password"
+                    type="password"
+                    placeholder="Create a strong password"
+                    value={adminForm.password}
+                    onChange={(e) =>
+                      setAdminForm({ ...adminForm, password: e.target.value })
+                    }
+                    disabled={adminCreating}
+                    required
+                  />
+                </div>
+
+                <Button type="submit" disabled={adminCreating} className="w-full">
+                  {adminCreating ? "Creating..." : "Create Admin"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <motion.div 

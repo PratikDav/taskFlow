@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,21 +13,64 @@ import {
   SidebarFooter,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   LayoutDashboard, 
   CheckSquare, 
   Settings, 
   User, 
   LogOut,
+  LogIn,
   Command
 } from "lucide-react";
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        const user = await res.json();
+        setCurrentUser(user);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST", credentials: "include" });
+      setLogoutDialogOpen(false);
+      setCurrentUser(null);
+      setLocation("/posts");
+      window.location.reload();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+  // Show dashboard only for admins, hide My Tasks for guests
   const menuItems = [
-    { title: "Dashboard", url: "/", icon: LayoutDashboard },
-    { title: "My Tasks", url: "/tasks", icon: CheckSquare },
+    ...(currentUser?.role === "admin" 
+      ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
+      : []),
+    ...(currentUser
+      ? [{ title: "My Tasks", url: "/tasks", icon: CheckSquare }]
+      : []),
     { title: "Settings", url: "/settings", icon: Settings },
   ];
 
@@ -82,14 +126,42 @@ export function AppSidebar() {
             <User className="h-4 w-4" />
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold">Demo User</span>
-            <span className="text-xs text-muted-foreground">Pro Plan</span>
+            <span className="text-sm font-semibold">{currentUser?.name || "Guest"}</span>
+            <span className="text-xs text-muted-foreground capitalize">
+              {currentUser?.role === "admin" ? "Admin" : currentUser ? "User" : "Not logged in"}
+            </span>
           </div>
-          <button className="ml-auto text-muted-foreground hover:text-destructive transition-colors group-data-[collapsible=icon]:hidden">
-            <LogOut className="h-4 w-4" />
-          </button>
+          {currentUser ? (
+            <button 
+              onClick={() => setLogoutDialogOpen(true)}
+              className="ml-auto text-muted-foreground hover:text-destructive transition-colors group-data-[collapsible=icon]:hidden"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          ) : (
+            <Link href="/auth" className="ml-auto text-muted-foreground hover:text-primary transition-colors group-data-[collapsible=icon]:hidden">
+              <LogIn className="h-4 w-4" />
+            </Link>
+          )}
         </div>
       </SidebarFooter>
+
+      <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Logout</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to logout? You will be signed out and redirected to the posts page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Logout
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
       <SidebarRail />
     </Sidebar>
   );
