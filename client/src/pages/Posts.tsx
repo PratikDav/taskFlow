@@ -68,10 +68,17 @@ export default function Posts() {
     }
   };
 
-  const handleLogout = async () => {
-    await fetch("/api/logout", { method: "POST" });
-    // Reload to get back to default user
-    window.location.reload();
+  const applyThemeToElement = (element: HTMLElement, theme: string) => {
+    const themeColors = codeBlockThemes[theme as keyof typeof codeBlockThemes] || codeBlockThemes.dark;
+    element.style.setProperty('--code-block-bg', themeColors.bg);
+    element.style.setProperty('--code-block-text', themeColors.text);
+    element.style.setProperty('--code-block-border', themeColors.border);
+  };
+
+  const handlePostRef = (element: HTMLDivElement | null, theme: string) => {
+    if (element) {
+      applyThemeToElement(element, theme);
+    }
   };
 
   // show loading only while we haven't checked the current user
@@ -118,7 +125,7 @@ export default function Posts() {
         ) : (
           posts.map((post) => (
             <div key={post.id} 
-                 className={`p-4 border rounded-lg bg-card hover:shadow-md transition theme-${post.code_block_theme || 'dark'}`}>
+                 className="p-4 border rounded-lg bg-card hover:shadow-md transition">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">{post.title}</h3>

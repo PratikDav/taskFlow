@@ -67,6 +67,9 @@
 
   /* Code block styling for ReactQuill */
   .ql-editor pre {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    border-color: #d1d5db !important;
     @apply rounded-lg p-4 my-4 overflow-x-auto border;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
@@ -76,44 +79,124 @@
     word-wrap: break-word;
   }
 
-  /* Theme-specific code block styles */
-  .theme-dark .ql-editor pre {
-    background-color: #1e293b !important;
-    color: #f1f5f9 !important;
-    border-color: #475569 !important;
-  }
-
-  .theme-light .ql-editor pre {
+  .ql-editor pre.ql-syntax {
     background-color: #f3f4f6 !important;
     color: #111827 !important;
-    border-color: #d1d5db !important;
   }
 
-  .theme-blue .ql-editor pre {
-    background-color: #1e3a8a !important;
-    color: #dbeafe !important;
-    border-color: #3b82f6 !important;
+  /* Inline code styling - different from code blocks */
+  .ql-editor code:not(pre code) {
+    background-color: #e5e7eb !important;
+    color: #374151 !important;
+    padding: 0.125rem 0.25rem !important;
+    border-radius: 0.25rem !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+    font-size: 0.875em !important;
+    border: 1px solid #d1d5db !important;
   }
 
-  .theme-green .ql-editor pre {
-    background-color: #14532d !important;
-    color: #dcfce7 !important;
-    border-color: #16a34a !important;
+  /* Toolbar button tooltips */
+  .ql-toolbar button {
+    position: relative;
   }
 
-  .theme-purple .ql-editor pre {
-    background-color: #581c87 !important;
-    color: #faf5ff !important;
-    border-color: #a855f7 !important;
+  .ql-toolbar button:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    animation: fadeIn 0.2s ease-in-out forwards;
   }
 
-  .ql-editor pre.ql-syntax {
-    background-color: inherit !important;
-    color: inherit !important;
+  .ql-toolbar button:hover::before {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: #1f2937;
+    z-index: 1000;
+    opacity: 0;
+    animation: fadeIn 0.2s ease-in-out forwards;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Distinguish code buttons visually */
+  .ql-toolbar .ql-code {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+    border: 2px solid #3b82f6 !important;
+    border-radius: 6px !important;
+    position: relative;
+  }
+
+  .ql-toolbar .ql-code::before {
+    content: "⟨⟩";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    font-weight: bold;
+    color: #1e40af;
+  }
+
+  .ql-toolbar .ql-code-block {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+    border: 2px solid #f59e0b !important;
+    border-radius: 6px !important;
+    position: relative;
+  }
+
+  .ql-toolbar .ql-code-block::before {
+    content: "{}";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    font-weight: bold;
+    color: #92400e;
+    font-family: 'Monaco', 'Menlo', monospace;
+  }
+
+  /* Hide original button content and adjust sizing */
+  .ql-toolbar .ql-code span,
+  .ql-toolbar .ql-code-block span {
+    opacity: 0;
+  }
+
+  .ql-toolbar .ql-code:hover {
+    background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%) !important;
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  }
+
+  .ql-toolbar .ql-code-block:hover {
+    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%) !important;
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
   }
 
   /* Code block styling for posts display */
   pre {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    border-color: #d1d5db !important;
     @apply rounded-lg p-4 my-4 overflow-x-auto border;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
@@ -123,37 +206,6 @@
     word-wrap: break-word;
     max-width: 100%;
     width: 100%;
-  }
-
-  /* Theme-specific code block styles for posts */
-  .theme-dark pre {
-    background-color: #1e293b !important;
-    color: #f1f5f9 !important;
-    border-color: #475569 !important;
-  }
-
-  .theme-light pre {
-    background-color: #f3f4f6 !important;
-    color: #111827 !important;
-    border-color: #d1d5db !important;
-  }
-
-  .theme-blue pre {
-    background-color: #1e3a8a !important;
-    color: #dbeafe !important;
-    border-color: #3b82f6 !important;
-  }
-
-  .theme-green pre {
-    background-color: #14532d !important;
-    color: #dcfce7 !important;
-    border-color: #16a34a !important;
-  }
-
-  .theme-purple pre {
-    background-color: #581c87 !important;
-    color: #faf5ff !important;
-    border-color: #a855f7 !important;
   }
 
   pre.ql-syntax {
