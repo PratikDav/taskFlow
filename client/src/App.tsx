@@ -16,6 +16,8 @@ import Admin from "@/pages/Admin";
 import Posts from "@/pages/Posts";
 import CreatePost from "@/pages/CreatePost";
 import Notes from "@/pages/Notes";
+import NoteDetail from "@/pages/NoteDetail";
+import NoteEdit from "@/pages/NoteEdit";
 
 function Router() {
   return (
@@ -27,6 +29,8 @@ function Router() {
       <Route path="/posts/create" component={CreatePost} />
       <Route path="/posts" component={Posts} />
       <Route path="/notes" component={Notes} />
+      <Route path="/notes/:id" component={NoteDetail} />
+      <Route path="/notes/:id/edit" component={NoteEdit} />
       <Route path="/tasks" component={Tasks} />
       <Route path="/settings" component={Settings} />
       <Route path="/profile" component={Profile} />

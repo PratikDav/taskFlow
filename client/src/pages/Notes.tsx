@@ -6,23 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Folder, FileText } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Plus, Folder as FolderIcon, FileText, MoreHorizontal } from "lucide-react";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import html2pdf from 'html2pdf.js';
+import JSZip from 'jszip';
+import { Note, Folder } from "../../../shared/schema";
 
-interface Folder {
-  id: number;
-  name: string;
-  created_at: Date;
-}
+const modules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'code', 'code-block', 'clean']
+  ],
+};
 
-interface Note {
-  id: number;
-  title: string;
-  content: string;
-  folder_id?: number;
-  folderName?: string;
-  created_at: Date;
-  updated_at: Date;
-}
+const formats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet', 'link', 'code', 'code-block'
+];
 
 export default function Notes() {
   const [, setLocation] = useLocation();
@@ -35,6 +41,10 @@ export default function Notes() {
   const [showCreateNote, setShowCreateNote] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [renameItem, setRenameItem] = useState<{type: 'folder' | 'note', id: number, currentName: string} | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -89,7 +99,7 @@ export default function Notes() {
       if (!res.ok) throw new Error("Failed to create note");
 
       await loadData();
-      setNewNote({ title: "", content: "", folderId: "" });
+      setNewNote({ title: "", content: "", folderId: selectedFolderId ? selectedFolderId.toString() : "none" });
       setShowCreateNote(false);
     } catch (err) {
       console.error(err);
@@ -158,6 +168,72 @@ export default function Notes() {
     setSelectedFolderId(folderId);
   };
 
+  const downloadAsPDF = (note: Note) => {
+    const element = document.createElement('div');
+    element.innerHTML = note.content;
+    html2pdf().set({filename: note.title + '.pdf'}).from(element).save();
+  };
+
+  const downloadAsWord = (note: Note) => {
+    const blob = new Blob([note.content.replace(/<[^>]*>/g, '')], {type: 'application/msword'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = note.title + '.doc';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadFolderAsZIP = async (folder: Folder) => {
+    const zip = new JSZip();
+    const folderNotes = notes.filter(n => n.folderId === folder.id);
+    for (const note of folderNotes) {
+      zip.file(note.title + '.txt', note.content.replace(/<[^>]*>/g, ''));
+    }
+    const content = await zip.generateAsync({type: 'blob'});
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = folder.name + '.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleRename = async () => {
+    if (!renameItem) return;
+    
+    if (renameItem.type === 'folder') {
+      const endpoint = `/api/folders/${renameItem.id}`;
+      const body = { name: renameValue };
+      await fetch(endpoint, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json' }, 
+        credentials: 'include', 
+        body: JSON.stringify(body) 
+      });
+    } else {
+      // For notes, we need to preserve existing content and folderId
+      const note = notes.find(n => n.id === renameItem.id);
+      if (!note) return;
+      
+      const endpoint = `/api/notes/${renameItem.id}`;
+      const body = { 
+        title: renameValue, 
+        content: note.content, 
+        folderId: note.folderId 
+      };
+      await fetch(endpoint, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json' }, 
+        credentials: 'include', 
+        body: JSON.stringify(body) 
+      });
+    }
+    
+    await loadData();
+    setShowRenameDialog(false);
+  };
+
   if (me === undefined) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
@@ -174,6 +250,15 @@ export default function Notes() {
     <div className="max-w-6xl mx-auto p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
+          <div className="text-sm text-muted-foreground mb-2">
+            <span className="cursor-pointer hover:text-primary" onClick={() => setSelectedFolderId(null)}>Notes</span>
+            {selectedFolderId && (
+              <>
+                <span className="mx-2">&gt;</span>
+                <span>{folders.find(f => f.id === selectedFolderId)?.name || "Folder"}</span>
+              </>
+            )}
+          </div>
           <h1 className="text-2xl font-bold">
             {selectedFolderId
               ? folders.find(f => f.id === selectedFolderId)?.name || "Folder"
@@ -185,6 +270,22 @@ export default function Notes() {
           </p>
         </div>
         <div className="flex gap-2">
+          <div className="flex gap-1 mr-4">
+            <Button
+              variant={layout === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLayout('grid')}
+            >
+              Grid
+            </Button>
+            <Button
+              variant={layout === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLayout('list')}
+            >
+              List
+            </Button>
+          </div>
           {selectedFolderId && (
             <Button
               variant="outline"
@@ -197,7 +298,7 @@ export default function Notes() {
             variant="outline"
             onClick={() => setShowCreateFolder(!showCreateFolder)}
           >
-            <Folder className="h-4 w-4 mr-2" />
+            <FolderIcon className="h-4 w-4 mr-2" />
             New Folder
           </Button>
           <Button onClick={() => { setNewNote(prev => ({ ...prev, folderId: selectedFolderId ? selectedFolderId.toString() : "none" })); setShowCreateNote(!showCreateNote); }}>
@@ -244,12 +345,6 @@ export default function Notes() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateNote} className="space-y-4">
-              <Input
-                placeholder="Note title..."
-                value={newNote.title}
-                onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
-                disabled={loading}
-              />
               <Select
                 value={newNote.folderId}
                 onValueChange={(value) => setNewNote({ ...newNote, folderId: value })}
@@ -257,7 +352,7 @@ export default function Notes() {
                 <SelectTrigger>
                   <SelectValue placeholder="Select folder (optional)" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   <SelectItem value="none">No folder</SelectItem>
                   {folders.map((folder) => (
                     <SelectItem key={folder.id} value={folder.id.toString()}>
@@ -266,12 +361,20 @@ export default function Notes() {
                   ))}
                 </SelectContent>
               </Select>
-              <Textarea
-                placeholder="Note content..."
-                value={newNote.content}
-                onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
-                rows={4}
+              <Input
+                placeholder="Note title..."
+                value={newNote.title}
+                onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
                 disabled={loading}
+              />
+              <ReactQuill
+                theme="snow"
+                value={newNote.content}
+                onChange={(value) => setNewNote({ ...newNote, content: value })}
+                modules={modules}
+                formats={formats}
+                placeholder="Note content..."
+                className="mb-4"
               />
               <div className="flex gap-2">
                 <Button type="submit" disabled={loading}>
@@ -290,137 +393,225 @@ export default function Notes() {
         </Card>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {selectedFolderId === null && folders.map((folder) => (
-          <Card
-            key={folder.id}
-            className={`relative cursor-pointer transition-colors ${
-              selectedFolderId === folder.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
-            }`}
-            onClick={() => handleFolderClick(folder.id)}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Folder className="h-5 w-5" />
-                  {folder.name}
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteFolder(folder.id);
-                  }}
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {notes.filter(note => note.folder_id === folder.id).length} notes
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {folders.map((folder) => (
-          <Card
-            key={folder.id}
-            className={`relative cursor-pointer transition-colors ${
-              selectedFolderId === folder.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
-            }`}
-            onClick={() => handleFolderClick(folder.id)}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Folder className="h-5 w-5" />
-                  {folder.name}
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteFolder(folder.id);
-                  }}
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {notes.filter(note => note.folder_id === folder.id).length} notes
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-
-        {(() => {
-          const filteredNotes = notes.filter(note => selectedFolderId === null || note.folder_id === selectedFolderId);
-          return (
-            <>
-              {filteredNotes.map((note) => (
-                <Card key={note.id} className="relative">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{note.title}</CardTitle>
+      {layout === 'grid' ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {selectedFolderId === null && folders.map((folder) => (
+            <Card
+              key={folder.id}
+              className={`relative cursor-pointer transition-colors ${
+                selectedFolderId === folder.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
+              }`}
+              onClick={() => handleFolderClick(folder.id)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FolderIcon className="h-4 w-4" />
+                    {folder.name}
+                  </CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteNote(note.id)}
-                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                        className="h-6 w-6 p-0"
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <MoreHorizontal className="h-3 w-3" />
                       </Button>
-                    </div>
-                    {note.folderName && (
-                      <Badge variant="secondary" className="w-fit">
-                        {note.folderName}
-                      </Badge>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {note.content}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Updated {new Date(note.updated_at).toLocaleDateString()}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {filteredNotes.length === 0 && (selectedFolderId === null ? folders.length === 0 : true) && (
-                <div className="col-span-full text-center py-12">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    {selectedFolderId ? "No notes in this folder" : "No notes yet"}
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {selectedFolderId
-                      ? "Create a new note in this folder."
-                      : "Create your first folder and start organizing your notes."
-                    }
-                  </p>
-                  {!selectedFolderId && (
-                    <Button onClick={() => setShowCreateFolder(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Folder
-                    </Button>
-                  )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-gray-50">
+                      <DropdownMenuItem onClick={() => downloadFolderAsZIP(folder)}>Download as ZIP</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setRenameItem({type: 'folder', id: folder.id, currentName: folder.name}); setRenameValue(folder.name); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }} className="text-destructive">Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              )}
-            </>
-          );
-        })()}
-      </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-xs text-muted-foreground">
+                  {notes.filter(note => note.folderId === folder.id).length} notes
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+
+          {notes
+            .filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId)
+            .map((note) => (
+              <Card key={note.id} className="relative cursor-pointer hover:bg-muted/50" onClick={() => setLocation(`/notes/${note.id}`)}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">{note.title}</CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onTouchStart={(e) => e.stopPropagation()}
+                        >
+                          <MoreHorizontal className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-gray-50">
+                        <DropdownMenuItem onClick={() => downloadAsPDF(note)}>Download as PDF</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => downloadAsWord(note)}>Download as Word</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setRenameItem({type: 'note', id: note.id, currentName: note.title}); setRenameValue(note.title); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }} className="text-destructive">Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+
+          {(() => {
+            const filteredNotes = notes.filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId);
+            return filteredNotes.length === 0 && (selectedFolderId === null ? folders.length === 0 : true) && (
+              <div className="col-span-full text-center py-12">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  {selectedFolderId ? "No notes in this folder" : "No notes yet"}
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  {selectedFolderId
+                    ? "Create a new note in this folder."
+                    : "Create your first folder and start organizing your notes."
+                  }
+                </p>
+                {!selectedFolderId && (
+                  <Button onClick={() => setShowCreateFolder(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Folder
+                  </Button>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {selectedFolderId === null && folders.map((folder) => (
+            <div key={folder.id} className="flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-muted/50" onClick={() => handleFolderClick(folder.id)}>
+              <span className="text-base flex items-center gap-2">
+                <FolderIcon className="h-4 w-4" />
+                {folder.name} ({notes.filter(note => note.folderId === folder.id).length} notes)
+              </span>
+              <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-gray-50">
+                  <DropdownMenuItem onClick={() => downloadFolderAsZIP(folder)}>Download as ZIP</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setRenameItem({type: 'folder', id: folder.id, currentName: folder.name}); setRenameValue(folder.name); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }} className="text-destructive">Delete</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ))}
+
+          {notes
+            .filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId)
+            .map((note) => (
+              <div key={note.id} className="flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-muted/50" onClick={() => setLocation(`/notes/${note.id}`)}>
+                <span className="text-base">{note.title}</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}
+                    >
+                      <MoreHorizontal className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-gray-50">
+                    <DropdownMenuItem onClick={() => downloadAsPDF(note)}>Download as PDF</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => downloadAsWord(note)}>Download as Word</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setRenameItem({type: 'note', id: note.id, currentName: note.title}); setRenameValue(note.title); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }} className="text-destructive">Delete</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))}
+
+          {(() => {
+            const filteredNotes = notes.filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId);
+            return filteredNotes.length === 0 && (selectedFolderId === null ? folders.length === 0 : true) && (
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  {selectedFolderId ? "No notes in this folder" : "No notes yet"}
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  {selectedFolderId
+                    ? "Create a new note in this folder."
+                    : "Create your first folder and start organizing your notes."
+                  }
+                </p>
+                {!selectedFolderId && (
+                  <Button onClick={() => setShowCreateFolder(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Folder
+                  </Button>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename {renameItem?.type}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              placeholder={`Enter new ${renameItem?.type} name`}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRename}>
+              Rename
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

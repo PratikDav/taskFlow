@@ -353,9 +353,9 @@ export class MySQLStorage implements IStorage {
       );
       return rows.map(row => ({
         id: row.id,
-        user_id: row.user_id,
+        userId: row.user_id,
         name: row.name,
-        created_at: row.created_at,
+        createdAt: row.created_at,
       }));
     } finally {
       conn.release();
@@ -373,9 +373,9 @@ export class MySQLStorage implements IStorage {
       const row = rows[0];
       return {
         id: row.id,
-        user_id: row.user_id,
+        userId: row.user_id,
         name: row.name,
-        created_at: row.created_at,
+        createdAt: row.created_at,
       };
     } finally {
       conn.release();
@@ -392,9 +392,9 @@ export class MySQLStorage implements IStorage {
       const folderId = result.insertId;
       return {
         id: folderId,
-        user_id: userId,
+        userId: userId,
         name,
-        created_at: new Date(),
+        createdAt: new Date(),
       };
     } finally {
       conn.release();
@@ -424,12 +424,12 @@ export class MySQLStorage implements IStorage {
       );
       return rows.map(row => ({
         id: row.id,
-        user_id: row.user_id,
-        folder_id: row.folder_id,
+        userId: row.user_id,
+        folderId: row.folder_id,
         title: row.title,
         content: row.content,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
         folderName: row.folder_name,
       }));
     } finally {
@@ -451,12 +451,12 @@ export class MySQLStorage implements IStorage {
       const row = rows[0];
       return {
         id: row.id,
-        user_id: row.user_id,
-        folder_id: row.folder_id,
+        userId: row.user_id,
+        folderId: row.folder_id,
         title: row.title,
         content: row.content,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
         folderName: row.folder_name,
       };
     } finally {
@@ -474,12 +474,12 @@ export class MySQLStorage implements IStorage {
       const noteId = result.insertId;
       return {
         id: noteId,
-        user_id: userId,
-        folder_id: folderId,
+        userId: userId,
+        folderId: folderId,
         title,
         content,
-        created_at: new Date(),
-        updated_at: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
     } finally {
       conn.release();
