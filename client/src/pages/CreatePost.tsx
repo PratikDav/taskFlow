@@ -3,6 +3,8 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Palette } from "lucide-react";
 
 export default function CreatePost() {
   const [, setLocation] = useLocation();
@@ -36,7 +38,15 @@ export default function CreatePost() {
 
   // Apply theme to the editor
   useEffect(() => {
+    // Remove any existing dynamic styles
+    const existingStyle = document.getElementById('code-block-theme');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+
+    // Create new style element
     const style = document.createElement('style');
+    style.id = 'code-block-theme';
     style.textContent = `
       .ql-editor pre {
         background-color: ${codeBlockTheme === 'dark' ? '#1e293b' : 
@@ -56,12 +66,13 @@ export default function CreatePost() {
                        '#a855f7'} !important;
       }
     `;
-    style.id = 'code-block-theme';
     document.head.appendChild(style);
 
     return () => {
-      const existing = document.getElementById('code-block-theme');
-      if (existing) existing.remove();
+      const styleToRemove = document.getElementById('code-block-theme');
+      if (styleToRemove) {
+        styleToRemove.remove();
+      }
     };
   }, [codeBlockTheme]);
 
@@ -138,46 +149,73 @@ export default function CreatePost() {
           className="w-full p-2 border rounded-md bg-background"
           disabled={loading}
         />
-        <ReactQuill
-          theme="snow"
-          value={post.content}
-          onChange={(value) => setPost({ ...post, content: value })}
-          modules={modules}
-          formats={formats}
-          placeholder="Write your post content here..."
-          className="min-h-[200px]"
-        />
+        <div className={`theme-${codeBlockTheme}`}>
+          <ReactQuill
+            theme="snow"
+            value={post.content}
+            onChange={(value) => setPost({ ...post, content: value })}
+            modules={modules}
+            formats={formats}
+            placeholder="Write your post content here..."
+            className="min-h-[200px]"
+          />
+        </div>
 
         {/* Code Block Theme Selector */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Code Block Theme:</label>
-          <div className="flex gap-2 flex-wrap">
-            {Object.entries(codeBlockThemes).map(([theme, colors]) => (
-              <button
-                key={theme}
-                type="button"
-                onClick={() => {
-                  setCodeBlockTheme(theme);
-                  setPost({ ...post, codeBlockTheme: theme });
-                }}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                  codeBlockTheme === theme
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                {theme.charAt(0).toUpperCase() + theme.slice(1)}
-              </button>
-            ))}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Palette className="h-4 w-4 text-primary" />
+            <label className="text-sm font-semibold text-foreground">Code Block Theme</label>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Preview: <code className={`px-1 py-0.5 rounded text-xs ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].bg} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].text}`}>inline code</code> and block code below:
-          </p>
-          <pre className={`text-xs p-2 rounded border mt-1 ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].bg} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].text} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].border}`}>
-            function example() {`{`}
-              console.log('Hello World');
-            {`}`}
-          </pre>
+          <Select value={codeBlockTheme} onValueChange={(value) => {
+            setCodeBlockTheme(value);
+            setPost({ ...post, codeBlockTheme: value });
+          }}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="dark">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-slate-900 border border-slate-700"></div>
+                  <span>Dark Theme</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="light">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-gray-100 border border-gray-300"></div>
+                  <span>Light Theme</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="blue">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-blue-900 border border-blue-700"></div>
+                  <span>Blue Theme</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="green">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-green-900 border border-green-700"></div>
+                  <span>Green Theme</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="purple">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-purple-900 border border-purple-700"></div>
+                  <span>Purple Theme</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>Preview:</p>
+            <code className={`px-1 py-0.5 rounded text-xs ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].bg} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].text}`}>inline code</code>
+            <pre className={`text-xs p-2 rounded border mt-1 ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].bg} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].text} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].border}`}>
+              function example() {`{`}
+                console.log('Hello World');
+              {`}`}
+            </pre>
+          </div>
         </div>
 
         <div className="flex gap-2">

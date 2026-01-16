@@ -67,9 +67,6 @@
 
   /* Code block styling for ReactQuill */
   .ql-editor pre {
-    background-color: var(--code-block-bg, #1e293b) !important;
-    color: var(--code-block-text, #f1f5f9) !important;
-    border-color: var(--code-block-border, #475569) !important;
     @apply rounded-lg p-4 my-4 overflow-x-auto border;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
@@ -79,16 +76,44 @@
     word-wrap: break-word;
   }
 
+  /* Theme-specific code block styles */
+  .theme-dark .ql-editor pre {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+  }
+
+  .theme-light .ql-editor pre {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    border-color: #d1d5db !important;
+  }
+
+  .theme-blue .ql-editor pre {
+    background-color: #1e3a8a !important;
+    color: #dbeafe !important;
+    border-color: #3b82f6 !important;
+  }
+
+  .theme-green .ql-editor pre {
+    background-color: #14532d !important;
+    color: #dcfce7 !important;
+    border-color: #16a34a !important;
+  }
+
+  .theme-purple .ql-editor pre {
+    background-color: #581c87 !important;
+    color: #faf5ff !important;
+    border-color: #a855f7 !important;
+  }
+
   .ql-editor pre.ql-syntax {
-    background-color: var(--code-block-bg, #1e293b) !important;
-    color: var(--code-block-text, #f1f5f9) !important;
+    background-color: inherit !important;
+    color: inherit !important;
   }
 
   /* Code block styling for posts display */
   pre {
-    background-color: var(--code-block-bg, #1e293b) !important;
-    color: var(--code-block-text, #f1f5f9) !important;
-    border-color: var(--code-block-border, #475569) !important;
     @apply rounded-lg p-4 my-4 overflow-x-auto border;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.875rem;
@@ -100,9 +125,40 @@
     width: 100%;
   }
 
+  /* Theme-specific code block styles for posts */
+  .theme-dark pre {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+  }
+
+  .theme-light pre {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    border-color: #d1d5db !important;
+  }
+
+  .theme-blue pre {
+    background-color: #1e3a8a !important;
+    color: #dbeafe !important;
+    border-color: #3b82f6 !important;
+  }
+
+  .theme-green pre {
+    background-color: #14532d !important;
+    color: #dcfce7 !important;
+    border-color: #16a34a !important;
+  }
+
+  .theme-purple pre {
+    background-color: #581c87 !important;
+    color: #faf5ff !important;
+    border-color: #a855f7 !important;
+  }
+
   pre.ql-syntax {
-    background-color: var(--code-block-bg, #1e293b) !important;
-    color: var(--code-block-text, #f1f5f9) !important;
+    background-color: inherit !important;
+    color: inherit !important;
   }
 
   .ql-editor code {

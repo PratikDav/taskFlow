@@ -118,24 +118,7 @@ export default function Posts() {
         ) : (
           posts.map((post) => (
             <div key={post.id} 
-                 className="p-4 border rounded-lg bg-card hover:shadow-md transition"
-                 style={{
-                   '--code-block-bg': post.code_block_theme === 'dark' ? '#1e293b' :
-                                    post.code_block_theme === 'light' ? '#f3f4f6' :
-                                    post.code_block_theme === 'blue' ? '#1e3a8a' :
-                                    post.code_block_theme === 'green' ? '#14532d' :
-                                    '#581c87',
-                   '--code-block-text': post.code_block_theme === 'dark' ? '#f1f5f9' :
-                                      post.code_block_theme === 'light' ? '#111827' :
-                                      post.code_block_theme === 'blue' ? '#dbeafe' :
-                                      post.code_block_theme === 'green' ? '#dcfce7' :
-                                      '#faf5ff',
-                   '--code-block-border': post.code_block_theme === 'dark' ? '#475569' :
-                                        post.code_block_theme === 'light' ? '#d1d5db' :
-                                        post.code_block_theme === 'blue' ? '#3b82f6' :
-                                        post.code_block_theme === 'green' ? '#16a34a' :
-                                        '#a855f7'
-                 } as React.CSSProperties}>
+                 className={`p-4 border rounded-lg bg-card hover:shadow-md transition theme-${post.code_block_theme || 'dark'}`}>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">{post.title}</h3>
