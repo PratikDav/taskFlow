@@ -3,12 +3,6 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import Quill from 'quill';
-
-// Register custom fonts whitelist for Quill
-const Font = Quill.import('formats/font');
-Font.whitelist = ['merriweather', 'playfair', 'lora', 'times', 'bengali', 'inter', 'roboto', 'serif', 'sans'];
-Quill.register(Font, true);
 
 export default function CreatePost() {
   const [, setLocation] = useLocation();
@@ -17,7 +11,7 @@ export default function CreatePost() {
 
   const modules = {
     toolbar: [
-      [{ 'header': [1, 2, 3, false] }, { 'font': ['merriweather','playfair','lora','times','bengali','inter','roboto','serif','sans'] }],
+      [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
       ['link', 'code', 'code-block', 'clean']
@@ -25,7 +19,7 @@ export default function CreatePost() {
   };
 
   const formats = [
-    'header', 'font',
+    'header',
     'bold', 'italic', 'underline', 'strike',
     'list', 'bullet', 'link', 'code', 'code-block'
   ];
@@ -78,8 +72,6 @@ export default function CreatePost() {
             button.setAttribute('title', 'Remove Formatting');
           } else if (classList.contains('ql-header')) {
             button.setAttribute('title', 'Heading');
-          } else if (classList.contains('ql-font')) {
-            button.setAttribute('title', 'Font Family');
           }
         });
       }

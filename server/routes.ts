@@ -429,6 +429,202 @@ export async function registerRoutes(
     }
   });
 
+  // Folders API
+  app.get('/api/folders', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const folders = await storage.getFolders(userId);
+      res.json(folders);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch folders' });
+    }
+  });
+
+  app.post('/api/folders', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ message: 'Name is required' });
+      }
+
+      const folder = await storage.createFolder(userId, name);
+      res.status(201).json(folder);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to create folder' });
+    }
+  });
+
+  app.delete('/api/folders/:id', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const folderId = Number(req.params.id);
+      const folder = await storage.getFolderById(folderId);
+      
+      if (!folder) {
+        return res.status(404).json({ message: 'Folder not found' });
+      }
+
+      if (folder.user_id !== userId) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      await storage.deleteFolder(folderId);
+      res.status(204).send();
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to delete folder' });
+    }
+  });
+
+  // Notes API
+  app.get('/api/notes', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const notes = await storage.getNotes(userId);
+      res.json(notes);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch notes' });
+    }
+  });
+
+  app.get('/api/notes/:id', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const noteId = Number(req.params.id);
+      const note = await storage.getNoteById(noteId);
+      
+      if (!note) {
+        return res.status(404).json({ message: 'Note not found' });
+      }
+
+      if (note.user_id !== userId) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      res.json(note);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch note' });
+    }
+  });
+
+  app.post('/api/notes', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const { title, content, folderId } = req.body;
+      if (!title || !content) {
+        return res.status(400).json({ message: 'Title and content are required' });
+      }
+
+      const note = await storage.createNote(userId, title, content, folderId);
+      res.status(201).json(note);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to create note' });
+    }
+  });
+
+  app.put('/api/notes/:id', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const noteId = Number(req.params.id);
+      const note = await storage.getNoteById(noteId);
+      
+      if (!note) {
+        return res.status(404).json({ message: 'Note not found' });
+      }
+
+      if (note.user_id !== userId) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      const { title, content, folderId } = req.body;
+      if (!title || !content) {
+        return res.status(400).json({ message: 'Title and content are required' });
+      }
+
+      const updatedNote = await storage.updateNote(noteId, title, content, folderId);
+      res.json(updatedNote);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to update note' });
+    }
+  });
+
+  app.delete('/api/notes/:id', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const noteId = Number(req.params.id);
+      const note = await storage.getNoteById(noteId);
+      
+      if (!note) {
+        return res.status(404).json({ message: 'Note not found' });
+      }
+
+      if (note.user_id !== userId) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      await storage.deleteNote(noteId);
+      res.status(204).send();
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to delete note' });
+    }
+  });
+
   // Seed data
   const existingTasks = await storage.getTasks();
   if (existingTasks.length === 0) {

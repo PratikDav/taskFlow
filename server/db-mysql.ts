@@ -83,17 +83,29 @@ export async function initDatabase() {
       }
     }
 
-    // Create posts table
+    // Create folders table
     await conn.execute(`
-      CREATE TABLE IF NOT EXISTS posts (
+      CREATE TABLE IF NOT EXISTS folders (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create notes table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        folder_id INT,
         title VARCHAR(255) NOT NULL,
         content LONGTEXT NOT NULL,
-        code_block_theme VARCHAR(50) DEFAULT 'dark',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL
       )
     `);
 

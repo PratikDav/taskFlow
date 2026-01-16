@@ -125,6 +125,54 @@
   .ql-picker .ql-picker-label[data-value="roboto"]::after { content: 'Roboto'; }
   .ql-picker .ql-picker-label[data-value="sans"]::after { content: 'Sans Serif'; }
 
+  /* Ensure picker items and the selected label show in their respective fonts */
+  .ql-picker .ql-picker-label[data-value="merriweather"],
+  .ql-picker .ql-picker-options .ql-picker-item[data-value="merriweather"] {
+    font-family: 'Merriweather', serif !important;
+  }
+
+  .ql-picker .ql-picker-label[data-value="playfair"],
+  .ql-picker .ql-picker-options .ql-picker-item[data-value="playfair"] {
+    font-family: 'Playfair Display', serif !important;
+  }
+
+  .ql-picker .ql-picker-label[data-value="lora"],
+  .ql-picker .ql-picker-options .ql-picker-item[data-value="lora"] {
+    font-family: 'Lora', serif !important;
+  }
+
+  .ql-picker .ql-picker-label[data-value="times"],
+  .ql-picker .ql-picker-options .ql-picker-item[data-value="times"] {
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  .ql-picker .ql-picker-label[data-value="bengali"],
+  .ql-picker .ql-picker-options .ql-picker-item[data-value="bengali"] {
+    font-family: 'Noto Serif Bengali', serif !important;
+  }
+
+  .ql-picker .ql-picker-label[data-value="inter"],
+  .ql-picker .ql-picker-options .ql-picker-item[data-value="inter"] {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  }
+
+  .ql-picker .ql-picker-label[data-value="roboto"],
+  .ql-picker .ql-picker-options .ql-picker-item[data-value="roboto"] {
+    font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+  }
+
+  .ql-picker .ql-picker-label[data-value="sans"],
+  .ql-picker .ql-picker-options .ql-picker-item[data-value="sans"] {
+    font-family: 'DM Sans', 'Inter', 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif !important;
+  }
+
+  /* Extra specificity to cover Quill variants */
+  .ql-picker.ql-font .ql-picker-label,
+  .ql-picker.ql-font .ql-picker-label[data-value],
+  .ql-picker.ql-font .ql-picker-options .ql-picker-item {
+    font-size: 14px !important;
+  }
+
   /* Toolbar button tooltips */
   .ql-toolbar button {
     position: relative;

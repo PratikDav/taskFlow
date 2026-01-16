@@ -29,6 +29,23 @@ export interface Post {
   updated_at: Date;
 }
 
+export interface Folder {
+  id: number;
+  user_id: number;
+  name: string;
+  created_at: Date;
+}
+
+export interface Note {
+  id: number;
+  user_id: number;
+  folder_id?: number;
+  title: string;
+  content: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface IStorage {
   getTasks(): Promise<Task[]>;
   getTask(id: number): Promise<Task | undefined>;
@@ -51,6 +68,19 @@ export interface IStorage {
   createPost(userId: number, title: string, content: string, codeBlockTheme?: string): Promise<Post>;
   updatePost(id: number, title: string, content: string): Promise<Post>;
   deletePost(id: number): Promise<void>;
+
+  // Folder operations
+  getFolders(userId: number): Promise<Folder[]>;
+  getFolderById(id: number): Promise<Folder | undefined>;
+  createFolder(userId: number, name: string): Promise<Folder>;
+  deleteFolder(id: number): Promise<void>;
+
+  // Note operations
+  getNotes(userId: number): Promise<(Note & { folderName?: string })[]>;
+  getNoteById(id: number): Promise<(Note & { folderName?: string }) | undefined>;
+  createNote(userId: number, title: string, content: string, folderId?: number): Promise<Note>;
+  updateNote(id: number, title: string, content: string, folderId?: number): Promise<Note>;
+  deleteNote(id: number): Promise<void>;
 }
 
 export class MySQLStorage implements IStorage {
@@ -308,6 +338,173 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       await conn.execute("DELETE FROM posts WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Folder operations
+  async getFolders(userId: number): Promise<Folder[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        "SELECT id, user_id, name, created_at FROM folders WHERE user_id = ? ORDER BY created_at DESC",
+        [userId]
+      );
+      return rows.map(row => ({
+        id: row.id,
+        user_id: row.user_id,
+        name: row.name,
+        created_at: row.created_at,
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getFolderById(id: number): Promise<Folder | undefined> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        "SELECT id, user_id, name, created_at FROM folders WHERE id = ?",
+        [id]
+      );
+      if (rows.length === 0) return undefined;
+      const row = rows[0];
+      return {
+        id: row.id,
+        user_id: row.user_id,
+        name: row.name,
+        created_at: row.created_at,
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async createFolder(userId: number, name: string): Promise<Folder> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute(
+        "INSERT INTO folders (user_id, name) VALUES (?, ?)",
+        [userId, name]
+      );
+      const folderId = result.insertId;
+      return {
+        id: folderId,
+        user_id: userId,
+        name,
+        created_at: new Date(),
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteFolder(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute("DELETE FROM folders WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Note operations
+  async getNotes(userId: number): Promise<(Note & { folderName?: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        `SELECT n.id, n.user_id, n.folder_id, n.title, n.content, n.created_at, n.updated_at, f.name as folder_name
+         FROM notes n
+         LEFT JOIN folders f ON n.folder_id = f.id
+         WHERE n.user_id = ?
+         ORDER BY n.updated_at DESC`,
+        [userId]
+      );
+      return rows.map(row => ({
+        id: row.id,
+        user_id: row.user_id,
+        folder_id: row.folder_id,
+        title: row.title,
+        content: row.content,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        folderName: row.folder_name,
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getNoteById(id: number): Promise<(Note & { folderName?: string }) | undefined> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        `SELECT n.id, n.user_id, n.folder_id, n.title, n.content, n.created_at, n.updated_at, f.name as folder_name
+         FROM notes n
+         LEFT JOIN folders f ON n.folder_id = f.id
+         WHERE n.id = ?`,
+        [id]
+      );
+      if (rows.length === 0) return undefined;
+      const row = rows[0];
+      return {
+        id: row.id,
+        user_id: row.user_id,
+        folder_id: row.folder_id,
+        title: row.title,
+        content: row.content,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        folderName: row.folder_name,
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async createNote(userId: number, title: string, content: string, folderId?: number): Promise<Note> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute(
+        "INSERT INTO notes (user_id, folder_id, title, content) VALUES (?, ?, ?, ?)",
+        [userId, folderId || null, title, content]
+      );
+      const noteId = result.insertId;
+      return {
+        id: noteId,
+        user_id: userId,
+        folder_id: folderId,
+        title,
+        content,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateNote(id: number, title: string, content: string, folderId?: number): Promise<Note> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "UPDATE notes SET title = ?, content = ?, folder_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [title, content, folderId || null, id]
+      );
+      const note = await this.getNoteById(id);
+      if (!note) throw new Error("Note not found after update");
+      return note;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteNote(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute("DELETE FROM notes WHERE id = ?", [id]);
     } finally {
       conn.release();
     }

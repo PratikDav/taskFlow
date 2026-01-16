@@ -36,7 +36,8 @@ import {
   User, 
   LogOut,
   ChevronUp,
-  Command
+  Command,
+  FileText
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -76,6 +77,7 @@ export function AppSidebar() {
       ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
       : []),
     { title: "My Tasks", url: "/tasks", icon: CheckSquare },
+    { title: "Notes", url: "/notes", icon: FileText },
     ...(currentUser?.role === "admin" 
       ? [{ title: "Settings", url: "/settings", icon: Settings }]
       : []),

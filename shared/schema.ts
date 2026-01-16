@@ -14,4 +14,29 @@ export interface Task extends InsertTask {
   createdAt: Date;
 }
 
-export type UpdateTaskRequest = Partial<InsertTask>;
+export const insertFolderSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+});
+
+export type InsertFolder = z.infer<typeof insertFolderSchema>;
+
+export interface Folder extends InsertFolder {
+  id: number;
+  userId: number;
+  createdAt: Date;
+}
+
+export const insertNoteSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  folderId: z.number().optional(),
+});
+
+export type InsertNote = z.infer<typeof insertNoteSchema>;
+
+export interface Note extends InsertNote {
+  id: number;
+  userId: number;
+  createdAt: Date;
+  updatedAt: Date;
+}

@@ -15,6 +15,7 @@ import AuthPage from "@/pages/AuthPage";
 import Admin from "@/pages/Admin";
 import Posts from "@/pages/Posts";
 import CreatePost from "@/pages/CreatePost";
+import Notes from "@/pages/Notes";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/posts/create" component={CreatePost} />
       <Route path="/posts" component={Posts} />
+      <Route path="/notes" component={Notes} />
       <Route path="/tasks" component={Tasks} />
       <Route path="/settings" component={Settings} />
       <Route path="/profile" component={Profile} />
