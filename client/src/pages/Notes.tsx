@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Plus, Folder as FolderIcon, FileText, MoreHorizontal } from "lucide-react";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -45,6 +45,10 @@ export default function Notes() {
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [renameItem, setRenameItem] = useState<{type: 'folder' | 'note', id: number, currentName: string} | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  const [downloadFolder, setDownloadFolder] = useState<Folder | null>(null);
+  const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'word'>('pdf');
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -184,18 +188,44 @@ export default function Notes() {
     URL.revokeObjectURL(url);
   };
 
-  const downloadFolderAsZIP = async (folder: Folder) => {
-    const zip = new JSZip();
-    const folderNotes = notes.filter(n => n.folderId === folder.id);
-    for (const note of folderNotes) {
-      zip.file(note.title + '.txt', note.content.replace(/<[^>]*>/g, ''));
+  const downloadFolderAsZIP = async (folder: Folder, format: 'pdf' | 'word') => {
+    setDownloading(true);
+    try {
+      const zip = new JSZip();
+      const folderNotes = notes.filter(n => n.folderId === folder.id);
+      for (const note of folderNotes) {
+        if (format === 'word') {
+          const content = note.content.replace(/<[^>]*>/g, '');
+          zip.file(note.title + '.doc', content);
+        } else {
+          // PDF generation using html2pdf (jsPDF) to obtain blob
+          const element = document.createElement('div');
+          element.innerHTML = note.content;
+          // html2pdf -> toPdf -> get('pdf') returns jsPDF instance
+          try {
+            // @ts-ignore
+            const pdfObj = await html2pdf().from(element).toPdf().get('pdf');
+            const blob = pdfObj.output('blob');
+            zip.file(note.title + '.pdf', blob);
+          } catch (err) {
+            // fallback: save plain text if PDF generation fails
+            const content = note.content.replace(/<[^>]*>/g, '');
+            zip.file(note.title + '.txt', content);
+          }
+        }
+      }
+      const content = await zip.generateAsync({type: 'blob'});
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = folder.name + '.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
+      setShowDownloadDialog(false);
     }
-    const content = await zip.generateAsync({type: 'blob'});
-    const url = URL.createObjectURL(content);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = folder.name + '.zip';
-    a.click();
+  };
     URL.revokeObjectURL(url);
   };
 
@@ -394,18 +424,18 @@ export default function Notes() {
       )}
 
       {layout === 'grid' ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {selectedFolderId === null && folders.map((folder) => (
             <Card
               key={folder.id}
-              className={`relative cursor-pointer transition-colors ${
+              className={`relative cursor-pointer transition-colors p-2 ${
                 selectedFolderId === folder.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
               }`}
               onClick={() => handleFolderClick(folder.id)}
             >
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-1">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
                     <FolderIcon className="h-4 w-4" />
                     {folder.name}
                   </CardTitle>
@@ -423,9 +453,9 @@ export default function Notes() {
                         <MoreHorizontal className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-gray-50">
-                      <DropdownMenuItem onClick={() => downloadFolderAsZIP(folder)}>Download as ZIP</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setRenameItem({type: 'folder', id: folder.id, currentName: folder.name}); setRenameValue(folder.name); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
+                      <DropdownMenuContent className="bg-gray-50">
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setDownloadFolder(folder); setDownloadFormat('pdf'); setShowDownloadDialog(true); }}>Download as ZIP</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameItem({type: 'folder', id: folder.id, currentName: folder.name}); setRenameValue(folder.name); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }} className="text-destructive">Delete</DropdownMenuItem>
@@ -444,10 +474,10 @@ export default function Notes() {
           {notes
             .filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId)
             .map((note) => (
-              <Card key={note.id} className="relative cursor-pointer hover:bg-muted/50" onClick={() => setLocation(`/notes/${note.id}`)}>
-                <CardHeader className="pb-2">
+              <Card key={note.id} className="relative cursor-pointer p-2 hover:bg-muted/50" onClick={() => setLocation(`/notes/${note.id}`)}>
+                <CardHeader className="pb-1">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{note.title}</CardTitle>
+                    <CardTitle className="text-sm">{note.title}</CardTitle>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -465,7 +495,7 @@ export default function Notes() {
                       <DropdownMenuContent className="bg-gray-50">
                         <DropdownMenuItem onClick={() => downloadAsPDF(note)}>Download as PDF</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => downloadAsWord(note)}>Download as Word</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { setRenameItem({type: 'note', id: note.id, currentName: note.title}); setRenameValue(note.title); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameItem({type: 'note', id: note.id, currentName: note.title}); setRenameValue(note.title); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }} className="text-destructive">Delete</DropdownMenuItem>
@@ -523,8 +553,8 @@ export default function Notes() {
                       </Button>
                     </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-gray-50">
-                  <DropdownMenuItem onClick={() => downloadFolderAsZIP(folder)}>Download as ZIP</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { setRenameItem({type: 'folder', id: folder.id, currentName: folder.name}); setRenameValue(folder.name); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setDownloadFolder(folder); setDownloadFormat('pdf'); setShowDownloadDialog(true); }}>Download as ZIP</DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameItem({type: 'folder', id: folder.id, currentName: folder.name}); setRenameValue(folder.name); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id); }} className="text-destructive">Delete</DropdownMenuItem>
@@ -555,7 +585,7 @@ export default function Notes() {
                   <DropdownMenuContent className="bg-gray-50">
                     <DropdownMenuItem onClick={() => downloadAsPDF(note)}>Download as PDF</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => downloadAsWord(note)}>Download as Word</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setRenameItem({type: 'note', id: note.id, currentName: note.title}); setRenameValue(note.title); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameItem({type: 'note', id: note.id, currentName: note.title}); setRenameValue(note.title); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }} className="text-destructive">Delete</DropdownMenuItem>
@@ -608,6 +638,36 @@ export default function Notes() {
             </Button>
             <Button onClick={handleRename}>
               Rename
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDownloadDialog} onOpenChange={setShowDownloadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Download Folder as ZIP</DialogTitle>
+            <DialogDescription>
+              Choose the format for notes in "{downloadFolder?.name}".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Select value={downloadFormat} onValueChange={(value: 'pdf' | 'word') => setDownloadFormat(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pdf">PDF</SelectItem>
+                <SelectItem value="word">Word (.doc)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDownloadDialog(false)} disabled={downloading}>
+              Cancel
+            </Button>
+            <Button onClick={() => downloadFolder && downloadFolderAsZIP(downloadFolder, downloadFormat)} disabled={downloading}>
+              {downloading ? 'Downloading...' : 'Download'}
             </Button>
           </DialogFooter>
         </DialogContent>

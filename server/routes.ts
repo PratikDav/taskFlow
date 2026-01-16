@@ -485,7 +485,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Folder not found' });
       }
 
-      if (folder.user_id !== userId) {
+      if (folder.userId !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
@@ -494,6 +494,35 @@ export async function registerRoutes(
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Failed to delete folder' });
+    }
+  });
+
+  app.put('/api/folders/:id', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const folderId = Number(req.params.id);
+      const folder = await storage.getFolderById(folderId);
+      if (!folder) {
+        return res.status(404).json({ message: 'Folder not found' });
+      }
+      if (folder.userId !== userId) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      const { name } = req.body;
+      if (!name) return res.status(400).json({ message: 'Name is required' });
+
+      const updated = await storage.updateFolder(folderId, name);
+      res.json(updated);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to update folder' });
     }
   });
 
@@ -531,7 +560,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Note not found' });
       }
 
-      if (note.user_id !== userId) {
+      if (note.userId !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
@@ -580,7 +609,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Note not found' });
       }
 
-      if (note.user_id !== userId) {
+      if (note.userId !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
@@ -613,7 +642,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Note not found' });
       }
 
-      if (note.user_id !== userId) {
+      if (note.userId !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 

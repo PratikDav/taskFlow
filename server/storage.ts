@@ -401,6 +401,18 @@ export class MySQLStorage implements IStorage {
     }
   }
 
+  async updateFolder(id: number, name: string): Promise<Folder> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute("UPDATE folders SET name = ? WHERE id = ?", [name, id]);
+      const folder = await this.getFolderById(id);
+      if (!folder) throw new Error("Folder not found after update");
+      return folder;
+    } finally {
+      conn.release();
+    }
+  }
+
   async deleteFolder(id: number): Promise<void> {
     const conn = await pool.getConnection();
     try {

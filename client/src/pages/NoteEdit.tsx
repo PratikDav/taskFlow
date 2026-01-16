@@ -27,8 +27,8 @@ interface Note {
   title: string;
   content: string;
   folderId?: number;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export default function NoteEdit() {
@@ -90,7 +90,8 @@ export default function NoteEdit() {
         credentials: "include",
         body: JSON.stringify({
           title: formData.title,
-          content: formData.content
+          content: formData.content,
+          folderId: note.folderId
         }),
       });
       if (!res.ok) throw new Error("Failed to update note");

@@ -10,8 +10,8 @@ interface Note {
   content: string;
   folderId?: number;
   folderName?: string;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export default function NoteDetail() {
@@ -95,7 +95,7 @@ export default function NoteDetail() {
         <div dangerouslySetInnerHTML={{ __html: note.content }} />
       </div>
       <p className="text-xs text-muted-foreground mt-8">
-        Updated {new Date(note.updated_at).toLocaleDateString()}
+        Updated {new Date(note.updatedAt).toLocaleDateString()}
       </p>
     </div>
   );
