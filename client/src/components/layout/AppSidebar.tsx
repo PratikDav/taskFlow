@@ -84,14 +84,14 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
       <SidebarHeader className="h-16 flex items-center justify-center border-b border-border/20 px-4">
-        <div className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center">
+        <Link href="/posts" className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center hover:opacity-80 transition-opacity">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30">
             <Command className="h-4 w-4" />
           </div>
           <span className="font-display font-bold text-lg tracking-tight group-data-[collapsible=icon]:hidden">
             TaskFlow
           </span>
-        </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
