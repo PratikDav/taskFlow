@@ -53,6 +53,7 @@ export interface IStorage {
 }
 
 export class MySQLStorage implements IStorage {
+  public db = pool;
   private tasks: Map<number, Task> = new Map();
   private nextTaskId = 1;
 
