@@ -1,4 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;700&family=Outfit:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap');
+/* Times New Roman is a system font; we'll reference it as 'Times New Roman' in CSS */
 
 @tailwind base;
 @tailwind components;
@@ -48,6 +55,9 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20;
     font-family: var(--font-sans);
+
+    /* Default editor fonts fallbacks */
+    --editor-font-fancy: 'Merriweather', 'Playfair Display', 'Lora', 'Times New Roman', 'Noto Serif Bengali', serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -95,12 +105,32 @@
     border: 1px solid #d1d5db !important;
   }
 
+  /* Font family mappings for Quill font picker */
+  .ql-font-merriweather { font-family: 'Merriweather', serif; }
+  .ql-font-playfair { font-family: 'Playfair Display', serif; }
+  .ql-font-lora { font-family: 'Lora', serif; }
+  .ql-font-times { font-family: 'Times New Roman', Times, serif; }
+  .ql-font-bengali { font-family: 'Noto Serif Bengali', serif; }
+  .ql-font-inter { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+  .ql-font-roboto { font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }
+  .ql-font-sans { font-family: 'DM Sans', 'Inter', 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; }
+
+  /* Ensure picker shows readable names */
+  .ql-picker .ql-picker-label[data-value="merriweather"]::after { content: 'Merriweather'; }
+  .ql-picker .ql-picker-label[data-value="playfair"]::after { content: 'Playfair Display'; }
+  .ql-picker .ql-picker-label[data-value="lora"]::after { content: 'Lora'; }
+  .ql-picker .ql-picker-label[data-value="times"]::after { content: 'Times New Roman'; }
+  .ql-picker .ql-picker-label[data-value="bengali"]::after { content: 'Bangla (Noto)'; }
+  .ql-picker .ql-picker-label[data-value="inter"]::after { content: 'Inter'; }
+  .ql-picker .ql-picker-label[data-value="roboto"]::after { content: 'Roboto'; }
+  .ql-picker .ql-picker-label[data-value="sans"]::after { content: 'Sans Serif'; }
+
   /* Toolbar button tooltips */
   .ql-toolbar button {
     position: relative;
   }
 
-  .ql-toolbar button:hover::after {
+  .ql-toolbar button:not(.ql-code):not(.ql-code-block):hover::after {
     content: attr(title);
     position: absolute;
     bottom: -35px;
@@ -117,7 +147,7 @@
     animation: fadeIn 0.2s ease-in-out forwards;
   }
 
-  .ql-toolbar button:hover::before {
+  .ql-toolbar button:not(.ql-code):not(.ql-code-block):hover::before {
     content: '';
     position: absolute;
     bottom: -5px;
@@ -130,18 +160,34 @@
     animation: fadeIn 0.2s ease-in-out forwards;
   }
 
-  @keyframes fadeIn {
-    to {
-      opacity: 1;
-    }
+  /* Separate tooltips for code buttons */
+  .ql-toolbar .ql-code:hover::after,
+  .ql-toolbar .ql-code-block:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 1;
+    animation: fadeIn 0.2s ease-in-out forwards;
   }
 
   /* Distinguish code buttons visually */
-  .ql-toolbar .ql-code {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
-    border: 2px solid #3b82f6 !important;
-    border-radius: 6px !important;
+  .ql-toolbar .ql-code,
+  .ql-toolbar .ql-code-block {
     position: relative;
+    width: 28px !important;
+    height: 24px !important;
+    min-width: 28px !important;
+    margin: 0 1px !important;
+    overflow: hidden;
   }
 
   .ql-toolbar .ql-code::before {
@@ -150,16 +196,10 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
-    color: #1e40af;
-  }
-
-  .ql-toolbar .ql-code-block {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
-    border: 2px solid #f59e0b !important;
-    border-radius: 6px !important;
-    position: relative;
+    color: #374151;
+    z-index: 2;
   }
 
   .ql-toolbar .ql-code-block::before {
@@ -168,28 +208,146 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
-    color: #92400e;
+    color: #374151;
     font-family: 'Monaco', 'Menlo', monospace;
+    z-index: 2;
   }
 
-  /* Hide original button content and adjust sizing */
-  .ql-toolbar .ql-code span,
-  .ql-toolbar .ql-code-block span {
-    opacity: 0;
+  /* Completely hide all original button content */
+  .ql-toolbar .ql-code *,
+  .ql-toolbar .ql-code-block * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
 
-  .ql-toolbar .ql-code:hover {
-    background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%) !important;
-    transform: scale(1.05);
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  .ql-toolbar .ql-code::after,
+  .ql-toolbar .ql-code-block::after {
+    display: none !important;
   }
 
+  .ql-toolbar .ql-code:hover,
   .ql-toolbar .ql-code-block:hover {
-    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%) !important;
-    transform: scale(1.05);
-    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    background-color: #dbeafe !important;
+    border-color: #3b82f6 !important;
+  }
+
+  /* Toolbar layout - keep all buttons in one line */
+  .ql-toolbar {
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    white-space: nowrap;
+    padding: 16px 24px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: fit-content !important;
+  }
+
+  .ql-toolbar .ql-formats {
+    flex-shrink: 0;
+    display: flex !important;
+    align-items: center;
+    margin-right: 20px !important;
+  }
+
+  .ql-toolbar .ql-formats:last-child {
+    margin-right: 0 !important;
+  }
+
+  /* Hide toolbar scrollbars */
+  .ql-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ql-toolbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  /* Auto-resizing editor */
+  .ql-container {
+    min-height: 300px !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+
+  .ql-editor {
+    min-height: 300px !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    padding-bottom: 50px !important; /* Extra space at bottom */
+  }
+
+  /* Make editor grow with content */
+  .ql-editor.ql-blank::before {
+    color: #aaa;
+    font-style: normal;
+  }
+
+  /* Ensure the editor container grows */
+  .ql-container.ql-snow {
+    border-bottom: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    min-height: 300px;
+    max-height: none;
+  }
+
+  /* Auto-resize editor */
+  .auto-resize-editor .ql-container {
+    min-height: 300px !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .auto-resize-editor .ql-editor {
+    min-height: 300px !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-bottom: 20px !important;
+  }
+
+  /* Hide scrollbars until absolutely necessary */
+  .auto-resize-editor .ql-container::-webkit-scrollbar,
+  .auto-resize-editor .ql-editor::-webkit-scrollbar {
+    display: none;
+  }
+
+  .auto-resize-editor .ql-container,
+  .auto-resize-editor .ql-editor {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  /* Ensure toolbar doesn't wrap */
+  .ql-toolbar.ql-snow {
+    border-bottom: 1px solid #ccc;
+    box-sizing: border-box;
+    font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+    padding: 8px;
+    position: relative;
+  }
+
+  .ql-toolbar.ql-snow .ql-formats {
+    display: inline-block;
+    margin-right: 15px;
+    vertical-align: middle;
+  }
+
+  /* Responsive toolbar for larger screens */
+  @media (min-width: 768px) {
+    .ql-toolbar {
+      justify-content: flex-start;
+      padding: 8px 12px;
+    }
   }
 
   /* Code block styling for posts display */
