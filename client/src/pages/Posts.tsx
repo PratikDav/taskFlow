@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 
 export default function Posts() {
   const [, setLocation] = useLocation();
-  const [me, setMe] = useState<any>(null);
+  // `undefined` means "not loaded yet"; `null` means guest (not logged in)
+  const [me, setMe] = useState<any | null | undefined>(undefined);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [newPost, setNewPost] = useState({ title: "", content: "" });
@@ -73,11 +74,8 @@ export default function Posts() {
     window.location.reload();
   };
 
-  const handleLoginClick = () => {
-    setLocation("/login");
-  };
-
-  if (!me)
+  // show loading only while we haven't checked the current user
+  if (me === undefined)
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
         <div className="text-center">Loading...</div>
@@ -95,42 +93,20 @@ export default function Posts() {
             {isLoggedIn && <span className="ml-2 text-green-600">✓ Logged In</span>}
           </p>
         </div>
-        <div className="flex gap-2">
-          {!isLoggedIn && (
-            <Button onClick={handleLoginClick}>
-              Login / Sign Up
-            </Button>
-          )}
-          {isLoggedIn && (
-            <Button variant="destructive" onClick={handleLogout}>
-              Logout
-            </Button>
-          )}
-        </div>
       </div>
 
-      {/* Create Post Form - Always available */}
-      <form onSubmit={handleCreatePost} className="mb-8 p-6 border rounded-lg bg-card">
-        <h2 className="text-lg font-semibold mb-4">Share Your Thoughts</h2>
-        <input
-          type="text"
-          placeholder="Post title..."
-          value={newPost.title}
-          onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-          className="w-full p-2 mb-3 border rounded-md bg-background"
-          disabled={loading}
-        />
-        <textarea
-          placeholder="What's on your mind? Share your post content here..."
-          value={newPost.content}
-          onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-          className="w-full p-2 mb-3 border rounded-md min-h-[100px] bg-background"
-          disabled={loading}
-        />
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Publishing..." : "Publish Post"}
-        </Button>
-      </form>
+          {/* Create Post CTA - navigates to dedicated create page */}
+          <div className="mb-8 p-6 border rounded-lg bg-card flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Share Your Thoughts</h2>
+              <p className="text-sm text-muted-foreground">Click the button to write a new post on a dedicated page.</p>
+            </div>
+            <div>
+              <Button onClick={() => me ? setLocation("/posts/create") : setLocation("/auth")} className="ml-4">
+                Create Post
+              </Button>
+            </div>
+          </div>
 
       {/* Posts List */}
       <div className="space-y-4">
@@ -147,14 +123,14 @@ export default function Posts() {
                   <h3 className="font-semibold text-lg">{post.title}</h3>
                   <p className="text-sm text-muted-foreground">
                     By {post.userName}
-                    {post.user_id === me.id && (
+                    {me && post.user_id === me.id && (
                       <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded inline-block">
                         Your Post
                       </span>
                     )}
                   </p>
                 </div>
-                {post.user_id === me.id && (
+                {me && post.user_id === me.id && (
                   <Button
                     variant="destructive"
                     size="sm"
@@ -164,7 +140,7 @@ export default function Posts() {
                   </Button>
                 )}
               </div>
-              <p className="mt-3 text-sm leading-relaxed">{post.content}</p>
+              <p className="mt-3 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
               <p className="text-xs text-muted-foreground mt-3">
                 {new Date(post.created_at).toLocaleDateString("en-US", {
                   weekday: "short",

@@ -9,10 +9,12 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Tasks from "@/pages/Tasks";
 import Settings from "@/pages/Settings";
+import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
 import AuthPage from "@/pages/AuthPage";
 import Admin from "@/pages/Admin";
 import Posts from "@/pages/Posts";
+import CreatePost from "@/pages/CreatePost";
 
 function Router() {
   return (
@@ -21,9 +23,11 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/login" component={Login} />
       <Route path="/admin" component={Admin} />
+      <Route path="/posts/create" component={CreatePost} />
       <Route path="/posts" component={Posts} />
       <Route path="/tasks" component={Tasks} />
       <Route path="/settings" component={Settings} />
+      <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );

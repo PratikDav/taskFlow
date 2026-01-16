@@ -220,8 +220,8 @@ export class MySQLStorage implements IStorage {
 
       // Create new user
       const [result] = await conn.execute<any>(
-        "INSERT INTO users (name, email, password, gmail_address, github_link, linkedin_link, role) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [name, email, hashedPassword, gmailAddress || null, githubLink || null, linkedinLink || null, "user"]
+        "INSERT INTO users (provider, provider_id, name, email, password, gmail_address, github_link, linkedin_link, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ['local', `local_${email}`, name, email, hashedPassword, gmailAddress || null, githubLink || null, linkedinLink || null, "user"]
       );
 
       const [newUser] = await conn.execute<any[]>(

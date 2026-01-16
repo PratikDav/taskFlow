@@ -47,6 +47,42 @@ export async function initDatabase() {
       }
     }
 
+    // Add gmail_address column if it doesn't exist
+    try {
+      await conn.execute(`
+        ALTER TABLE users ADD COLUMN gmail_address VARCHAR(255)
+      `);
+      console.log("gmail_address column added to users table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
+    // Add github_link column if it doesn't exist
+    try {
+      await conn.execute(`
+        ALTER TABLE users ADD COLUMN github_link VARCHAR(255)
+      `);
+      console.log("github_link column added to users table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
+    // Add linkedin_link column if it doesn't exist
+    try {
+      await conn.execute(`
+        ALTER TABLE users ADD COLUMN linkedin_link VARCHAR(255)
+      `);
+      console.log("linkedin_link column added to users table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
     // Create posts table
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS posts (

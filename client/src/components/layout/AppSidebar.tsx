@@ -22,13 +22,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { 
   LayoutDashboard, 
   CheckSquare, 
   Settings, 
   User, 
   LogOut,
-  LogIn,
+  ChevronUp,
   Command
 } from "lucide-react";
 
@@ -63,14 +70,12 @@ export function AppSidebar() {
     }
   };
 
-  // Show dashboard only for admins, hide My Tasks for guests
+  // Show dashboard only for admins, My Tasks for all users
   const menuItems = [
     ...(currentUser?.role === "admin" 
       ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
       : []),
-    ...(currentUser
-      ? [{ title: "My Tasks", url: "/tasks", icon: CheckSquare }]
-      : []),
+    { title: "My Tasks", url: "/tasks", icon: CheckSquare },
     { title: "Settings", url: "/settings", icon: Settings },
   ];
 
@@ -131,18 +136,43 @@ export function AppSidebar() {
               {currentUser?.role === "admin" ? "Admin" : currentUser ? "User" : "Not logged in"}
             </span>
           </div>
-          {currentUser ? (
-            <button 
-              onClick={() => setLogoutDialogOpen(true)}
-              className="ml-auto text-muted-foreground hover:text-destructive transition-colors group-data-[collapsible=icon]:hidden"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          ) : (
-            <Link href="/auth" className="ml-auto text-muted-foreground hover:text-primary transition-colors group-data-[collapsible=icon]:hidden">
-              <LogIn className="h-4 w-4" />
-            </Link>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="ml-auto text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronUp className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {currentUser ? (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLogoutDialogOpen(true)} className="text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link href="/auth" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Login/Sign Up
+                  </Link>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </SidebarFooter>
 

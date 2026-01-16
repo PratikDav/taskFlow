@@ -1,12 +1,51 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Shield, Palette } from "lucide-react";
+import { Bell, Shield, Palette, Globe } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
+  const [settings, setSettings] = useState({
+    darkMode: false,
+    compactMode: false,
+    emailNotifications: true,
+    taskReminders: true,
+    language: "en",
+  });
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Load settings from localStorage
+    const savedSettings = localStorage.getItem("app-settings");
+    if (savedSettings) {
+      try {
+        setSettings(JSON.parse(savedSettings));
+      } catch (err) {
+        console.error("Failed to parse saved settings:", err);
+      }
+    }
+  }, []);
+
+  const updateSetting = (key: string, value: any) => {
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+    localStorage.setItem("app-settings", JSON.stringify(newSettings));
+
+    // Apply dark mode immediately
+    if (key === "darkMode") {
+      document.documentElement.classList.toggle("dark", value);
+    }
+
+    toast({
+      title: "Settings Updated",
+      description: "Your preferences have been saved.",
+    });
+  };
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
@@ -15,36 +54,6 @@ export default function Settings() {
       </div>
 
       <div className="grid gap-6">
-        {/* Profile Section */}
-        <Card className="rounded-2xl shadow-sm border-border/50">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-xl text-primary">
-                <User className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your personal details.</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" defaultValue="Demo User" className="rounded-xl" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" defaultValue="user@example.com" className="rounded-xl" />
-              </div>
-            </div>
-            <div className="flex justify-end pt-4">
-              <Button className="rounded-xl">Save Changes</Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Appearance Section */}
         <Card className="rounded-2xl shadow-sm border-border/50">
           <CardHeader>
@@ -64,7 +73,10 @@ export default function Settings() {
                 <Label className="text-base">Dark Mode</Label>
                 <p className="text-sm text-muted-foreground">Enable dark mode for the interface.</p>
               </div>
-              <Switch />
+              <Switch
+                checked={settings.darkMode}
+                onCheckedChange={(checked) => updateSetting("darkMode", checked)}
+              />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
@@ -72,7 +84,10 @@ export default function Settings() {
                 <Label className="text-base">Compact Mode</Label>
                 <p className="text-sm text-muted-foreground">Reduce spacing in lists and tables.</p>
               </div>
-              <Switch />
+              <Switch
+                checked={settings.compactMode}
+                onCheckedChange={(checked) => updateSetting("compactMode", checked)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -96,7 +111,10 @@ export default function Settings() {
                 <Label className="text-base">Email Notifications</Label>
                 <p className="text-sm text-muted-foreground">Receive daily summaries via email.</p>
               </div>
-              <Switch defaultChecked />
+              <Switch
+                checked={settings.emailNotifications}
+                onCheckedChange={(checked) => updateSetting("emailNotifications", checked)}
+              />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
@@ -104,7 +122,53 @@ export default function Settings() {
                 <Label className="text-base">Task Reminders</Label>
                 <p className="text-sm text-muted-foreground">Get notified when a task is due.</p>
               </div>
-              <Switch defaultChecked />
+              <Switch
+                checked={settings.taskReminders}
+                onCheckedChange={(checked) => updateSetting("taskReminders", checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Language Section */}
+        <Card className="rounded-2xl shadow-sm border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-xl text-green-600">
+                <Globe className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle>Language</CardTitle>
+                <CardDescription>Choose your preferred language.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base">Interface Language</Label>
+                <p className="text-sm text-muted-foreground">Select the language for the app interface.</p>
+              </div>
+              <Select
+                value={settings.language}
+                onValueChange={(value) => updateSetting("language", value)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="it">Italiano</SelectItem>
+                  <SelectItem value="pt">Português</SelectItem>
+                  <SelectItem value="ru">Русский</SelectItem>
+                  <SelectItem value="ja">日本語</SelectItem>
+                  <SelectItem value="ko">한국어</SelectItem>
+                  <SelectItem value="zh">中文</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>

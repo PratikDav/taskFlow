@@ -157,26 +157,120 @@ export async function registerRoutes(
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const user = req.session?.user;
-    // Detailed debug to inspect cookie and session ids
-    console.log(
-      "DEBUG /api/me - headers.cookie:",
-      req.headers.cookie,
-      "sessionID:",
-      req.sessionID,
-      "sessionObj:",
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      req.session,
-      "user:",
-      user?.email || "none"
-    );
-
+    console.log("GET /api/me - sessionID:", req.sessionID, "user:", user?.email || "null");
     if (user) {
       return res.json(user);
     }
 
     // Not authenticated — return null so frontend can treat as guest
     res.json(null);
+  });
+
+  app.put('/api/me', async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const user = req.session?.user;
+    console.log("PUT /api/me called, user:", user?.email, "body:", req.body);
+    if (!user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    try {
+      const { name, currentPassword, newPassword, gmailAddress, githubLink, linkedinLink } = req.body;
+
+      // If changing password, verify current password
+      if (newPassword) {
+        if (!currentPassword) {
+          return res.status(400).json({ message: 'Current password is required to change password' });
+        }
+
+        const [rows] = await storage.db.execute(
+          'SELECT password FROM users WHERE id = ?',
+          [user.id]
+        );
+
+        if (rows.length === 0) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+        const isValidPassword = await bcrypt.compare(currentPassword, rows[0].password);
+        if (!isValidPassword) {
+          return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await storage.db.execute(
+          'UPDATE users SET password = ? WHERE id = ?',
+          [hashedPassword, user.id]
+        );
+      }
+
+      // Update other fields
+      const updateFields = [];
+      const updateValues = [];
+
+      if (name !== undefined) {
+        updateFields.push('name = ?');
+        updateValues.push(name);
+      }
+      if (gmailAddress !== undefined) {
+        updateFields.push('gmail_address = ?');
+        updateValues.push(gmailAddress);
+      }
+      if (githubLink !== undefined) {
+        updateFields.push('github_link = ?');
+        updateValues.push(githubLink);
+      }
+      if (linkedinLink !== undefined) {
+        updateFields.push('linkedin_link = ?');
+        updateValues.push(linkedinLink);
+      }
+
+      if (updateFields.length > 0) {
+        updateValues.push(user.id);
+        console.log("Updating fields:", updateFields, "values:", updateValues);
+        const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+        console.log("Query:", query);
+        try {
+          await storage.db.execute(query, updateValues);
+          console.log("Database update completed successfully");
+        } catch (dbErr) {
+          console.error("Database update error:", dbErr);
+          return res.status(500).json({ message: 'Database update failed' });
+        }
+      }
+
+      // Fetch updated user data
+      const [updatedRows] = await storage.db.execute(
+        'SELECT id, name, email, gmail_address, github_link, linkedin_link, role FROM users WHERE id = ?',
+        [user.id]
+      );
+
+      if (updatedRows.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const updatedUser = {
+        id: updatedRows[0].id,
+        name: updatedRows[0].name,
+        email: updatedRows[0].email,
+        gmailAddress: updatedRows[0].gmail_address,
+        githubLink: updatedRows[0].github_link,
+        linkedinLink: updatedRows[0].linkedin_link,
+        role: updatedRows[0].role,
+      };
+
+      // Update session
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      req.session.user = updatedUser;
+
+      res.json(updatedUser);
+    } catch (err) {
+      console.error('Profile update error:', err);
+      res.status(500).json({ message: 'Failed to update profile' });
+    }
   });
 
   app.post('/api/logout', async (req, res) => {
