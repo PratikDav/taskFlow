@@ -24,6 +24,7 @@ export interface Post {
   user_id: number;
   title: string;
   content: string;
+  code_block_theme?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -47,7 +48,7 @@ export interface IStorage {
   // Post operations
   getPosts(): Promise<(Post & { userName: string })[]>;
   getPostById(id: number): Promise<(Post & { userName: string }) | undefined>;
-  createPost(userId: number, title: string, content: string): Promise<Post>;
+  createPost(userId: number, title: string, content: string, codeBlockTheme?: string): Promise<Post>;
   updatePost(id: number, title: string, content: string): Promise<Post>;
   deletePost(id: number): Promise<void>;
 }
@@ -265,12 +266,12 @@ export class MySQLStorage implements IStorage {
     }
   }
 
-  async createPost(userId: number, title: string, content: string): Promise<Post> {
+  async createPost(userId: number, title: string, content: string, codeBlockTheme: string = 'dark'): Promise<Post> {
     const conn = await pool.getConnection();
     try {
       const [result] = await conn.execute<any>(
-        "INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)",
-        [userId, title, content]
+        "INSERT INTO posts (user_id, title, content, code_block_theme) VALUES (?, ?, ?, ?)",
+        [userId, title, content, codeBlockTheme]
       );
 
       const [rows] = await conn.execute<any[]>(

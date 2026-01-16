@@ -355,12 +355,12 @@ export async function registerRoutes(
       // @ts-ignore
       const userId = req.session?.user?.id || DEFAULT_USER_ID;
 
-      const { title, content } = req.body;
+      const { title, content, codeBlockTheme } = req.body;
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
-      const post = await storage.createPost(userId, title, content);
+      const post = await storage.createPost(userId, title, content, codeBlockTheme || 'dark');
       res.status(201).json(post);
     } catch (err) {
       console.error(err);

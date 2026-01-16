@@ -64,6 +64,59 @@
   .animate-in {
     animation: animateIn 0.3s ease-out forwards;
   }
+
+  /* Code block styling for ReactQuill */
+  .ql-editor pre {
+    background-color: var(--code-block-bg, #1e293b) !important;
+    color: var(--code-block-text, #f1f5f9) !important;
+    border-color: var(--code-block-border, #475569) !important;
+    @apply rounded-lg p-4 my-4 overflow-x-auto border;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    display: block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .ql-editor pre.ql-syntax {
+    background-color: var(--code-block-bg, #1e293b) !important;
+    color: var(--code-block-text, #f1f5f9) !important;
+  }
+
+  /* Code block styling for posts display */
+  pre {
+    background-color: var(--code-block-bg, #1e293b) !important;
+    color: var(--code-block-text, #f1f5f9) !important;
+    border-color: var(--code-block-border, #475569) !important;
+    @apply rounded-lg p-4 my-4 overflow-x-auto border;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    display: block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  pre.ql-syntax {
+    background-color: var(--code-block-bg, #1e293b) !important;
+    color: var(--code-block-text, #f1f5f9) !important;
+  }
+
+  .ql-editor code {
+    @apply bg-slate-100 text-slate-800 px-1 py-0.5 rounded text-sm font-mono;
+  }
+
+  .ql-editor pre code {
+    @apply bg-transparent text-slate-100 p-0 rounded-none text-sm;
+  }
+
+  /* Inline code styling for posts display */
+  p code {
+    @apply bg-slate-100 text-slate-800 px-1 py-0.5 rounded text-sm font-mono dark:bg-slate-800 dark:text-slate-200;
+  }
 }
 
 @keyframes animateIn {

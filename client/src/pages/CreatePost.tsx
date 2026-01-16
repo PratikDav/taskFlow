@@ -7,23 +7,63 @@ import 'react-quill/dist/quill.snow.css';
 export default function CreatePost() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
-  const [post, setPost] = useState({ title: "", content: "" });
+  const [post, setPost] = useState({ title: "", content: "", codeBlockTheme: "dark" });
+  const [codeBlockTheme, setCodeBlockTheme] = useState('dark');
+
+  const codeBlockThemes = {
+    dark: { bg: 'bg-slate-900', text: 'text-slate-100', border: 'border-slate-700' },
+    light: { bg: 'bg-gray-100', text: 'text-gray-900', border: 'border-gray-300' },
+    blue: { bg: 'bg-blue-900', text: 'text-blue-100', border: 'border-blue-700' },
+    green: { bg: 'bg-green-900', text: 'text-green-100', border: 'border-green-700' },
+    purple: { bg: 'bg-purple-900', text: 'text-purple-100', border: 'border-purple-700' }
+  };
 
   const modules = {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link'],
+      ['link', 'code', 'code-block'],
       ['clean']
     ],
   };
 
   const formats = [
     'header', 'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'link'
+    'list', 'bullet', 'link', 'code', 'code-block'
   ];
   const [me, setMe] = useState<any | null | undefined>(undefined);
+
+  // Apply theme to the editor
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .ql-editor pre {
+        background-color: ${codeBlockTheme === 'dark' ? '#1e293b' : 
+                          codeBlockTheme === 'light' ? '#f3f4f6' :
+                          codeBlockTheme === 'blue' ? '#1e3a8a' :
+                          codeBlockTheme === 'green' ? '#14532d' :
+                          '#581c87'} !important;
+        color: ${codeBlockTheme === 'dark' ? '#f1f5f9' : 
+                codeBlockTheme === 'light' ? '#111827' :
+                codeBlockTheme === 'blue' ? '#dbeafe' :
+                codeBlockTheme === 'green' ? '#dcfce7' :
+                '#faf5ff'} !important;
+        border-color: ${codeBlockTheme === 'dark' ? '#475569' : 
+                       codeBlockTheme === 'light' ? '#d1d5db' :
+                       codeBlockTheme === 'blue' ? '#3b82f6' :
+                       codeBlockTheme === 'green' ? '#16a34a' :
+                       '#a855f7'} !important;
+      }
+    `;
+    style.id = 'code-block-theme';
+    document.head.appendChild(style);
+
+    return () => {
+      const existing = document.getElementById('code-block-theme');
+      if (existing) existing.remove();
+    };
+  }, [codeBlockTheme]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -107,6 +147,38 @@ export default function CreatePost() {
           placeholder="Write your post content here..."
           className="min-h-[200px]"
         />
+
+        {/* Code Block Theme Selector */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Code Block Theme:</label>
+          <div className="flex gap-2 flex-wrap">
+            {Object.entries(codeBlockThemes).map(([theme, colors]) => (
+              <button
+                key={theme}
+                type="button"
+                onClick={() => {
+                  setCodeBlockTheme(theme);
+                  setPost({ ...post, codeBlockTheme: theme });
+                }}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  codeBlockTheme === theme
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {theme.charAt(0).toUpperCase() + theme.slice(1)}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Preview: <code className={`px-1 py-0.5 rounded text-xs ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].bg} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].text}`}>inline code</code> and block code below:
+          </p>
+          <pre className={`text-xs p-2 rounded border mt-1 ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].bg} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].text} ${codeBlockThemes[codeBlockTheme as keyof typeof codeBlockThemes].border}`}>
+            function example() {`{`}
+              console.log('Hello World');
+            {`}`}
+          </pre>
+        </div>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>

@@ -90,11 +90,24 @@ export async function initDatabase() {
         user_id INT NOT NULL,
         title VARCHAR(255) NOT NULL,
         content LONGTEXT NOT NULL,
+        code_block_theme VARCHAR(50) DEFAULT 'dark',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
+
+    // Add code_block_theme column if it doesn't exist
+    try {
+      await conn.execute(`
+        ALTER TABLE posts ADD COLUMN code_block_theme VARCHAR(50) DEFAULT 'dark'
+      `);
+      console.log("code_block_theme column added to posts table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
 
     // Seed default user if not exists
     const [users] = await conn.execute<any[]>("SELECT * FROM users WHERE id = 1");
