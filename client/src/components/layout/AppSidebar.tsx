@@ -70,13 +70,15 @@ export function AppSidebar() {
     }
   };
 
-  // Show dashboard only for admins, My Tasks for all users
+  // Show dashboard only for admins, My Tasks for all users, Settings only for admins
   const menuItems = [
     ...(currentUser?.role === "admin" 
       ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
       : []),
     { title: "My Tasks", url: "/tasks", icon: CheckSquare },
-    { title: "Settings", url: "/settings", icon: Settings },
+    ...(currentUser?.role === "admin" 
+      ? [{ title: "Settings", url: "/settings", icon: Settings }]
+      : []),
   ];
 
   return (
