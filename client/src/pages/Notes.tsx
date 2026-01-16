@@ -544,10 +544,10 @@ export default function Notes() {
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                      }}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal className="h-3 w-3" />
                     </Button>
