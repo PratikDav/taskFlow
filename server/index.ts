@@ -26,7 +26,9 @@ app.use(
 app.use(express.urlencoded({ extended: false }));
 
 const MemoryStore = MemoryStoreModule(session);
-const sessionStore = new MemoryStore();
+// Provide the required options to MemoryStore constructor. Using a
+// daily checkPeriod by default.
+const sessionStore = new MemoryStore({ checkPeriod: 24 * 60 * 60 * 1000 });
 
 app.use(
   session({

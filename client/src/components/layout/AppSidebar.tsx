@@ -13,6 +13,7 @@ import {
   SidebarFooter,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,10 +39,14 @@ import {
   ChevronUp,
   Command,
   FileText
+  , X,
+  Trash2,
+  Newspaper
 } from "lucide-react";
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const { openMobile, setOpenMobile, isMobile } = useSidebar();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [, setLocation] = useLocation();
@@ -73,32 +78,42 @@ export function AppSidebar() {
 
   // Show dashboard only for admins, My Tasks for all users, Settings only for admins
   const menuItems = [
+    { title: "Feed", url: "/posts", icon: Newspaper },
     ...(currentUser?.role === "admin" 
       ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
       : []),
     { title: "My Tasks", url: "/tasks", icon: CheckSquare },
     { title: "Notes", url: "/notes", icon: FileText },
+    { title: "Trash", url: "/trash", icon: Trash2 },
     ...(currentUser?.role === "admin" 
       ? [{ title: "Settings", url: "/settings", icon: Settings }]
       : []),
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50">
-      <SidebarHeader className="h-16 flex items-center justify-center border-b border-border/20 px-4">
-        <Link href="/posts" className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center hover:opacity-80 transition-opacity">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30">
-            <Command className="h-4 w-4" />
+    <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar/50 backdrop-blur-sm">
+      <SidebarHeader className="h-14 sm:h-16 flex items-center justify-center border-b border-border/20 px-3 sm:px-4">
+        <Link href="/posts" className="flex items-center gap-2 sm:gap-3 w-full group-data-[collapsible=icon]:justify-center hover:opacity-80 transition-opacity">
+          <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30">
+            <Command className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </div>
-          <span className="font-display font-bold text-lg tracking-tight group-data-[collapsible=icon]:hidden">
+          <span className="font-display font-bold text-base sm:text-lg tracking-tight group-data-[collapsible=icon]:hidden">
             TaskFlow
           </span>
         </Link>
+        {/* Close button for mobile viewports <= 600px */}
+        <button
+          aria-label="Close sidebar"
+          onClick={() => setOpenMobile(false)}
+          className="inline-flex md:hidden absolute right-3 top-3 items-center justify-center h-9 w-9 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/20"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-2 py-3 sm:px-2 sm:py-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground/70 font-medium px-2 mb-2">
+          <SidebarGroupLabel className="text-muted-foreground/70 font-medium px-2 mb-2 text-xs sm:text-sm">
             Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -110,16 +125,19 @@ export function AppSidebar() {
                     isActive={location === item.url}
                     tooltip={item.title}
                     className={`
-                      rounded-xl transition-all duration-200 ease-out h-10
+                      rounded-lg sm:rounded-xl transition-all duration-200 ease-out h-9 sm:h-10 px-3 sm:px-4
+                      focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-primary/5
                       ${location === item.url 
                         ? 'bg-primary/10 text-primary font-medium shadow-sm' 
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        : item.title === 'Notes'
+                        ? 'text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 focus:bg-yellow-50 font-medium'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground focus:bg-muted'
                       }
                     `}
                   >
                     <Link href={item.url}>
-                      <item.icon className={location === item.url ? "text-primary" : ""} />
-                      <span>{item.title}</span>
+                      <item.icon className={`h-4 w-4 sm:h-4 sm:w-4 ${location === item.url ? "text-primary" : item.title === 'Notes' ? "text-yellow-600" : ""}`} />
+                      <span className="text-sm sm:text-sm">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -129,49 +147,49 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border/20">
-        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-          <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white shadow-md">
-            <User className="h-4 w-4" />
+      <SidebarFooter className="p-3 sm:p-4 border-t border-border/20">
+        <div className="flex items-center gap-2 sm:gap-3 group-data-[collapsible=icon]:justify-center">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white shadow-md flex-shrink-0">
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </div>
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold">{currentUser?.name || "Guest"}</span>
+          <div className="flex flex-col group-data-[collapsible=icon]:hidden min-w-0 flex-1">
+            <span className="text-xs sm:text-sm font-semibold truncate">{currentUser?.name || "Guest"}</span>
             <span className="text-xs text-muted-foreground capitalize">
               {currentUser?.role === "admin" ? "Admin" : currentUser ? "User" : "Not logged in"}
             </span>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="ml-auto text-muted-foreground hover:text-foreground transition-colors">
-                <ChevronUp className="h-4 w-4" />
+              <button className="ml-auto text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/20 flex-shrink-0" aria-label="User menu">
+                <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 sm:w-52">
               {currentUser ? (
                 <>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      My Profile
+                  <DropdownMenuItem asChild className="h-9 sm:h-10">
+                    <Link href="/profile" className="flex items-center gap-2 px-3">
+                      <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="text-sm">My Profile</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings" className="flex items-center gap-2">
-                      <Settings className="h-4 w-4" />
-                      Settings
+                  <DropdownMenuItem asChild className="h-9 sm:h-10">
+                    <Link href="/settings" className="flex items-center gap-2 px-3">
+                      <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="text-sm">Settings</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setLogoutDialogOpen(true)} className="text-destructive focus:text-destructive">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
+                  <DropdownMenuItem onClick={() => setLogoutDialogOpen(true)} className="text-destructive focus:text-destructive h-9 sm:h-10 px-3">
+                    <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
+                    <span className="text-sm">Logout</span>
                   </DropdownMenuItem>
                 </>
               ) : (
-                <DropdownMenuItem asChild>
-                  <Link href="/auth" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Login/Sign Up
+                <DropdownMenuItem asChild className="h-9 sm:h-10">
+                  <Link href="/auth" className="flex items-center gap-2 px-3">
+                    <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-sm">Login/Sign Up</span>
                   </Link>
                 </DropdownMenuItem>
               )}

@@ -69,6 +69,13 @@ export default function Posts() {
   };
 
   const applyThemeToElement = (element: HTMLElement, theme: string) => {
+    // Minimal local theme map for code blocks. If you have a shared theme map,
+    // replace this with an import from the shared file.
+    const codeBlockThemes: Record<string, { bg: string; text: string; border: string }> = {
+      dark: { bg: "#0f172a", text: "#e6eef8", border: "#1f2937" },
+      light: { bg: "#f8fafc", text: "#0f172a", border: "#e6e9ef" },
+    };
+
     const themeColors = codeBlockThemes[theme as keyof typeof codeBlockThemes] || codeBlockThemes.dark;
     element.style.setProperty('--code-block-bg', themeColors.bg);
     element.style.setProperty('--code-block-text', themeColors.text);

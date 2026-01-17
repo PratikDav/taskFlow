@@ -89,7 +89,7 @@ export function CreateTaskDialog() {
             <div className="space-y-2">
               <Label htmlFor="status" className="text-muted-foreground font-medium">Status</Label>
               <Select 
-                onValueChange={(val) => form.setValue("status", val)} 
+                onValueChange={(val: string) => form.setValue("status", val as unknown as InsertTask["status"])} 
                 defaultValue={form.getValues("status")}
               >
                 <SelectTrigger className="rounded-xl bg-muted/30 border-transparent">
@@ -106,7 +106,7 @@ export function CreateTaskDialog() {
             <div className="space-y-2">
               <Label htmlFor="priority" className="text-muted-foreground font-medium">Priority</Label>
               <Select 
-                onValueChange={(val) => form.setValue("priority", val)} 
+                onValueChange={(val: string) => form.setValue("priority", val as unknown as InsertTask["priority"])} 
                 defaultValue={form.getValues("priority")}
               >
                 <SelectTrigger className="rounded-xl bg-muted/30 border-transparent">

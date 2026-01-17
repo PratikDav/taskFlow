@@ -27,6 +27,7 @@ export interface Post {
   code_block_theme?: string;
   created_at: Date;
   updated_at: Date;
+  deleted_at?: Date;
 }
 
 export interface Folder {
@@ -34,16 +35,18 @@ export interface Folder {
   user_id: number;
   name: string;
   created_at: Date;
+  deleted_at?: Date;
 }
 
 export interface Note {
   id: number;
   user_id: number;
-  folder_id?: number;
+  folderId?: number;
   title: string;
   content: string;
   created_at: Date;
   updated_at: Date;
+  deleted_at?: Date;
 }
 
 export interface IStorage {
@@ -79,7 +82,7 @@ export interface IStorage {
   getNotes(userId: number): Promise<(Note & { folderName?: string })[]>;
   getNoteById(id: number): Promise<(Note & { folderName?: string }) | undefined>;
   createNote(userId: number, title: string, content: string, folderId?: number): Promise<Note>;
-  updateNote(id: number, title: string, content: string, folderId?: number): Promise<Note>;
+  updateNote(id: number, title?: string, content?: string, folderId?: number): Promise<Note>;
   deleteNote(id: number): Promise<void>;
 }
 
@@ -274,6 +277,7 @@ export class MySQLStorage implements IStorage {
       const [rows] = await conn.execute<any[]>(`
         SELECT p.*, u.name as userName FROM posts p
         LEFT JOIN users u ON p.user_id = u.id
+        WHERE p.deleted_at IS NULL
         ORDER BY p.created_at DESC
       `);
       return rows;
@@ -337,7 +341,7 @@ export class MySQLStorage implements IStorage {
   async deletePost(id: number): Promise<void> {
     const conn = await pool.getConnection();
     try {
-      await conn.execute("DELETE FROM posts WHERE id = ?", [id]);
+      await conn.execute("UPDATE posts SET deleted_at = NOW() WHERE id = ?", [id]);
     } finally {
       conn.release();
     }
@@ -348,14 +352,15 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute(
-        "SELECT id, user_id, name, created_at FROM folders WHERE user_id = ? ORDER BY created_at DESC",
+        "SELECT id, user_id, name, created_at, deleted_at FROM folders WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC",
         [userId]
       );
-      return rows.map(row => ({
+      return (rows as any[]).map(row => ({
         id: row.id,
-        userId: row.user_id,
+        user_id: row.user_id,
         name: row.name,
-        createdAt: row.created_at,
+        created_at: row.created_at,
+        deleted_at: row.deleted_at,
       }));
     } finally {
       conn.release();
@@ -369,13 +374,13 @@ export class MySQLStorage implements IStorage {
         "SELECT id, user_id, name, created_at FROM folders WHERE id = ?",
         [id]
       );
-      if (rows.length === 0) return undefined;
-      const row = rows[0];
+      if ((rows as any[]).length === 0) return undefined;
+      const row = (rows as any[])[0];
       return {
         id: row.id,
-        userId: row.user_id,
+        user_id: row.user_id,
         name: row.name,
-        createdAt: row.created_at,
+        created_at: row.created_at,
       };
     } finally {
       conn.release();
@@ -389,12 +394,12 @@ export class MySQLStorage implements IStorage {
         "INSERT INTO folders (user_id, name) VALUES (?, ?)",
         [userId, name]
       );
-      const folderId = result.insertId;
+      const folderId = (result as any).insertId;
       return {
         id: folderId,
-        userId: userId,
+        user_id: userId,
         name,
-        createdAt: new Date(),
+        created_at: new Date(),
       };
     } finally {
       conn.release();
@@ -416,7 +421,7 @@ export class MySQLStorage implements IStorage {
   async deleteFolder(id: number): Promise<void> {
     const conn = await pool.getConnection();
     try {
-      await conn.execute("DELETE FROM folders WHERE id = ?", [id]);
+      await conn.execute("UPDATE folders SET deleted_at = NOW() WHERE id = ?", [id]);
     } finally {
       conn.release();
     }
@@ -430,18 +435,18 @@ export class MySQLStorage implements IStorage {
         `SELECT n.id, n.user_id, n.folder_id, n.title, n.content, n.created_at, n.updated_at, f.name as folder_name
          FROM notes n
          LEFT JOIN folders f ON n.folder_id = f.id
-         WHERE n.user_id = ?
+         WHERE n.user_id = ? AND n.deleted_at IS NULL AND (f.deleted_at IS NULL OR f.id IS NULL)
          ORDER BY n.updated_at DESC`,
         [userId]
       );
-      return rows.map(row => ({
+      return (rows as any[]).map(row => ({
         id: row.id,
-        userId: row.user_id,
+        user_id: row.user_id,
         folderId: row.folder_id,
         title: row.title,
         content: row.content,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
         folderName: row.folder_name,
       }));
     } finally {
@@ -459,16 +464,16 @@ export class MySQLStorage implements IStorage {
          WHERE n.id = ?`,
         [id]
       );
-      if (rows.length === 0) return undefined;
-      const row = rows[0];
+      if ((rows as any[]).length === 0) return undefined;
+      const row = (rows as any[])[0];
       return {
         id: row.id,
-        userId: row.user_id,
+        user_id: row.user_id,
         folderId: row.folder_id,
         title: row.title,
         content: row.content,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
         folderName: row.folder_name,
       };
     } finally {
@@ -483,28 +488,47 @@ export class MySQLStorage implements IStorage {
         "INSERT INTO notes (user_id, folder_id, title, content) VALUES (?, ?, ?, ?)",
         [userId, folderId || null, title, content]
       );
-      const noteId = result.insertId;
+      const noteId = (result as any).insertId;
       return {
         id: noteId,
-        userId: userId,
+        user_id: userId,
         folderId: folderId,
         title,
         content,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       };
     } finally {
       conn.release();
     }
   }
 
-  async updateNote(id: number, title: string, content: string, folderId?: number): Promise<Note> {
+  async updateNote(id: number, title?: string, content?: string, folderId?: number): Promise<Note> {
     const conn = await pool.getConnection();
     try {
-      await conn.execute(
-        "UPDATE notes SET title = ?, content = ?, folder_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        [title, content, folderId || null, id]
-      );
+      // Build dynamic update query based on provided fields
+      const updates: string[] = [];
+      const values: any[] = [];
+
+      if (title !== undefined) {
+        updates.push("title = ?");
+        values.push(title);
+      }
+      if (content !== undefined) {
+        updates.push("content = ?");
+        values.push(content);
+      }
+      if (folderId !== undefined) {
+        updates.push("folder_id = ?");
+        values.push(folderId);
+      }
+
+      updates.push("updated_at = CURRENT_TIMESTAMP");
+      values.push(id);
+
+      const query = `UPDATE notes SET ${updates.join(", ")} WHERE id = ?`;
+      await conn.execute(query, values);
+
       const note = await this.getNoteById(id);
       if (!note) throw new Error("Note not found after update");
       return note;
@@ -516,7 +540,130 @@ export class MySQLStorage implements IStorage {
   async deleteNote(id: number): Promise<void> {
     const conn = await pool.getConnection();
     try {
+      await conn.execute("UPDATE notes SET deleted_at = NOW() WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getDeletedNotes(userId: number): Promise<Note[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        `SELECT id, user_id, folder_id as folderId, title, content, created_at, updated_at, deleted_at
+         FROM notes
+         WHERE user_id = ? AND deleted_at IS NOT NULL
+         ORDER BY deleted_at DESC`,
+        [userId]
+      );
+      return (rows as any[]).map(row => ({
+        id: row.id,
+        user_id: row.user_id,
+        folderId: row.folderId,
+        title: row.title,
+        content: row.content,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        deleted_at: row.deleted_at,
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getDeletedFolders(userId: number): Promise<Folder[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        "SELECT id, user_id, name, created_at, deleted_at FROM folders WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC",
+        [userId]
+      );
+      return (rows as any[]).map(row => ({
+        id: row.id,
+        user_id: row.user_id,
+        name: row.name,
+        created_at: row.created_at,
+        deleted_at: row.deleted_at,
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async restoreNote(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute("UPDATE notes SET deleted_at = NULL WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async restoreFolder(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute("UPDATE folders SET deleted_at = NULL WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async permanentDeleteNote(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
       await conn.execute("DELETE FROM notes WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async permanentDeleteFolder(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute("DELETE FROM folders WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getDeletedPosts(userId: number): Promise<Post[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        `SELECT id, user_id, title, content, code_block_theme, created_at, updated_at, deleted_at
+         FROM posts
+         WHERE user_id = ? AND deleted_at IS NOT NULL
+         ORDER BY deleted_at DESC`,
+        [userId]
+      );
+      return (rows as any[]).map(row => ({
+        id: row.id,
+        user_id: row.user_id,
+        title: row.title,
+        content: row.content,
+        code_block_theme: row.code_block_theme,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        deleted_at: row.deleted_at,
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async restorePost(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute("UPDATE posts SET deleted_at = NULL WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async permanentDeletePost(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute("DELETE FROM posts WHERE id = ?", [id]);
     } finally {
       conn.release();
     }

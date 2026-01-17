@@ -20,6 +20,7 @@ const modules = {
     [{ 'header': [1, 2, 3, false] }],
     ['bold', 'italic', 'underline', 'strike'],
     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'align': [] }],
     ['link', 'code', 'code-block', 'clean']
   ],
 };
@@ -27,7 +28,7 @@ const modules = {
 const formats = [
   'header',
   'bold', 'italic', 'underline', 'strike',
-  'list', 'bullet', 'link', 'code', 'code-block'
+  'list', 'bullet', 'link', 'code', 'code-block', 'align'
 ];
 
 export default function Notes() {
@@ -35,20 +36,23 @@ export default function Notes() {
   const [me, setMe] = useState<any | null | undefined>(undefined);
   const [notes, setNotes] = useState<Note[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [newNote, setNewNote] = useState({ title: "", content: "", folderId: "none" });
-  const [newFolder, setNewFolder] = useState({ name: "" });
-  const [showCreateNote, setShowCreateNote] = useState(false);
-  const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [newFolder, setNewFolder] = useState({ name: "" });
+  const [showCreateNote, setShowCreateNote] = useState(false);
+  const [newNote, setNewNote] = useState({ title: "", content: "", folderId: "none" });
+  const [loading, setLoading] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [renameItem, setRenameItem] = useState<{type: 'folder' | 'note', id: number, currentName: string} | null>(null);
-  const [renameValue, setRenameValue] = useState('');
+  const [renameValue, setRenameValue] = useState("");
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const [downloadFolder, setDownloadFolder] = useState<Folder | null>(null);
   const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'word'>('pdf');
   const [downloading, setDownloading] = useState(false);
+  const [showMoveNoteDialog, setShowMoveNoteDialog] = useState(false);
+  const [noteToMove, setNoteToMove] = useState<Note | null>(null);
+  const [selectedFolderForMove, setSelectedFolderForMove] = useState<string>("none");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -172,10 +176,38 @@ export default function Notes() {
     setSelectedFolderId(folderId);
   };
 
+  const handleMoveNote = async (noteId: number, folderId: number | null) => {
+    try {
+      const res = await fetch(`/api/notes/${noteId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: undefined, // Keep existing title
+          content: undefined, // Keep existing content
+          folderId: folderId,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to move note");
+
+      await loadData();
+      setShowMoveNoteDialog(false);
+      setNoteToMove(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const downloadAsPDF = (note: Note) => {
     const element = document.createElement('div');
-    element.innerHTML = note.content;
-    html2pdf().set({filename: note.title + '.pdf'}).from(element).save();
+    element.className = 'prose max-w-none';
+    element.innerHTML = `<h2 style="text-align: center;">${note.title}</h2>${note.content}`;
+    html2pdf().set({
+      margin: [1, 1, 2.5, 1],
+      filename: note.title + '.pdf',
+      html2canvas: { scale: 2, useCORS: true, height: 792, width: 612 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    }).from(element).save();
   };
 
   const downloadAsWord = (note: Note) => {
@@ -200,11 +232,15 @@ export default function Notes() {
         } else {
           // PDF generation using html2pdf (jsPDF) to obtain blob
           const element = document.createElement('div');
-          element.innerHTML = note.content;
-          // html2pdf -> toPdf -> get('pdf') returns jsPDF instance
+          element.className = 'prose max-w-none';
+          element.innerHTML = `<h2 style="text-align: center;">${note.title}</h2>${note.content}`;
           try {
             // @ts-ignore
-            const pdfObj = await html2pdf().from(element).toPdf().get('pdf');
+            const pdfObj = await html2pdf().from(element).set({
+              margin: [1, 1, 2.5, 1],
+              html2canvas: { scale: 2, useCORS: true, height: 792, width: 612 },
+              jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            }).toPdf().get('pdf');
             const blob = pdfObj.output('blob');
             zip.file(note.title + '.pdf', blob);
           } catch (err) {
@@ -225,8 +261,6 @@ export default function Notes() {
       setDownloading(false);
       setShowDownloadDialog(false);
     }
-  };
-    URL.revokeObjectURL(url);
   };
 
   const handleRename = async () => {
@@ -277,11 +311,21 @@ export default function Notes() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="max-w-6xl mx-auto p-2 sm:p-4 md:p-6 lg:p-8 min-h-screen max-h-screen overflow-hidden flex flex-col">
+      <style dangerouslySetInnerHTML={{__html: `
+        @media (max-width: 400px) {
+          .mobile-note-btn { display: block !important; }
+          .desktop-note-btn { display: none !important; }
+        }
+        @media (min-width: 401px) {
+          .mobile-note-btn { display: none !important; }
+          .desktop-note-btn { display: inline-flex !important; }
+        }
+      `}} />
+      <div className="mb-3 sm:mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <div className="text-sm text-muted-foreground mb-2">
-            <span className="cursor-pointer hover:text-primary" onClick={() => setSelectedFolderId(null)}>Notes</span>
+            <span className="cursor-pointer hover:text-primary" onClick={() => setSelectedFolderId(null)}>All Notes</span>
             {selectedFolderId && (
               <>
                 <span className="mx-2">&gt;</span>
@@ -292,11 +336,11 @@ export default function Notes() {
           <h1 className="text-2xl font-bold">
             {selectedFolderId
               ? folders.find(f => f.id === selectedFolderId)?.name || "Folder"
-              : "My Notes"
+              : "All Notes"
             }
           </h1>
           <p className="text-sm text-muted-foreground">
-            {selectedFolderId ? "Notes in this folder" : "Organize your thoughts and ideas"}
+            {selectedFolderId ? "Notes in this folder" : "All your notes and folders"}
           </p>
         </div>
         <div className="flex gap-2">
@@ -331,14 +375,36 @@ export default function Notes() {
             <FolderIcon className="h-4 w-4 mr-2" />
             New Folder
           </Button>
-          <Button onClick={() => { setNewNote(prev => ({ ...prev, folderId: selectedFolderId ? selectedFolderId.toString() : "none" })); setShowCreateNote(!showCreateNote); }}>
+          <Button className="desktop-note-btn" onClick={() => { setNewNote(prev => ({ ...prev, folderId: selectedFolderId ? selectedFolderId.toString() : "none" })); setShowCreateNote(!showCreateNote); }}>
             <Plus className="h-4 w-4 mr-2" />
             New Note
           </Button>
         </div>
       </div>
 
-      {showCreateFolder && (
+      {/* Help message for moving notes */}
+      {selectedFolderId === null && notes.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">
+            💡 <strong>Tip:</strong> To move notes into folders, click the <strong>⋮ menu</strong> on any note and select "Move to folder".
+          </p>
+        </div>
+      )}
+
+      {/* Mobile New Note Button - Fixed at bottom for screens up to 400px */}
+      <div className="mobile-note-btn fixed bottom-4 left-4 right-4 z-10">
+        <Button 
+          className="w-full shadow-lg" 
+          size="lg"
+          onClick={() => { setNewNote(prev => ({ ...prev, folderId: selectedFolderId ? selectedFolderId.toString() : "none" })); setShowCreateNote(!showCreateNote); }}
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          New Note
+        </Button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pb-20 sm:pb-0">
+        {showCreateFolder && (
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Create New Folder</CardTitle>
@@ -424,20 +490,20 @@ export default function Notes() {
       )}
 
       {layout === 'grid' ? (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-1 sm:gap-1.5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {selectedFolderId === null && folders.map((folder) => (
             <Card
               key={folder.id}
-              className={`relative cursor-pointer transition-colors p-2 ${
-                selectedFolderId === folder.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
+              className={`relative cursor-pointer transition-colors p-0.5 sm:p-1 bg-folder hover:bg-folder-hover ${
+                selectedFolderId === folder.id ? 'ring-2 ring-primary' : ''
               }`}
               onClick={() => handleFolderClick(folder.id)}
             >
-              <CardHeader className="pb-1">
+              <CardHeader className="pb-0.5 px-1.5 sm:px-2 pt-1.5 sm:pt-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <FolderIcon className="h-4 w-4" />
-                    {folder.name}
+                  <CardTitle className="text-sm sm:text-xs flex items-center gap-1.5 truncate">
+                    <FolderIcon className="h-3.5 w-3.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                    {folder.name} ({notes.filter(note => note.folderId === folder.id).length})
                   </CardTitle>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -463,21 +529,16 @@ export default function Notes() {
                   </DropdownMenu>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-xs text-muted-foreground">
-                  {notes.filter(note => note.folderId === folder.id).length} notes
-                </p>
-              </CardContent>
             </Card>
           ))}
 
           {notes
-            .filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId)
+            .filter(note => note.folderId === selectedFolderId)
             .map((note) => (
-              <Card key={note.id} className="relative cursor-pointer p-2 hover:bg-muted/50" onClick={() => setLocation(`/notes/${note.id}`)}>
-                <CardHeader className="pb-1">
+              <Card key={note.id} className="relative cursor-pointer p-0.5 sm:p-1 hover:bg-muted/50" onClick={() => setLocation(`/notes/${note.id}`)}>
+                <CardHeader className="pb-0.5 px-1.5 sm:px-2 pt-1.5 sm:pt-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">{note.title}</CardTitle>
+                    <CardTitle className="text-sm sm:text-xs truncate">{note.title}</CardTitle>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -495,6 +556,7 @@ export default function Notes() {
                       <DropdownMenuContent className="bg-gray-50">
                         <DropdownMenuItem onClick={() => downloadAsPDF(note)}>Download as PDF</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => downloadAsWord(note)}>Download as Word</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setNoteToMove(note); setSelectedFolderForMove("none"); setShowMoveNoteDialog(true); }}>Move to folder</DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameItem({type: 'note', id: note.id, currentName: note.title}); setRenameValue(note.title); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
@@ -507,7 +569,7 @@ export default function Notes() {
             ))}
 
           {(() => {
-            const filteredNotes = notes.filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId);
+            const filteredNotes = notes.filter(note => note.folderId === selectedFolderId);
             return filteredNotes.length === 0 && (selectedFolderId === null ? folders.length === 0 : true) && (
               <div className="col-span-full text-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -531,12 +593,12 @@ export default function Notes() {
           })()}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1 sm:space-y-2">
           {selectedFolderId === null && folders.map((folder) => (
-            <div key={folder.id} className="flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-muted/50" onClick={() => handleFolderClick(folder.id)}>
-              <span className="text-base flex items-center gap-2">
+            <div key={folder.id} className="flex items-center justify-between p-2 sm:p-3 border rounded cursor-pointer hover:bg-muted/50" onClick={() => handleFolderClick(folder.id)}>
+              <span className="text-sm sm:text-base flex items-center gap-2">
                 <FolderIcon className="h-4 w-4" />
-                {folder.name} ({notes.filter(note => note.folderId === folder.id).length} notes)
+                {folder.name} ({notes.filter(note => note.folderId === folder.id).length})
               </span>
               <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -564,10 +626,10 @@ export default function Notes() {
           ))}
 
           {notes
-            .filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId)
+            .filter(note => selectedFolderId === null || note.folderId === selectedFolderId)
             .map((note) => (
-              <div key={note.id} className="flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-muted/50" onClick={() => setLocation(`/notes/${note.id}`)}>
-                <span className="text-base">{note.title}</span>
+              <div key={note.id} className="flex items-center justify-between p-2 sm:p-3 border rounded cursor-pointer hover:bg-muted/50" onClick={() => setLocation(`/notes/${note.id}`)}>
+                <span className="text-sm sm:text-base">{note.title}</span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -585,6 +647,7 @@ export default function Notes() {
                   <DropdownMenuContent className="bg-gray-50">
                     <DropdownMenuItem onClick={() => downloadAsPDF(note)}>Download as PDF</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => downloadAsWord(note)}>Download as Word</DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setNoteToMove(note); setShowMoveNoteDialog(true); }}>Move to folder</DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameItem({type: 'note', id: note.id, currentName: note.title}); setRenameValue(note.title); setShowRenameDialog(true); }}>Rename</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => console.log('Info')}>Info</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => console.log('Share')}>Share</DropdownMenuItem>
@@ -595,7 +658,7 @@ export default function Notes() {
             ))}
 
           {(() => {
-            const filteredNotes = notes.filter(note => selectedFolderId === null ? !note.folderId : note.folderId === selectedFolderId);
+            const filteredNotes = notes.filter(note => selectedFolderId === null || note.folderId === selectedFolderId);
             return filteredNotes.length === 0 && (selectedFolderId === null ? folders.length === 0 : true) && (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -672,6 +735,47 @@ export default function Notes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showMoveNoteDialog} onOpenChange={setShowMoveNoteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move Note to Folder</DialogTitle>
+            <DialogDescription>
+              Choose a folder to move "{noteToMove?.title}" to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Select value={selectedFolderForMove} onValueChange={setSelectedFolderForMove}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select folder" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="none">No folder (move to root)</SelectItem>
+                {folders.map((folder) => (
+                  <SelectItem key={folder.id} value={folder.id.toString()}>
+                    {folder.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMoveNoteDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              const folderId = selectedFolderForMove === "none" ? null : parseInt(selectedFolderForMove);
+              if (noteToMove) {
+                handleMoveNote(noteToMove.id, folderId);
+                setShowMoveNoteDialog(false);
+              }
+            }}>
+              Move Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      </div>
     </div>
   );
 }

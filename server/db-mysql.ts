@@ -94,6 +94,20 @@ export async function initDatabase() {
       )
     `);
 
+    // Create tasks table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        status ENUM('todo', 'in_progress', 'done') DEFAULT 'todo',
+        priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+        is_favorite BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
     // Create notes table
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS notes (
@@ -109,12 +123,48 @@ export async function initDatabase() {
       )
     `);
 
+    // Add deleted_at to folders table
+    try {
+      await conn.execute(`
+        ALTER TABLE folders ADD COLUMN deleted_at TIMESTAMP NULL
+      `);
+      console.log("deleted_at column added to folders table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
+    // Add deleted_at to notes table
+    try {
+      await conn.execute(`
+        ALTER TABLE notes ADD COLUMN deleted_at TIMESTAMP NULL
+      `);
+      console.log("deleted_at column added to notes table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
     // Add code_block_theme column if it doesn't exist
     try {
       await conn.execute(`
         ALTER TABLE posts ADD COLUMN code_block_theme VARCHAR(50) DEFAULT 'dark'
       `);
       console.log("code_block_theme column added to posts table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
+    // Add deleted_at to posts table
+    try {
+      await conn.execute(`
+        ALTER TABLE posts ADD COLUMN deleted_at TIMESTAMP NULL
+      `);
+      console.log("deleted_at column added to posts table");
     } catch (err: any) {
       if (err.code !== "ER_DUP_FIELDNAME") {
         throw err;

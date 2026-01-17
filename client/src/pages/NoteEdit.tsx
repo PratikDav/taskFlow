@@ -12,6 +12,7 @@ const modules = {
     [{ 'header': [1, 2, 3, false] }],
     ['bold', 'italic', 'underline', 'strike'],
     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'align': [] }],
     ['link', 'code', 'code-block', 'clean']
   ],
 };
@@ -19,7 +20,7 @@ const modules = {
 const formats = [
   'header',
   'bold', 'italic', 'underline', 'strike',
-  'list', 'bullet', 'link', 'code', 'code-block'
+  'list', 'bullet', 'link', 'code', 'code-block', 'align'
 ];
 
 interface Note {

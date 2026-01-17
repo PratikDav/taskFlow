@@ -5,6 +5,9 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       borderRadius: {
         lg: ".5625rem", /* 9px */
         md: ".375rem", /* 6px */
@@ -81,6 +84,10 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        folder: {
+          DEFAULT: "#E9EEF9",
+          hover: "#E3E4E4",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
@@ -104,4 +111,8 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  safelist: [
+    'bg-folder',
+    'hover:bg-folder-hover',
+  ],
 } satisfies Config;

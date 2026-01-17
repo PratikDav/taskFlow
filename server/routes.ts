@@ -189,11 +189,11 @@ export async function registerRoutes(
           [user.id]
         );
 
-        if (rows.length === 0) {
+        if ((rows as any[]).length === 0) {
           return res.status(404).json({ message: 'User not found' });
         }
 
-        const isValidPassword = await bcrypt.compare(currentPassword, rows[0].password);
+        const isValidPassword = await bcrypt.compare(currentPassword, (rows as any[])[0].password);
         if (!isValidPassword) {
           return res.status(400).json({ message: 'Current password is incorrect' });
         }
@@ -247,18 +247,18 @@ export async function registerRoutes(
         [user.id]
       );
 
-      if (updatedRows.length === 0) {
+      if ((updatedRows as any[]).length === 0) {
         return res.status(404).json({ message: 'User not found' });
       }
 
       const updatedUser = {
-        id: updatedRows[0].id,
-        name: updatedRows[0].name,
-        email: updatedRows[0].email,
-        gmailAddress: updatedRows[0].gmail_address,
-        githubLink: updatedRows[0].github_link,
-        linkedinLink: updatedRows[0].linkedin_link,
-        role: updatedRows[0].role,
+        id: (updatedRows as any[])[0].id,
+        name: (updatedRows as any[])[0].name,
+        email: (updatedRows as any[])[0].email,
+        gmailAddress: (updatedRows as any[])[0].gmail_address,
+        githubLink: (updatedRows as any[])[0].github_link,
+        linkedinLink: (updatedRows as any[])[0].linkedin_link,
+        role: (updatedRows as any[])[0].role,
       };
 
       // Update session
@@ -485,7 +485,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Folder not found' });
       }
 
-      if (folder.userId !== userId) {
+      if (folder.user_id !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
@@ -511,7 +511,7 @@ export async function registerRoutes(
       if (!folder) {
         return res.status(404).json({ message: 'Folder not found' });
       }
-      if (folder.userId !== userId) {
+      if (folder.user_id !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
@@ -560,7 +560,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Note not found' });
       }
 
-      if (note.userId !== userId) {
+      if (note.user_id !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
@@ -609,13 +609,14 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Note not found' });
       }
 
-      if (note.userId !== userId) {
+      if (note.user_id !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
       const { title, content, folderId } = req.body;
-      if (!title || !content) {
-        return res.status(400).json({ message: 'Title and content are required' });
+      // For updates, title and content are optional, but at least one field should be provided
+      if (title === undefined && content === undefined && folderId === undefined) {
+        return res.status(400).json({ message: 'At least one field must be provided for update' });
       }
 
       const updatedNote = await storage.updateNote(noteId, title, content, folderId);
@@ -642,7 +643,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Note not found' });
       }
 
-      if (note.userId !== userId) {
+      if (note.user_id !== userId) {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
@@ -652,6 +653,185 @@ export async function registerRoutes(
       console.error(err);
       res.status(500).json({ message: 'Failed to delete note' });
     }
+  });
+
+  // Folders API
+  app.get("/api/folders", async (req, res) => {
+    const userId = (req as any).session?.userId || DEFAULT_USER_ID;
+    const folders = await storage.getFolders(userId);
+    res.json(folders);
+  });
+
+  app.post("/api/folders", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId || DEFAULT_USER_ID;
+      const input = api.folders.create.input.parse(req.body);
+      const folder = await storage.createFolder(userId, input.name);
+      res.status(201).json(folder);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.put("/api/folders/:id", async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ message: 'Name is required' });
+      }
+      const folder = await storage.updateFolder(Number(req.params.id), name);
+      if (!folder) {
+        return res.status(404).json({ message: 'Folder not found' });
+      }
+      res.json(folder);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.delete("/api/folders/:id", async (req, res) => {
+    const folder = await storage.getFolderById(Number(req.params.id));
+    if (!folder) {
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+    await storage.deleteFolder(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  // Notes API
+  app.get("/api/notes", async (req, res) => {
+    const userId = (req as any).session?.userId || DEFAULT_USER_ID;
+    const notes = await storage.getNotes(userId);
+    res.json(notes);
+  });
+
+  app.get("/api/notes/:id", async (req, res) => {
+    const note = await storage.getNoteById(Number(req.params.id));
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
+    res.json(note);
+  });
+
+  app.post("/api/notes", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId || DEFAULT_USER_ID;
+      const input = api.notes.create.input.parse(req.body);
+      const note = await storage.createNote(userId, input.title, input.content, input.folderId);
+      res.status(201).json(note);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.put("/api/notes/:id", async (req, res) => {
+    try {
+      const input = api.notes.update.input.parse(req.body);
+      const note = await storage.updateNote(Number(req.params.id), input.title, input.content, input.folderId);
+      if (!note) {
+        return res.status(404).json({ message: 'Note not found' });
+      }
+      res.json(note);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.delete("/api/notes/:id", async (req, res) => {
+    const note = await storage.getNoteById(Number(req.params.id));
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
+    await storage.deleteNote(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  // Trash API
+  app.get("/api/trash/notes", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const notes = await storage.getDeletedNotes(userId);
+    res.json(notes);
+  });
+
+  app.get("/api/trash/folders", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const folders = await storage.getDeletedFolders(userId);
+    res.json(folders);
+  });
+
+  app.post("/api/trash/notes/:id/restore", async (req, res) => {
+    await storage.restoreNote(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.post("/api/trash/folders/:id/restore", async (req, res) => {
+    await storage.restoreFolder(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.get("/api/trash/posts", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const posts = await storage.getDeletedPosts(userId);
+    res.json(posts);
+  });
+
+  app.post("/api/trash/posts/:id/restore", async (req, res) => {
+    await storage.restorePost(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.delete("/api/trash/posts/:id", async (req, res) => {
+    await storage.permanentDeletePost(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.delete("/api/trash/notes/:id", async (req, res) => {
+    await storage.permanentDeleteNote(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  app.delete("/api/trash/folders/:id", async (req, res) => {
+    await storage.permanentDeleteFolder(Number(req.params.id));
+    res.status(204).send();
   });
 
   // Seed data

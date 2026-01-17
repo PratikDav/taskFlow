@@ -1,6 +1,32 @@
 import { z } from 'zod';
 import { insertTaskSchema, Task, insertFolderSchema, Folder, insertNoteSchema, Note } from './schema';
 
+const taskResponseSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  status: z.enum(["todo", "in_progress", "done"]),
+  priority: z.enum(["low", "medium", "high"]),
+  isFavorite: z.boolean(),
+  createdAt: z.date(),
+});
+
+const folderResponseSchema = z.object({
+  id: z.number(),
+  user_id: z.number(),
+  name: z.string(),
+  createdAt: z.date(),
+});
+
+const noteResponseSchema = z.object({
+  id: z.number(),
+  user_id: z.number(),
+  folder_id: z.number().optional(),
+  title: z.string(),
+  content: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
 export const errorSchemas = {
   validation: z.object({
     message: z.string(),
@@ -20,14 +46,14 @@ export const api = {
       method: 'GET' as const,
       path: '/api/tasks',
       responses: {
-        200: z.array(z.custom<typeof tasks.$inferSelect>()),
+        200: z.array(taskResponseSchema),
       },
     },
     get: {
       method: 'GET' as const,
       path: '/api/tasks/:id',
       responses: {
-        200: z.custom<typeof tasks.$inferSelect>(),
+        200: taskResponseSchema,
         404: errorSchemas.notFound,
       },
     },
@@ -36,7 +62,7 @@ export const api = {
       path: '/api/tasks',
       input: insertTaskSchema,
       responses: {
-        201: z.custom<typeof tasks.$inferSelect>(),
+        201: taskResponseSchema,
         400: errorSchemas.validation,
       },
     },
@@ -45,7 +71,7 @@ export const api = {
       path: '/api/tasks/:id',
       input: insertTaskSchema.partial(),
       responses: {
-        200: z.custom<typeof tasks.$inferSelect>(),
+        200: taskResponseSchema,
         400: errorSchemas.validation,
         404: errorSchemas.notFound,
       },
