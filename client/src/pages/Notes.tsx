@@ -382,15 +382,6 @@ export default function Notes() {
         </div>
       </div>
 
-      {/* Help message for moving notes */}
-      {selectedFolderId === null && notes.length > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            💡 <strong>Tip:</strong> To move notes into folders, click the <strong>⋮ menu</strong> on any note and select "Move to folder".
-          </p>
-        </div>
-      )}
-
       {/* Mobile New Note Button - Fixed at bottom for screens up to 400px */}
       <div className="mobile-note-btn fixed bottom-4 left-4 right-4 z-10">
         <Button 
