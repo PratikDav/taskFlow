@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Tasks from "@/pages/Tasks";
@@ -20,6 +21,8 @@ import Notes from "@/pages/Notes";
 import NoteDetail from "@/pages/NoteDetail";
 import NoteEdit from "@/pages/NoteEdit";
 import Trash from "@/pages/Trash";
+import UserProfile from "@/pages/UserProfile";
+import Friends from "@/pages/Friends";
 
 function Router() {
   return (
@@ -30,6 +33,7 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/posts/create" component={CreatePost} />
       <Route path="/posts" component={Posts} />
+      <Route path="/friends" component={Friends} />
       <Route path="/notes" component={Notes} />
       <Route path="/notes/:id" component={NoteDetail} />
       <Route path="/notes/:id/edit" component={NoteEdit} />
@@ -37,6 +41,7 @@ function Router() {
       <Route path="/tasks" component={Tasks} />
       <Route path="/settings" component={Settings} />
       <Route path="/profile" component={Profile} />
+      <Route path="/profile/:id" component={UserProfile} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -68,6 +73,12 @@ function App() {
                   <Router />
                 </div>
               </main>
+              {/* Notification dropdown on the right side - only show on non-fullscreen routes */}
+              {!isFullScreenRoute && (
+                <div className="fixed top-4 right-4 z-50">
+                  <NotificationDropdown />
+                </div>
+              )}
             </div>
           </SidebarProvider>
         )}

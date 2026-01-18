@@ -44,3 +44,36 @@ export interface Note extends InsertNote {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const insertNotificationSchema = z.object({
+  user_id: z.number(),
+  type: z.enum([
+    "friend_request",
+    "friend_request_accepted",
+    "friend_request_rejected",
+    "admin_post",
+    "admin_announcement",
+    "friend_post",
+    "mention",
+    "comment",
+    "reaction",
+    "system"
+  ]),
+  title: z.string(),
+  message: z.string(),
+  data: z.record(z.any()).optional(),
+  is_read: z.boolean().default(false),
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+export interface Notification extends InsertNotification {
+  id: number;
+  created_at: Date;
+}
+
+export const updateNotificationSchema = z.object({
+  is_read: z.boolean(),
+});
+
+export type UpdateNotificationRequest = z.infer<typeof updateNotificationSchema>;

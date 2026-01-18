@@ -15,6 +15,13 @@ declare module "http" {
   }
 }
 
+declare module "express-session" {
+  interface SessionData {
+    user?: any;
+    userId?: number;
+  }
+}
+
 app.use(
   express.json({
     verify: (req, _res, buf) => {
@@ -25,19 +32,13 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
-const MemoryStore = MemoryStoreModule(session);
-// Provide the required options to MemoryStore constructor. Using a
-// daily checkPeriod by default.
-const sessionStore = new MemoryStore({ checkPeriod: 24 * 60 * 60 * 1000 });
-
 app.use(
   session({
-    store: sessionStore,
     secret: process.env.SESSION_SECRET || "dev-session-secret",
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // Allow cookies over HTTP in development
       httpOnly: true,
       sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours

@@ -41,7 +41,7 @@ export default function Notes() {
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolder, setNewFolder] = useState({ name: "" });
   const [showCreateNote, setShowCreateNote] = useState(false);
-  const [newNote, setNewNote] = useState({ title: "", content: "", folderId: "none" });
+  const [newNote, setNewNote] = useState({ title: "", content: "", folderId: "none", privacy: "public" });
   const [loading, setLoading] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [renameItem, setRenameItem] = useState<{type: 'folder' | 'note', id: number, currentName: string} | null>(null);
@@ -102,12 +102,13 @@ export default function Notes() {
           title: newNote.title,
           content: newNote.content,
           folderId: newNote.folderId !== "none" ? parseInt(newNote.folderId) : undefined,
+          privacy: newNote.privacy,
         }),
       });
       if (!res.ok) throw new Error("Failed to create note");
 
       await loadData();
-      setNewNote({ title: "", content: "", folderId: selectedFolderId ? selectedFolderId.toString() : "none" });
+      setNewNote({ title: "", content: "", folderId: selectedFolderId ? selectedFolderId.toString() : "none", privacy: "public" });
       setShowCreateNote(false);
     } catch (err) {
       console.error(err);
@@ -463,6 +464,22 @@ export default function Notes() {
                 placeholder="Note content..."
                 className="mb-4"
               />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Privacy</label>
+                <Select
+                  value={newNote.privacy}
+                  onValueChange={(value) => setNewNote({ ...newNote, privacy: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select privacy level" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="public">Public - Anyone can see this note</SelectItem>
+                    <SelectItem value="friends">Friends - Only friends can see this note</SelectItem>
+                    <SelectItem value="private">Private - Only you can see this note</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={loading}>
                   {loading ? "Creating..." : "Create Note"}

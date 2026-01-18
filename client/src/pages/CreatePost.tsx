@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 export default function CreatePost() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
-  const [post, setPost] = useState({ title: "", content: "", codeBlockTheme: "light" });
+  const [post, setPost] = useState({ title: "", content: "", codeBlockTheme: "light", privacy: "public" });
 
   const modules = {
     toolbar: [
@@ -126,7 +128,7 @@ export default function CreatePost() {
     <div className="max-w-4xl mx-auto p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Create Post</h1>
-        <p className="text-sm text-muted-foreground">Write and publish a new post.</p>
+        <p className="text-sm text-muted-foreground">Explain what you learn as you want.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 border rounded-lg bg-card space-y-4">
@@ -147,6 +149,20 @@ export default function CreatePost() {
           placeholder="Write your post content here..."
           className="auto-resize-editor"
         />
+
+        <div className="space-y-2">
+          <Label htmlFor="privacy">Privacy</Label>
+          <Select value={post.privacy} onValueChange={(value) => setPost({ ...post, privacy: value })}>
+            <SelectTrigger className="w-full bg-slate-50 border-slate-300 hover:bg-slate-100 focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
+              <SelectValue placeholder="Select privacy level" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-200 shadow-lg">
+              <SelectItem value="public" className="hover:bg-slate-50 focus:bg-slate-50">Public - Anyone can see this post</SelectItem>
+              <SelectItem value="friends" className="hover:bg-slate-50 focus:bg-slate-50">Link Ups - Only link ups can see this post</SelectItem>
+              <SelectItem value="private" className="hover:bg-slate-50 focus:bg-slate-50">Private - Only you can see this post</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={loading}>
