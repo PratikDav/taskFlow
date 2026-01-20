@@ -83,6 +83,30 @@ export async function initDatabase() {
       }
     }
 
+    // Add designation column if it doesn't exist
+    try {
+      await conn.execute(`
+        ALTER TABLE users ADD COLUMN designation VARCHAR(255)
+      `);
+      console.log("designation column added to users table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
+    // Create user_skills table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS user_skills (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        skill_id VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_user_skill (user_id, skill_id)
+      )
+    `);
+
     // Create folders table
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS folders (
@@ -171,7 +195,65 @@ export async function initDatabase() {
       }
     }
 
-    // Seed default user if not exists
+    // Add privacy column to posts table
+    try {
+      await conn.execute(`
+        ALTER TABLE posts ADD COLUMN privacy ENUM('public', 'friends', 'private') DEFAULT 'public'
+      `);
+      console.log("privacy column added to posts table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
+    // Add privacy column to notes table
+    try {
+      await conn.execute(`
+        ALTER TABLE notes ADD COLUMN privacy ENUM('public', 'friends', 'private') DEFAULT 'private'
+      `);
+      console.log("privacy column added to notes table");
+    } catch (err: any) {
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        throw err;
+      }
+    }
+
+    // Create friends table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS friends (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        friend_id INT NOT NULL,
+        status ENUM('pending', 'accepted', 'blocked') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_friendship (user_id, friend_id)
+      )
+    `);
+
+    console.log("Friends table created");
+
+    // Create notifications table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type ENUM('friend_request', 'friend_request_accepted', 'friend_request_rejected', 'admin_post', 'admin_announcement', 'friend_post', 'mention', 'comment', 'reaction', 'system') NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        data JSON,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_read (user_id, is_read),
+        INDEX idx_created_at (created_at)
+      )
+    `);
+
+    console.log("Notifications table created");
     const [users] = await conn.execute<any[]>("SELECT * FROM users WHERE id = 1");
     if (users.length === 0) {
       await conn.execute(

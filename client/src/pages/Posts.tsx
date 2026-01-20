@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
+import { useFriends } from "@/hooks/use-friends";
 
 export default function Posts() {
   const [, setLocation] = useLocation();
@@ -9,6 +11,7 @@ export default function Posts() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [newPost, setNewPost] = useState({ title: "", content: "" });
+  const { friends, sendFriendRequest } = useFriends();
 
   // Check if user is logged in
   const isLoggedIn = !!me;
@@ -66,6 +69,10 @@ export default function Posts() {
       console.error(err);
       alert("Failed to delete post");
     }
+  };
+
+  const handleAddFriend = async (userId: number) => {
+    await sendFriendRequest(userId);
   };
 
   const applyThemeToElement = (element: HTMLElement, theme: string) => {
@@ -130,42 +137,69 @@ export default function Posts() {
             No posts yet. Be the first to share!
           </p>
         ) : (
-          posts.map((post) => (
-            <div key={post.id} 
-                 className="p-4 border rounded-lg bg-card hover:shadow-md transition">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{post.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    By {post.userName}
-                    {me && post.user_id === me.id && (
-                      <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded inline-block">
-                        Your Post
-                      </span>
-                    )}
-                  </p>
+          posts.map((post) => {
+            const isOwnPost = me && post.user_id === me.id;
+            const isFriend = friends.some(friend => friend.id === post.user_id);
+            const canAddFriend = me && !isOwnPost && !isFriend;
+
+            return (
+              <div key={post.id} 
+                   className="p-4 border rounded-lg bg-card hover:shadow-md transition">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{post.title}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() => setLocation(`/profile/${post.user_id}`)}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                      >
+                        By {post.userName}
+                      </button>
+                      {canAddFriend && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleAddFriend(post.user_id)}
+                          className="h-6 w-6 p-0 hover:bg-primary/10"
+                          title="Add friend"
+                        >
+                          <UserPlus className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {isFriend && !isOwnPost && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded inline-block">
+                          Linked up
+                        </span>
+                      )}
+                      {isOwnPost && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded inline-block">
+                          Your Post
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {isOwnPost && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeletePost(post.id)}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </div>
-                {me && post.user_id === me.id && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeletePost(post.id)}
-                  >
-                    Delete
-                  </Button>
-                )}
+                <p className="mt-3 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  {new Date(post.created_at).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
               </div>
-              <p className="mt-3 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
-              <p className="text-xs text-muted-foreground mt-3">
-                {new Date(post.created_at).toLocaleDateString("en-US", {
-                  weekday: "short",
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

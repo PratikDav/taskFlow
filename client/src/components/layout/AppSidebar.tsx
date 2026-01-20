@@ -12,8 +12,9 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { useSidebar } from "@/components/ui/sidebar";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +42,8 @@ import {
   FileText
   , X,
   Trash2,
-  Newspaper
+  Newspaper,
+  Users
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -79,12 +81,13 @@ export function AppSidebar() {
   // Show dashboard only for admins, My Tasks for all users, Settings only for admins
   const menuItems = [
     { title: "Feed", url: "/posts", icon: Newspaper },
-    ...(currentUser?.role === "admin" 
-      ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
-      : []),
+    { title: "Link Ups", url: "/friends", icon: Users },
     { title: "My Tasks", url: "/tasks", icon: CheckSquare },
     { title: "Notes", url: "/notes", icon: FileText },
     { title: "Trash", url: "/trash", icon: Trash2 },
+    ...(currentUser?.role === "admin" 
+      ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
+      : []),
     ...(currentUser?.role === "admin" 
       ? [{ title: "Settings", url: "/settings", icon: Settings }]
       : []),

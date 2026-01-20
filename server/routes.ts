@@ -1,9 +1,11 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage, DEFAULT_USER_ID } from "./storage";
+import { NotificationService } from "./notification-service";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import bcrypt from "bcrypt";
+import { SERVER_SKILLS, getServerSkillById } from "./skills";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -159,11 +161,74 @@ export async function registerRoutes(
     const user = req.session?.user;
     console.log("GET /api/me - sessionID:", req.sessionID, "user:", user?.email || "null");
     if (user) {
-      return res.json(user);
+      // Fetch fresh user data from database to include any new fields
+      const [updatedRows] = await storage.db.execute(
+        'SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?',
+        [user.id]
+      );
+
+      if ((updatedRows as any[]).length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Fetch user skills
+      const skillIds = await storage.getUserSkills(user.id);
+      // Get full skill objects from server skills data
+      const skills = skillIds
+        .map(skillId => getServerSkillById(skillId))
+        .filter(skill => skill !== undefined); // Filter out any invalid skill IDs
+
+      const freshUser = {
+        id: (updatedRows as any[])[0].id,
+        provider: (updatedRows as any[])[0].provider,
+        name: (updatedRows as any[])[0].name,
+        email: (updatedRows as any[])[0].email,
+        designation: (updatedRows as any[])[0].designation,
+        skills: skills,
+        gmailAddress: (updatedRows as any[])[0].gmail_address,
+        githubLink: (updatedRows as any[])[0].github_link,
+        linkedinLink: (updatedRows as any[])[0].linkedin_link,
+        role: (updatedRows as any[])[0].role,
+        created_at: (updatedRows as any[])[0].created_at,
+      };
+
+      // Update session with fresh data
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      req.session.user = freshUser;
+
+      return res.json(freshUser);
     }
 
     // Not authenticated — return null so frontend can treat as guest
     res.json(null);
+  });
+
+  app.get('/api/users/:id', async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const user = await storage.getUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Return public user info (exclude password and sensitive data)
+      const publicUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        gmailAddress: user.gmail_address,
+        githubLink: user.github_link,
+        linkedinLink: user.linkedin_link,
+        created_at: user.created_at,
+      };
+
+      res.json(publicUser);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch user' });
+    }
   });
 
   app.put('/api/me', async (req, res) => {
@@ -176,7 +241,7 @@ export async function registerRoutes(
     }
 
     try {
-      const { name, currentPassword, newPassword, gmailAddress, githubLink, linkedinLink } = req.body;
+      const { name, designation, currentPassword, newPassword, gmailAddress, githubLink, linkedinLink } = req.body;
 
       // If changing password, verify current password
       if (newPassword) {
@@ -214,6 +279,10 @@ export async function registerRoutes(
         updateFields.push('name = ?');
         updateValues.push(name);
       }
+      if (designation !== undefined) {
+        updateFields.push('designation = ?');
+        updateValues.push(designation);
+      }
       if (gmailAddress !== undefined) {
         updateFields.push('gmail_address = ?');
         updateValues.push(gmailAddress);
@@ -243,7 +312,7 @@ export async function registerRoutes(
 
       // Fetch updated user data
       const [updatedRows] = await storage.db.execute(
-        'SELECT id, name, email, gmail_address, github_link, linkedin_link, role FROM users WHERE id = ?',
+        'SELECT id, name, email, designation, gmail_address, github_link, linkedin_link, role FROM users WHERE id = ?',
         [user.id]
       );
 
@@ -255,6 +324,7 @@ export async function registerRoutes(
         id: (updatedRows as any[])[0].id,
         name: (updatedRows as any[])[0].name,
         email: (updatedRows as any[])[0].email,
+        designation: (updatedRows as any[])[0].designation,
         gmailAddress: (updatedRows as any[])[0].gmail_address,
         githubLink: (updatedRows as any[])[0].github_link,
         linkedinLink: (updatedRows as any[])[0].linkedin_link,
@@ -270,6 +340,40 @@ export async function registerRoutes(
     } catch (err) {
       console.error('Profile update error:', err);
       res.status(500).json({ message: 'Failed to update profile' });
+    }
+  });
+
+  app.put('/api/me/skills', async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const user = req.session?.user;
+    if (!user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    try {
+      const { skills } = req.body;
+
+      if (!Array.isArray(skills)) {
+        return res.status(400).json({ message: 'Skills must be an array' });
+      }
+
+      // Validate skill IDs against available skills
+      const validSkills = skills.filter(skillId => {
+        return typeof skillId === 'string' && getServerSkillById(skillId) !== undefined;
+      });
+
+      if (validSkills.length !== skills.length) {
+        return res.status(400).json({ message: 'Invalid skill IDs provided' });
+      }
+
+      // Update user skills
+      await storage.updateUserSkills(user.id, validSkills);
+
+      res.json({ message: 'Skills updated successfully' });
+    } catch (err) {
+      console.error('Skills update error:', err);
+      res.status(500).json({ message: 'Failed to update skills' });
     }
   });
 
@@ -341,7 +445,10 @@ export async function registerRoutes(
   // Posts API
   app.get('/api/posts', async (req, res) => {
     try {
-      const posts = await storage.getPosts();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      const posts = await storage.getPosts(userId);
       res.json(posts);
     } catch (err) {
       console.error(err);
@@ -355,12 +462,29 @@ export async function registerRoutes(
       // @ts-ignore
       const userId = req.session?.user?.id || DEFAULT_USER_ID;
 
-      const { title, content, codeBlockTheme } = req.body;
+      const { title, content, codeBlockTheme, privacy } = req.body;
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
-      const post = await storage.createPost(userId, title, content, codeBlockTheme || 'dark');
+      const post = await storage.createPost(userId, title, content, codeBlockTheme || 'dark', privacy || 'public');
+
+      // Create notifications for friends if post is public or friends-only
+      if (privacy === 'public' || privacy === 'friends') {
+        try {
+          const author = await storage.getUserById(userId);
+          if (author) {
+            const friendIds = await NotificationService.getFriendIds(userId);
+            if (friendIds.length > 0) {
+              await NotificationService.createFriendPostNotification(friendIds, author.name, title);
+            }
+          }
+        } catch (notificationErr) {
+          console.error('Failed to create friend post notifications:', notificationErr);
+          // Don't fail the post creation if notifications fail
+        }
+      }
+
       res.status(201).json(post);
     } catch (err) {
       console.error(err);
@@ -388,12 +512,12 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Forbidden' });
       }
 
-      const { title, content } = req.body;
+      const { title, content, privacy } = req.body;
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
-      const updatedPost = await storage.updatePost(postId, title, content);
+      const updatedPost = await storage.updatePost(postId, title, content, privacy);
       res.json(updatedPost);
     } catch (err) {
       console.error(err);
@@ -580,12 +704,12 @@ export async function registerRoutes(
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const { title, content, folderId } = req.body;
+      const { title, content, folderId, privacy } = req.body;
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
-      const note = await storage.createNote(userId, title, content, folderId);
+      const note = await storage.createNote(userId, title, content, folderId, privacy || 'public');
       res.status(201).json(note);
     } catch (err) {
       console.error(err);
@@ -613,13 +737,13 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Forbidden' });
       }
 
-      const { title, content, folderId } = req.body;
+      const { title, content, folderId, privacy } = req.body;
       // For updates, title and content are optional, but at least one field should be provided
-      if (title === undefined && content === undefined && folderId === undefined) {
+      if (title === undefined && content === undefined && folderId === undefined && privacy === undefined) {
         return res.status(400).json({ message: 'At least one field must be provided for update' });
       }
 
-      const updatedNote = await storage.updateNote(noteId, title, content, folderId);
+      const updatedNote = await storage.updateNote(noteId, title, content, folderId, privacy);
       res.json(updatedNote);
     } catch (err) {
       console.error(err);
@@ -832,6 +956,283 @@ export async function registerRoutes(
   app.delete("/api/trash/folders/:id", async (req, res) => {
     await storage.permanentDeleteFolder(Number(req.params.id));
     res.status(204).send();
+  });
+
+  // Friend routes
+  app.post("/api/friends/request", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const { friendId } = req.body;
+    if (!friendId || friendId === userId) {
+      return res.status(400).json({ message: 'Invalid friend ID' });
+    }
+
+    try {
+      await storage.sendFriendRequest(userId, friendId);
+      
+      // Create notification for the recipient
+      const sender = await storage.getUserById(userId);
+      if (sender) {
+        await NotificationService.createFriendRequestNotification(friendId, userId, sender.name);
+      }
+      
+      res.status(201).json({ message: 'Friend request sent' });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/friends/accept", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const { friendId } = req.body;
+    try {
+      await storage.acceptFriendRequest(userId, friendId);
+      
+      // Create notification for the requester
+      const accepter = await storage.getUserById(userId);
+      if (accepter) {
+        await NotificationService.createFriendRequestAcceptedNotification(friendId, accepter.name);
+      }
+      
+      res.json({ message: 'Friend request accepted' });
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to accept friend request' });
+    }
+  });
+
+  app.post("/api/friends/reject", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const { friendId } = req.body;
+    try {
+      await storage.rejectFriendRequest(userId, friendId);
+      
+      // Create notification for the requester
+      const rejecter = await storage.getUserById(userId);
+      if (rejecter) {
+        await NotificationService.createFriendRequestRejectedNotification(friendId, rejecter.name);
+      }
+      
+      res.json({ message: 'Friend request rejected' });
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to reject friend request' });
+    }
+  });
+
+  app.delete("/api/friends/:friendId", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const friendId = Number(req.params.friendId);
+    try {
+      await storage.removeFriend(userId, friendId);
+      res.json({ message: 'Friend removed' });
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to remove friend' });
+    }
+  });
+
+  app.get("/api/friends", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    try {
+      const friends = await storage.getFriends(userId);
+      res.json(friends);
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to get friends' });
+    }
+  });
+
+  app.get("/api/friends/requests", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    try {
+      const requests = await storage.getFriendRequests(userId);
+      res.json(requests);
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to get friend requests' });
+    }
+  });
+
+  app.get("/api/friends/posts", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    try {
+      const posts = await storage.getFriendsPosts(userId);
+      res.json(posts);
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to get friends posts' });
+    }
+  });
+
+  app.get("/api/friends/notes", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const userId = req.session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    try {
+      const notes = await storage.getFriendsNotes(userId);
+      res.json(notes);
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to get friends notes' });
+    }
+  });
+
+  // Notification routes
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const notifications = await storage.getNotifications(userId, limit);
+      res.json(notifications);
+    } catch (err) {
+      console.error("Failed to get notifications:", err);
+      res.status(500).json({ message: "Failed to get notifications" });
+    }
+  });
+
+  app.get("/api/notifications/unread-count", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const count = await storage.getUnreadNotificationCount(userId);
+      res.json({ count });
+    } catch (err) {
+      console.error("Failed to get unread count:", err);
+      res.status(500).json({ message: "Failed to get unread count" });
+    }
+  });
+
+  app.put("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const notificationId = parseInt(req.params.id);
+      await storage.markNotificationAsRead(notificationId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.put("/api/notifications/mark-all-read", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const notificationId = parseInt(req.params.id);
+      await storage.deleteNotification(notificationId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+      res.status(500).json({ message: "Failed to delete notification" });
+    }
+  });
+
+  // Test endpoint to create sample notifications (for development)
+  app.post("/api/notifications/test", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Create some test notifications
+      await storage.createNotification({
+        user_id: userId,
+        type: "system",
+        title: "Welcome to TaskFlow!",
+        message: "Thanks for joining our community. Explore features and connect with others!",
+        is_read: false
+      });
+
+      await storage.createNotification({
+        user_id: userId,
+        type: "friend_request",
+        title: "Test Friend Request",
+        message: "John Doe sent you a friend request (test notification)",
+        is_read: false
+      });
+
+      await storage.createNotification({
+        user_id: userId,
+        type: "admin_announcement",
+        title: "New Feature Available",
+        message: "Check out our new notification system!",
+        is_read: false
+      });
+
+      res.json({ success: true, message: "Test notifications created" });
+    } catch (err) {
+      console.error("Failed to create test notifications:", err);
+      res.status(500).json({ message: "Failed to create test notifications" });
+    }
   });
 
   // Seed data

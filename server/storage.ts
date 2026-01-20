@@ -3,7 +3,9 @@ import bcrypt from "bcrypt";
 import {
   type InsertTask,
   type UpdateTaskRequest,
-  type Task
+  type Task,
+  type InsertNotification,
+  type UpdateNotificationRequest
 } from "@shared/schema";
 
 export interface User {
@@ -12,6 +14,7 @@ export interface User {
   name: string;
   email: string;
   password?: string;
+  designation?: string;
   gmail_address?: string;
   github_link?: string;
   linkedin_link?: string;
@@ -25,6 +28,7 @@ export interface Post {
   title: string;
   content: string;
   code_block_theme?: string;
+  privacy: 'public' | 'friends' | 'private';
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date;
@@ -44,9 +48,21 @@ export interface Note {
   folderId?: number;
   title: string;
   content: string;
+  privacy: 'public' | 'friends' | 'private';
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date;
+}
+
+export interface Notification {
+  id: number;
+  user_id: number;
+  type: 'friend_request' | 'friend_request_accepted' | 'friend_request_rejected' | 'admin_post' | 'admin_announcement' | 'friend_post' | 'mention' | 'comment' | 'reaction' | 'system';
+  title: string;
+  message: string;
+  data?: Record<string, any>;
+  is_read: boolean;
+  created_at: Date;
 }
 
 export interface IStorage {
@@ -66,10 +82,10 @@ export interface IStorage {
   registerUser(email: string, password: string, name: string, gmailAddress?: string, githubLink?: string, linkedinLink?: string): Promise<User>;
 
   // Post operations
-  getPosts(): Promise<(Post & { userName: string })[]>;
+  getPosts(userId?: number): Promise<(Post & { userName: string })[]>;
   getPostById(id: number): Promise<(Post & { userName: string }) | undefined>;
-  createPost(userId: number, title: string, content: string, codeBlockTheme?: string): Promise<Post>;
-  updatePost(id: number, title: string, content: string): Promise<Post>;
+  createPost(userId: number, title: string, content: string, codeBlockTheme?: string, privacy?: 'public' | 'friends' | 'private'): Promise<Post>;
+  updatePost(id: number, title: string, content: string, privacy?: 'public' | 'friends' | 'private'): Promise<Post>;
   deletePost(id: number): Promise<void>;
 
   // Folder operations
@@ -81,9 +97,32 @@ export interface IStorage {
   // Note operations
   getNotes(userId: number): Promise<(Note & { folderName?: string })[]>;
   getNoteById(id: number): Promise<(Note & { folderName?: string }) | undefined>;
-  createNote(userId: number, title: string, content: string, folderId?: number): Promise<Note>;
-  updateNote(id: number, title?: string, content?: string, folderId?: number): Promise<Note>;
+  createNote(userId: number, title: string, content: string, folderId?: number, privacy?: 'public' | 'friends' | 'private'): Promise<Note>;
+  updateNote(id: number, title?: string, content?: string, folderId?: number, privacy?: 'public' | 'friends' | 'private'): Promise<Note>;
   deleteNote(id: number): Promise<void>;
+
+  // Friend operations
+  sendFriendRequest(userId: number, friendId: number): Promise<void>;
+  acceptFriendRequest(userId: number, friendId: number): Promise<void>;
+  rejectFriendRequest(userId: number, friendId: number): Promise<void>;
+  removeFriend(userId: number, friendId: number): Promise<void>;
+  getFriends(userId: number): Promise<User[]>;
+  getFriendRequests(userId: number): Promise<User[]>;
+  getFriendsPosts(userId: number): Promise<(Post & { userName: string })[]>;
+  getFriendsNotes(userId: number): Promise<(Note & { userName: string; folderName?: string })[]>;
+  areFriends(userId: number, friendId: number): Promise<boolean>;
+
+  // Notification operations
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotifications(userId: number, limit?: number): Promise<Notification[]>;
+  getUnreadNotificationCount(userId: number): Promise<number>;
+  markNotificationAsRead(notificationId: number): Promise<void>;
+  markAllNotificationsAsRead(userId: number): Promise<void>;
+  deleteNotification(notificationId: number): Promise<void>;
+
+  // Skills operations
+  getUserSkills(userId: number): Promise<string[]>;
+  updateUserSkills(userId: number, skillIds: string[]): Promise<void>;
 }
 
 export class MySQLStorage implements IStorage {
@@ -131,7 +170,7 @@ export class MySQLStorage implements IStorage {
     try {
       // Check if user exists
       const [rows] = await conn.execute<any[]>(
-        "SELECT * FROM users WHERE email = ? AND provider = ?",
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE email = ? AND provider = ?",
         [email, provider]
       );
 
@@ -146,7 +185,7 @@ export class MySQLStorage implements IStorage {
       );
 
       const [newUser] = await conn.execute<any[]>(
-        "SELECT * FROM users WHERE id = ?",
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
         [result.insertId]
       );
 
@@ -160,7 +199,7 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
-        "SELECT * FROM users WHERE email = ?",
+        "SELECT id, provider, name, email, password, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE email = ?",
         [email]
       );
       return rows[0];
@@ -173,7 +212,7 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
-        "SELECT * FROM users WHERE id = ?",
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
         [id]
       );
       return rows[0];
@@ -195,7 +234,7 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
-        "SELECT * FROM users WHERE username = ?",
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE username = ?",
         [username]
       );
       
@@ -227,7 +266,7 @@ export class MySQLStorage implements IStorage {
       );
 
       const [newUser] = await conn.execute<any[]>(
-        "SELECT * FROM users WHERE id = ?",
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
         [result.insertId]
       );
 
@@ -260,7 +299,7 @@ export class MySQLStorage implements IStorage {
       );
 
       const [newUser] = await conn.execute<any[]>(
-        "SELECT * FROM users WHERE id = ?",
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
         [result.insertId]
       );
 
@@ -271,15 +310,34 @@ export class MySQLStorage implements IStorage {
   }
 
   // Post operations
-  async getPosts(): Promise<(Post & { userName: string })[]> {
+  async getPosts(userId?: number): Promise<(Post & { userName: string })[]> {
     const conn = await pool.getConnection();
     try {
-      const [rows] = await conn.execute<any[]>(`
+      let query = `
         SELECT p.*, u.name as userName FROM posts p
         LEFT JOIN users u ON p.user_id = u.id
         WHERE p.deleted_at IS NULL
-        ORDER BY p.created_at DESC
-      `);
+      `;
+      const params: any[] = [];
+
+      if (userId) {
+        // Get user's friends
+        const friends = await this.getFriends(userId);
+        const friendIds = friends.map(f => f.id);
+
+        query += ` AND (
+          p.privacy = 'public' OR
+          (p.privacy = 'friends' AND p.user_id IN (${friendIds.length > 0 ? friendIds.map(() => '?').join(',') : 'NULL'})) OR
+          p.user_id = ?
+        )`;
+        params.push(...friendIds, userId);
+      } else {
+        query += ` AND p.privacy = 'public'`;
+      }
+
+      query += ` ORDER BY p.created_at DESC`;
+
+      const [rows] = await conn.execute<any[]>(query, params);
       return rows;
     } finally {
       conn.release();
@@ -300,12 +358,12 @@ export class MySQLStorage implements IStorage {
     }
   }
 
-  async createPost(userId: number, title: string, content: string, codeBlockTheme: string = 'dark'): Promise<Post> {
+  async createPost(userId: number, title: string, content: string, codeBlockTheme: string = 'dark', privacy: 'public' | 'friends' | 'private' = 'public'): Promise<Post> {
     const conn = await pool.getConnection();
     try {
       const [result] = await conn.execute<any>(
-        "INSERT INTO posts (user_id, title, content, code_block_theme) VALUES (?, ?, ?, ?)",
-        [userId, title, content, codeBlockTheme]
+        "INSERT INTO posts (user_id, title, content, code_block_theme, privacy) VALUES (?, ?, ?, ?, ?)",
+        [userId, title, content, codeBlockTheme, privacy]
       );
 
       const [rows] = await conn.execute<any[]>(
@@ -319,13 +377,20 @@ export class MySQLStorage implements IStorage {
     }
   }
 
-  async updatePost(id: number, title: string, content: string): Promise<Post> {
+  async updatePost(id: number, title: string, content: string, privacy?: 'public' | 'friends' | 'private'): Promise<Post> {
     const conn = await pool.getConnection();
     try {
-      await conn.execute(
-        "UPDATE posts SET title = ?, content = ? WHERE id = ?",
-        [title, content, id]
-      );
+      if (privacy) {
+        await conn.execute(
+          "UPDATE posts SET title = ?, content = ?, privacy = ? WHERE id = ?",
+          [title, content, privacy, id]
+        );
+      } else {
+        await conn.execute(
+          "UPDATE posts SET title = ?, content = ? WHERE id = ?",
+          [title, content, id]
+        );
+      }
 
       const [rows] = await conn.execute<any[]>(
         "SELECT * FROM posts WHERE id = ?",
@@ -432,7 +497,7 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute(
-        `SELECT n.id, n.user_id, n.folder_id, n.title, n.content, n.created_at, n.updated_at, f.name as folder_name
+        `SELECT n.id, n.user_id, n.folder_id, n.title, n.content, n.privacy, n.created_at, n.updated_at, f.name as folder_name
          FROM notes n
          LEFT JOIN folders f ON n.folder_id = f.id
          WHERE n.user_id = ? AND n.deleted_at IS NULL AND (f.deleted_at IS NULL OR f.id IS NULL)
@@ -445,6 +510,7 @@ export class MySQLStorage implements IStorage {
         folderId: row.folder_id,
         title: row.title,
         content: row.content,
+        privacy: row.privacy,
         created_at: row.created_at,
         updated_at: row.updated_at,
         folderName: row.folder_name,
@@ -458,7 +524,7 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute(
-        `SELECT n.id, n.user_id, n.folder_id, n.title, n.content, n.created_at, n.updated_at, f.name as folder_name
+        `SELECT n.id, n.user_id, n.folder_id, n.title, n.content, n.privacy, n.created_at, n.updated_at, f.name as folder_name
          FROM notes n
          LEFT JOIN folders f ON n.folder_id = f.id
          WHERE n.id = ?`,
@@ -472,6 +538,7 @@ export class MySQLStorage implements IStorage {
         folderId: row.folder_id,
         title: row.title,
         content: row.content,
+        privacy: row.privacy,
         created_at: row.created_at,
         updated_at: row.updated_at,
         folderName: row.folder_name,
@@ -481,12 +548,12 @@ export class MySQLStorage implements IStorage {
     }
   }
 
-  async createNote(userId: number, title: string, content: string, folderId?: number): Promise<Note> {
+  async createNote(userId: number, title: string, content: string, folderId?: number, privacy: 'public' | 'friends' | 'private' = 'private'): Promise<Note> {
     const conn = await pool.getConnection();
     try {
       const [result] = await conn.execute(
-        "INSERT INTO notes (user_id, folder_id, title, content) VALUES (?, ?, ?, ?)",
-        [userId, folderId || null, title, content]
+        "INSERT INTO notes (user_id, folder_id, title, content, privacy) VALUES (?, ?, ?, ?, ?)",
+        [userId, folderId || null, title, content, privacy]
       );
       const noteId = (result as any).insertId;
       return {
@@ -495,6 +562,7 @@ export class MySQLStorage implements IStorage {
         folderId: folderId,
         title,
         content,
+        privacy,
         created_at: new Date(),
         updated_at: new Date(),
       };
@@ -503,7 +571,7 @@ export class MySQLStorage implements IStorage {
     }
   }
 
-  async updateNote(id: number, title?: string, content?: string, folderId?: number): Promise<Note> {
+  async updateNote(id: number, title?: string, content?: string, folderId?: number, privacy?: 'public' | 'friends' | 'private'): Promise<Note> {
     const conn = await pool.getConnection();
     try {
       // Build dynamic update query based on provided fields
@@ -521,6 +589,10 @@ export class MySQLStorage implements IStorage {
       if (folderId !== undefined) {
         updates.push("folder_id = ?");
         values.push(folderId);
+      }
+      if (privacy !== undefined) {
+        updates.push("privacy = ?");
+        values.push(privacy);
       }
 
       updates.push("updated_at = CURRENT_TIMESTAMP");
@@ -550,7 +622,7 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute(
-        `SELECT id, user_id, folder_id as folderId, title, content, created_at, updated_at, deleted_at
+        `SELECT id, user_id, folder_id as folderId, title, content, privacy, created_at, updated_at, deleted_at
          FROM notes
          WHERE user_id = ? AND deleted_at IS NOT NULL
          ORDER BY deleted_at DESC`,
@@ -562,6 +634,7 @@ export class MySQLStorage implements IStorage {
         folderId: row.folderId,
         title: row.title,
         content: row.content,
+        privacy: row.privacy,
         created_at: row.created_at,
         updated_at: row.updated_at,
         deleted_at: row.deleted_at,
@@ -630,7 +703,7 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute(
-        `SELECT id, user_id, title, content, code_block_theme, created_at, updated_at, deleted_at
+        `SELECT id, user_id, title, content, code_block_theme, privacy, created_at, updated_at, deleted_at
          FROM posts
          WHERE user_id = ? AND deleted_at IS NOT NULL
          ORDER BY deleted_at DESC`,
@@ -642,6 +715,7 @@ export class MySQLStorage implements IStorage {
         title: row.title,
         content: row.content,
         code_block_theme: row.code_block_theme,
+        privacy: row.privacy,
         created_at: row.created_at,
         updated_at: row.updated_at,
         deleted_at: row.deleted_at,
@@ -664,6 +738,325 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       await conn.execute("DELETE FROM posts WHERE id = ?", [id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Friend operations
+  async sendFriendRequest(userId: number, friendId: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      // Check if friendship already exists
+      const [existing] = await conn.execute<any[]>(
+        "SELECT id FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)",
+        [userId, friendId, friendId, userId]
+      );
+
+      if (existing.length > 0) {
+        throw new Error("Friendship already exists");
+      }
+
+      await conn.execute(
+        "INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'pending')",
+        [userId, friendId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async acceptFriendRequest(userId: number, friendId: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      // Update the existing pending request to accepted
+      await conn.execute(
+        "UPDATE friends SET status = 'accepted', updated_at = NOW() WHERE user_id = ? AND friend_id = ? AND status = 'pending'",
+        [friendId, userId]
+      );
+
+      // Check if reverse relationship already exists, if not, create it
+      const [existing] = await conn.execute<any[]>(
+        "SELECT id FROM friends WHERE user_id = ? AND friend_id = ?",
+        [userId, friendId]
+      );
+
+      if (existing.length === 0) {
+        // Create the reverse relationship only if it doesn't exist
+        await conn.execute(
+          "INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, 'accepted')",
+          [userId, friendId]
+        );
+      } else {
+        // Update existing reverse relationship to accepted if it's not already
+        await conn.execute(
+          "UPDATE friends SET status = 'accepted', updated_at = NOW() WHERE user_id = ? AND friend_id = ? AND status != 'accepted'",
+          [userId, friendId]
+        );
+      }
+    } finally {
+      conn.release();
+    }
+  }
+
+  async rejectFriendRequest(userId: number, friendId: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "DELETE FROM friends WHERE user_id = ? AND friend_id = ? AND status = 'pending'",
+        [friendId, userId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async removeFriend(userId: number, friendId: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)",
+        [userId, friendId, friendId, userId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getFriends(userId: number): Promise<User[]> {
+    const conn = await pool.getConnection();
+    try {
+      // First, get all friend IDs (both directions)
+      const [friendIds] = await conn.execute<any[]>(
+        `SELECT DISTINCT
+           CASE
+             WHEN f.user_id = ? THEN f.friend_id
+             WHEN f.friend_id = ? THEN f.user_id
+           END as friend_id
+         FROM friends f
+         WHERE (f.user_id = ? OR f.friend_id = ?)
+         AND f.status = 'accepted'`,
+        [userId, userId, userId, userId]
+      );
+
+      if (friendIds.length === 0) {
+        return [];
+      }
+
+      // Then get the user details for these friend IDs
+      const friendIdList = friendIds.map(f => f.friend_id);
+      const placeholders = friendIdList.map(() => '?').join(',');
+      const [rows] = await conn.execute<any[]>(
+        `SELECT id, name, email, provider, role, created_at, gmail_address, github_link, linkedin_link
+         FROM users
+         WHERE id IN (${placeholders})
+         ORDER BY name`,
+        friendIdList
+      );
+
+      return rows;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getFriendRequests(userId: number): Promise<User[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT u.id, u.name, u.email, u.provider, u.role, u.created_at, u.gmail_address, u.github_link, u.linkedin_link
+         FROM users u
+         INNER JOIN friends f ON f.user_id = u.id
+         WHERE f.friend_id = ? AND f.status = 'pending'`,
+        [userId]
+      );
+      return rows;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getFriendsPosts(userId: number): Promise<(Post & { userName: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT p.*, u.name as userName, p.user_id FROM posts p
+         INNER JOIN users u ON p.user_id = u.id
+         INNER JOIN friends f ON (f.friend_id = p.user_id OR f.user_id = p.user_id)
+         WHERE ((f.user_id = ? AND f.friend_id = p.user_id) OR (f.friend_id = ? AND f.user_id = p.user_id))
+         AND f.status = 'accepted' AND p.privacy IN ('public', 'friends') AND p.deleted_at IS NULL AND p.user_id != ?
+         ORDER BY p.created_at DESC`,
+        [userId, userId, userId]
+      );
+      return rows;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getFriendsNotes(userId: number): Promise<(Note & { userName: string; folderName?: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT n.id, n.user_id, n.folder_id as folderId, n.title, n.content, n.privacy, n.created_at, n.updated_at, n.deleted_at,
+                u.name as userName, f.name as folderName
+         FROM notes n
+         INNER JOIN users u ON n.user_id = u.id
+         LEFT JOIN folders f ON n.folder_id = f.id
+         INNER JOIN friends fr ON (fr.friend_id = n.user_id OR fr.user_id = n.user_id)
+         WHERE ((fr.user_id = ? AND fr.friend_id = n.user_id) OR (fr.friend_id = ? AND fr.user_id = n.user_id))
+         AND fr.status = 'accepted' AND n.privacy IN ('public', 'friends') AND n.deleted_at IS NULL AND n.user_id != ?
+         ORDER BY n.updated_at DESC`,
+        [userId, userId, userId]
+      );
+      return rows;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async areFriends(userId: number, friendId: number): Promise<boolean> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id FROM friends WHERE ((user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)) AND status = 'accepted'",
+        [userId, friendId, friendId, userId]
+      );
+      return rows.length > 0;
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Notification methods
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO notifications (user_id, type, title, message, data, is_read) VALUES (?, ?, ?, ?, ?, ?)",
+        [
+          notification.user_id,
+          notification.type,
+          notification.title,
+          notification.message,
+          notification.data ? JSON.stringify(notification.data) : null,
+          notification.is_read || false
+        ]
+      );
+      
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, title, message, data, is_read, created_at FROM notifications WHERE id = ?",
+        [result.insertId]
+      );
+      
+      const row = rows[0];
+      return {
+        ...row,
+        data: row.data ? JSON.parse(row.data) : undefined,
+        created_at: new Date(row.created_at)
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getNotifications(userId: number, limit: number = 50): Promise<Notification[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, title, message, data, is_read, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+        [userId, limit]
+      );
+      
+      return rows.map(row => ({
+        ...row,
+        data: row.data ? JSON.parse(row.data) : undefined,
+        created_at: new Date(row.created_at)
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        "SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = false",
+        [userId]
+      );
+      return rows[0].count;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async markNotificationAsRead(notificationId: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "UPDATE notifications SET is_read = true WHERE id = ?",
+        [notificationId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "UPDATE notifications SET is_read = true WHERE user_id = ? AND is_read = false",
+        [userId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteNotification(notificationId: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "DELETE FROM notifications WHERE id = ?",
+        [notificationId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Skills operations
+  async getUserSkills(userId: number): Promise<string[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        "SELECT skill_id FROM user_skills WHERE user_id = ? ORDER BY created_at",
+        [userId]
+      );
+      return rows.map(row => row.skill_id);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateUserSkills(userId: number, skillIds: string[]): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      // Delete existing skills
+      await conn.execute(
+        "DELETE FROM user_skills WHERE user_id = ?",
+        [userId]
+      );
+
+      // Insert new skills
+      if (skillIds.length > 0) {
+        const values = skillIds.map(skillId => `(${userId}, '${skillId}')`).join(', ');
+        await conn.execute(
+          `INSERT INTO user_skills (user_id, skill_id) VALUES ${values}`
+        );
+      }
     } finally {
       conn.release();
     }
