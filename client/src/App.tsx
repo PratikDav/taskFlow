@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { TranslationProvider } from "@/hooks/use-translation";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Tasks from "@/pages/Tasks";
@@ -17,12 +18,14 @@ import AuthPage from "@/pages/AuthPage";
 import Admin from "@/pages/Admin";
 import Posts from "@/pages/Posts";
 import CreatePost from "@/pages/CreatePost";
+import Friends from "@/pages/Friends";
 import Notes from "@/pages/Notes";
 import NoteDetail from "@/pages/NoteDetail";
 import NoteEdit from "@/pages/NoteEdit";
 import Trash from "@/pages/Trash";
 import UserProfile from "@/pages/UserProfile";
-import Friends from "@/pages/Friends";
+import PanelSettings from "@/pages/PanelSettings";
+import SavedPosts from "@/pages/SavedPosts";
 
 function Router() {
   return (
@@ -41,7 +44,8 @@ function Router() {
       <Route path="/tasks" component={Tasks} />
       <Route path="/settings" component={Settings} />
       <Route path="/profile" component={Profile} />
-      <Route path="/profile/:id" component={UserProfile} />
+      <Route path="/saved-posts" component={SavedPosts} />
+      <Route path="/panel-settings" component={PanelSettings} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -56,34 +60,36 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        {isFullScreenRoute ? (
-          // Full screen layout for auth pages
-          <div className="min-h-screen w-full">
-            <Router />
-          </div>
-        ) : (
-          // Standard layout with sidebar
-          <SidebarProvider>
-            <div className="flex min-h-screen w-full bg-background/50">
-              <AppSidebar />
-              <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <MobileHeader />
-                <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 pt-2 md:pt-4 pb-4 md:pb-6">
-                  <Router />
-                </div>
-              </main>
-              {/* Notification dropdown on the right side - only show on non-fullscreen routes */}
-              {!isFullScreenRoute && (
-                <div className="fixed top-4 right-4 z-50">
-                  <NotificationDropdown />
-                </div>
-              )}
+      <TranslationProvider>
+        <TooltipProvider>
+          {isFullScreenRoute ? (
+            // Full screen layout for auth pages
+            <div className="min-h-screen w-full">
+              <Router />
             </div>
-          </SidebarProvider>
-        )}
-        <Toaster />
-      </TooltipProvider>
+          ) : (
+            // Standard layout with sidebar
+            <SidebarProvider>
+              <div className="flex min-h-screen w-full bg-background/50">
+                <AppSidebar />
+                <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                  <MobileHeader />
+                  <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 pt-2 md:pt-4 pb-4 md:pb-6">
+                    <Router />
+                  </div>
+                </main>
+                {/* Notification dropdown on the right side - only show on non-fullscreen routes */}
+                {!isFullScreenRoute && (
+                  <div className="fixed top-4 right-4 z-50">
+                    <NotificationDropdown />
+                  </div>
+                )}
+              </div>
+            </SidebarProvider>
+          )}
+          <Toaster />
+        </TooltipProvider>
+      </TranslationProvider>
     </QueryClientProvider>
   );
 }

@@ -1,69 +1,109 @@
-import type { Express } from "express";
-import type { Server } from "http";
-import { storage, DEFAULT_USER_ID } from "./storage";
-import { NotificationService } from "./notification-service";
-import { api } from "@shared/routes";
-import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import express, { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { SERVER_SKILLS, getServerSkillById } from "./skills";
+import { z } from "zod";
+import { api } from "../shared/routes.js";
+import { storage } from "./storage.js";
+import { pool } from "./db-mysql.js";
+import { NotificationService } from "./notification-service.js";
+
+const DEFAULT_USER_ID = 0;
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: 'uploads/',
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
+// Ensure uploads directory exists
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Tasks API
-  app.get(api.tasks.list.path, async (req, res) => {
-    const tasks = await storage.getTasks();
-    res.json(tasks);
-  });
+  // Serve uploaded files
+  app.use('/uploads', express.static('uploads'));
 
-  app.get(api.tasks.get.path, async (req, res) => {
-    const task = await storage.getTask(Number(req.params.id));
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-    res.json(task);
-  });
-
-  app.post(api.tasks.create.path, async (req, res) => {
+  // User search API
+  app.get("/api/users/search", async (req, res) => {
     try {
-      const input = api.tasks.create.input.parse(req.body);
-      const task = await storage.createTask(input);
-      res.status(201).json(task);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
-        });
+      const { email } = req.query;
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ message: "Email parameter is required" });
       }
-      throw err;
+
+      const users = await storage.searchUsersByEmail(email);
+      res.json(users);
+    } catch (err) {
+      console.error("Failed to search users:", err);
+      res.status(500).json({ message: "Failed to search users" });
     }
   });
 
-  app.put(api.tasks.update.path, async (req, res) => {
-    try {
-      const input = api.tasks.update.input.parse(req.body);
-      const task = await storage.updateTask(Number(req.params.id), input);
-      if (!task) {
-        return res.status(404).json({ message: 'Task not found' });
-      }
-      res.json(task);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
-        });
-      }
-      throw err;
-    }
-  });
+  // Tasks API - commented out
+  // app.get(api.tasks.list.path, async (req, res) => {
+  //   const tasks = await storage.getTasks();
+  //   res.json(tasks);
+  // });
 
-  app.delete(api.tasks.delete.path, async (req, res) => {
-    await storage.deleteTask(Number(req.params.id));
-    res.status(204).send();
-  });
+  // app.get(api.tasks.get.path, async (req, res) => {
+  //   const task = await storage.getTask(Number(req.params.id));
+  //   if (!task) {
+  //     return res.status(404).json({ message: 'Task not found' });
+  //   }
+  //   res.json(task);
+  // });
+
+  // app.post(api.tasks.create.path, async (req, res) => {
+  //   try {
+  //     const input = api.tasks.create.input.parse(req.body);
+  //     const task = await storage.createTask(input);
+  //     res.status(201).json(task);
+  //   } catch (err) {
+  //     if (err instanceof z.ZodError) {
+  //       return res.status(400).json({
+  //         message: err.errors[0].message,
+  //         field: err.errors[0].path.join('.'),
+  //       });
+  //     }
+  //     throw err;
+  //   }
+  // });
+
+  // app.put(api.tasks.update.path, async (req, res) => {
+  //   try {
+  //     const input = api.tasks.update.input.parse(req.body);
+  //     const task = await storage.updateTask(Number(req.params.id), input);
+  //     if (!task) {
+  //       return res.status(404).json({ message: 'Task not found' });
+  //     }
+  //     res.json(task);
+  //   } catch (err) {
+  //     if (err instanceof z.ZodError) {
+  //       return res.status(400).json({
+  //         message: err.errors[0].message,
+  //         field: err.errors[0].path.join('.'),
+  //       });
+  //     }
+  //     throw err;
+  //   }
+  // });
+
+  // app.delete(api.tasks.delete.path, async (req, res) => {
+  //   await storage.deleteTask(Number(req.params.id));
+  //   res.status(204).send();
+  // });
 
   // User registration endpoint
   app.post('/api/auth/register', async (req, res) => {
@@ -119,7 +159,28 @@ export async function registerRoutes(
         return res.status(400).json({ message: 'Email and password are required' });
       }
 
-      const user = await storage.findUserByEmail(email);
+      // Try to find user by email first, then by username
+      let user;
+      const conn = await pool.getConnection();
+      try {
+        // First try email
+        let [rows] = await conn.execute<any[]>(
+          "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at, password FROM users WHERE email = ?",
+          [email]
+        );
+        
+        if (rows.length === 0) {
+          // If not found by email, try username
+          [rows] = await conn.execute<any[]>(
+            "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at, password FROM users WHERE username = ?",
+            [email]
+          );
+        }
+        
+        user = rows[0];
+      } finally {
+        conn.release();
+      }
 
       if (!user || !user.password) {
         return res.status(401).json({ message: 'Invalid email or password' });
@@ -163,7 +224,7 @@ export async function registerRoutes(
     if (user) {
       // Fetch fresh user data from database to include any new fields
       const [updatedRows] = await storage.db.execute(
-        'SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?',
+        'SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ?',
         [user.id]
       );
 
@@ -173,10 +234,13 @@ export async function registerRoutes(
 
       // Fetch user skills
       const skillIds = await storage.getUserSkills(user.id);
-      // Get full skill objects from server skills data
-      const skills = skillIds
-        .map(skillId => getServerSkillById(skillId))
-        .filter(skill => skill !== undefined); // Filter out any invalid skill IDs
+      // Get full skill objects from database
+      let skills: any[] = [];
+      if (skillIds.length > 0) {
+        const placeholders = skillIds.map(() => '?').join(',');
+        const [skillRows] = await pool.execute(`SELECT id, name, category, color, logo_url as logoUrl FROM skills WHERE id IN (${placeholders})`, skillIds);
+        skills = skillRows as any[];
+      }
 
       const freshUser = {
         id: (updatedRows as any[])[0].id,
@@ -185,6 +249,9 @@ export async function registerRoutes(
         email: (updatedRows as any[])[0].email,
         designation: (updatedRows as any[])[0].designation,
         skills: skills,
+        avatar: (updatedRows as any[])[0].avatar,
+        avatar_original: (updatedRows as any[])[0].avatar_original,
+        avatar_crop: (updatedRows as any[])[0].avatar_crop,
         gmailAddress: (updatedRows as any[])[0].gmail_address,
         githubLink: (updatedRows as any[])[0].github_link,
         linkedinLink: (updatedRows as any[])[0].linkedin_link,
@@ -204,6 +271,17 @@ export async function registerRoutes(
     res.json(null);
   });
 
+  // Get available skills for selection
+  app.get('/api/skills', async (req, res) => {
+    try {
+      const [rows] = await pool.execute('SELECT id, name, category, color, logo_url as logoUrl FROM skills ORDER BY category, name');
+      res.json(rows);
+    } catch (err) {
+      console.error('Error fetching skills:', err);
+      res.status(500).json({ message: 'Failed to fetch skills' });
+    }
+  });
+
   app.get('/api/users/:id', async (req, res) => {
     try {
       const userId = Number(req.params.id);
@@ -213,6 +291,9 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'User not found' });
       }
 
+      // Get user skills
+      const skills = await storage.getUserSkills(userId);
+
       // Return public user info (exclude password and sensitive data)
       const publicUser = {
         id: user.id,
@@ -221,6 +302,7 @@ export async function registerRoutes(
         gmailAddress: user.gmail_address,
         githubLink: user.github_link,
         linkedinLink: user.linkedin_link,
+        skills: skills,
         created_at: user.created_at,
       };
 
@@ -358,13 +440,16 @@ export async function registerRoutes(
         return res.status(400).json({ message: 'Skills must be an array' });
       }
 
-      // Validate skill IDs against available skills
-      const validSkills = skills.filter(skillId => {
-        return typeof skillId === 'string' && getServerSkillById(skillId) !== undefined;
-      });
+      // Validate skill IDs against available skills in database
+      if (skills.length > 0) {
+        const placeholders = skills.map(() => '?').join(',');
+        const [skillRows] = await pool.execute(`SELECT id FROM skills WHERE id IN (${placeholders})`, skills);
+        const validSkillIds = (skillRows as any[]).map(row => row.id);
+        const validSkills = skills.filter(skillId => validSkillIds.includes(skillId));
 
-      if (validSkills.length !== skills.length) {
-        return res.status(400).json({ message: 'Invalid skill IDs provided' });
+        if (validSkills.length !== skills.length) {
+          return res.status(400).json({ message: 'Invalid skill IDs provided' });
+        }
       }
 
       // Update user skills
@@ -442,6 +527,119 @@ export async function registerRoutes(
     }
   });
 
+  // Admin skill logo upload endpoint
+  app.post('/api/admin/skill-logo', upload.single('logo'), async (req, res) => {
+    try {
+      console.log('Skill logo upload request received');
+      console.log('Body:', req.body);
+      console.log('File:', req.file);
+
+      // Check if user is logged in (temporarily allow regular users for testing)
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const user = req.session?.user;
+      if (!user) {
+        console.log('User not logged in');
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      const { skillId } = req.body;
+      if (!skillId) {
+        return res.status(400).json({ message: 'Skill ID is required' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      // Check if skill exists in database
+      const [skillRows] = await pool.execute('SELECT id FROM skills WHERE id = ?', [skillId]);
+      if (skillRows.length === 0) {
+        return res.status(404).json({ message: 'Skill not found' });
+      }
+
+      // Generate unique filename
+      const ext = path.extname(req.file.originalname);
+      const filename = `${skillId}-logo-${Date.now()}${ext}`;
+      const filepath = path.join('uploads', filename);
+
+      // Move file from temp location to final location
+      fs.renameSync(req.file.path, filepath);
+
+      // Update the skill's logoUrl in database
+      await pool.execute('UPDATE skills SET logo_url = ? WHERE id = ?', [`/uploads/${filename}`, skillId]);
+
+      res.json({ 
+        message: 'Logo uploaded successfully',
+        skillId,
+        logoUrl: `/uploads/${filename}`
+      });
+    } catch (err) {
+      console.error('Skill logo upload error:', err);
+      res.status(500).json({ message: 'Failed to upload logo' });
+    }
+  });
+
+  // User avatar upload endpoint
+  app.post('/api/me/avatar', upload.fields([{ name: 'avatar', maxCount: 1 }, { name: 'original', maxCount: 1 }]), async (req, res) => {
+    try {
+      // @ts-ignore
+      const user = req.session?.user;
+      if (!user) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      if (!files || (!files['avatar'] && !files['original'])) {
+        return res.status(400).json({ message: 'No files uploaded' });
+      }
+
+      // Check file sizes and compress if too large
+      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+      if (files['avatar'] && files['avatar'][0] && files['avatar'][0].size > MAX_SIZE) {
+        return res.status(400).json({ message: 'Avatar image file too large. Please use a smaller image.' });
+      }
+      // Allow larger original files since they're optional
+
+      // Save original if present
+      let originalUrl: string | null = null;
+      if (files['original'] && files['original'][0]) {
+        const orig = files['original'][0];
+        const origExt = path.extname(orig.originalname) || '.png';
+        const origFilename = `avatar-original-${user.id}-${Date.now()}${origExt}`;
+        const origPath = path.join('uploads', origFilename);
+        fs.renameSync(orig.path, origPath);
+        originalUrl = `/uploads/${origFilename}`;
+      }
+
+      // Save display avatar (cropped)
+      let avatarUrl: string | null = null;
+      if (files['avatar'] && files['avatar'][0]) {
+        const av = files['avatar'][0];
+        const avExt = path.extname(av.originalname) || '.jpg';
+        const avFilename = `avatar-${user.id}-${Date.now()}${avExt}`;
+        const avPath = path.join('uploads', avFilename);
+        fs.renameSync(av.path, avPath);
+        avatarUrl = `/uploads/${avFilename}`;
+      }
+
+      // Crop metadata (optional)
+      const cropJson = typeof req.body.crop === 'string' ? req.body.crop : JSON.stringify(req.body.crop || null);
+
+      // Persist to DB (update avatar and original as available)
+      await storage.updateUserAvatar(user.id, avatarUrl || originalUrl || '', originalUrl, cropJson);
+
+      // Update session user
+      // @ts-ignore
+      req.session.user = { ...(req.session.user || {}), avatar: avatarUrl || originalUrl, avatar_original: originalUrl, avatar_crop: cropJson };
+
+      res.json({ message: 'Avatar uploaded', avatarUrl: avatarUrl || originalUrl, avatarOriginal: originalUrl, crop: cropJson });
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      res.status(500).json({ message: 'Failed to upload avatar' });
+    }
+  });
+
   // Posts API
   app.get('/api/posts', async (req, res) => {
     try {
@@ -512,12 +710,12 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Forbidden' });
       }
 
-      const { title, content, privacy } = req.body;
+      const { title, content, privacy, titleAlignment } = req.body;
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
-      const updatedPost = await storage.updatePost(postId, title, content, privacy);
+      const updatedPost = await storage.updatePost(postId, title, content, privacy, titleAlignment);
       res.json(updatedPost);
     } catch (err) {
       console.error(err);
@@ -580,12 +778,12 @@ export async function registerRoutes(
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const { name } = req.body;
+      const { name, parentId } = req.body;
       if (!name) {
         return res.status(400).json({ message: 'Name is required' });
       }
 
-      const folder = await storage.createFolder(userId, name);
+      const folder = await storage.createFolder(userId, name, parentId);
       res.status(201).json(folder);
     } catch (err) {
       console.error(err);
@@ -639,9 +837,16 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Forbidden' });
       }
 
-      const { name } = req.body;
-      if (!name) return res.status(400).json({ message: 'Name is required' });
+      const { name, parentId } = req.body;
 
+      // If parentId is provided, update parent relationship
+      if (parentId !== undefined) {
+        const updated = await storage.updateFolderParent(folderId, parentId);
+        return res.json(updated);
+      }
+
+      // Otherwise, update name
+      if (!name) return res.status(400).json({ message: 'Name is required' });
       const updated = await storage.updateFolder(folderId, name);
       res.json(updated);
     } catch (err) {
@@ -1195,7 +1400,213 @@ export async function registerRoutes(
     }
   });
 
-  // Test endpoint to create sample notifications (for development)
+  // Shares API
+  app.get("/api/shares", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const shares = await storage.getShares(userId);
+      // Enrich shares with recipient user info and item details
+      const enriched = await Promise.all(shares.map(async (s) => {
+        const otherUser = await storage.getUserById(s.shared_with_user_id);
+        let item: any = null;
+        if (s.item_type === 'folder') {
+          item = await storage.getFolderById(s.item_id);
+        } else {
+          item = await storage.getNoteById(s.item_id);
+        }
+        return {
+          ...s,
+          shared_with_user: otherUser ? { id: otherUser.id, name: otherUser.name, email: otherUser.email } : null,
+          item: item ? (s.item_type === 'folder' ? { id: item.id, name: item.name } : { id: item.id, title: item.title }) : null
+        };
+      }));
+      res.json(enriched);
+    } catch (err) {
+      console.error("Failed to get shares:", err);
+      res.status(500).json({ message: "Failed to get shares" });
+    }
+  });
+
+  app.get("/api/shares/shared-with-me", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const shares = await storage.getSharedWithMe(userId);
+      // Enrich with owner info and item details
+      const enriched = await Promise.all(shares.map(async (s) => {
+        const owner = await storage.getUserById(s.user_id);
+        let item: any = null;
+        if (s.item_type === 'folder') {
+          item = await storage.getFolderById(s.item_id);
+        } else {
+          item = await storage.getNoteById(s.item_id);
+        }
+        return {
+          ...s,
+          owner: owner ? { id: owner.id, name: owner.name, email: owner.email } : null,
+          item: item ? (s.item_type === 'folder' ? { id: item.id, name: item.name } : { id: item.id, title: item.title }) : null
+        };
+      }));
+      res.json(enriched);
+    } catch (err) {
+      console.error("Failed to get shared items:", err);
+      res.status(500).json({ message: "Failed to get shared items" });
+    }
+  });
+
+  app.post("/api/shares", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const input = api.shares.create.input.parse(req.body);
+      
+      // Verify the user owns the item they're trying to share
+      if (input.item_type === 'folder') {
+        const folder = await storage.getFolderById(input.item_id);
+        if (!folder || folder.user_id !== userId) {
+          return res.status(403).json({ message: "You can only share items you own" });
+        }
+      } else if (input.item_type === 'note') {
+        const note = await storage.getNoteById(input.item_id);
+        if (!note || note.user_id !== userId) {
+          return res.status(403).json({ message: "You can only share items you own" });
+        }
+      }
+
+      // Check if share already exists
+      const existingShares = await storage.getShares(userId);
+      const alreadyShared = existingShares.some(share => 
+        share.shared_with_user_id === input.shared_with_user_id && 
+        share.item_type === input.item_type && 
+        share.item_id === input.item_id
+      );
+
+      if (alreadyShared) {
+        return res.status(400).json({ message: "This item is already shared with this user" });
+      }
+
+      const share = await storage.createShare(userId, input);
+      res.status(201).json(share);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      console.error("Failed to create share:", err);
+      res.status(500).json({ message: "Failed to create share" });
+    }
+  });
+
+  app.delete("/api/shares/:id", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const shareId = parseInt(req.params.id);
+      
+      // Verify the user owns the share
+      const shares = await storage.getShares(userId);
+      const share = shares.find(s => s.id === shareId);
+      
+      if (!share) {
+        return res.status(404).json({ message: "Share not found" });
+      }
+
+      await storage.deleteShare(shareId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Failed to delete share:", err);
+      res.status(500).json({ message: "Failed to delete share" });
+    }
+  });
+
+  // Saved Posts API
+  app.get("/api/saved-posts", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const savedPosts = await storage.getSavedPosts(userId);
+      res.json(savedPosts);
+    } catch (err) {
+      console.error("Failed to get saved posts:", err);
+      res.status(500).json({ message: "Failed to get saved posts" });
+    }
+  });
+
+  app.post("/api/saved-posts", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { post_id } = req.body;
+      if (!post_id || typeof post_id !== 'number') {
+        return res.status(400).json({ message: "post_id is required and must be a number" });
+      }
+
+      // Verify the post exists
+      const post = await storage.getPostById(post_id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const savedPost = await storage.savePost(userId, post_id);
+      res.status(201).json(savedPost);
+    } catch (err) {
+      console.error("Failed to save post:", err);
+      res.status(500).json({ message: "Failed to save post" });
+    }
+  });
+
+  app.delete("/api/saved-posts/:postId", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const postId = parseInt(req.params.postId);
+      await storage.unsavePost(userId, postId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Failed to unsave post:", err);
+      res.status(500).json({ message: "Failed to unsave post" });
+    }
+  });
+
+  app.get("/api/saved-posts/check/:postId", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const postId = parseInt(req.params.postId);
+      const saved = await storage.isPostSaved(userId, postId);
+      res.json({ saved });
+    } catch (err) {
+      console.error("Failed to check if post is saved:", err);
+      res.status(500).json({ message: "Failed to check saved status" });
+    }
+  });
   app.post("/api/notifications/test", async (req, res) => {
     try {
       const userId = req.session?.user?.id;
@@ -1263,6 +1674,72 @@ export async function registerRoutes(
       isFavorite: true
     });
   }
+
+  // Translation Management API (Admin only)
+  app.get('/api/admin/translations', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const translations = await storage.getAllTranslations();
+      res.json(translations);
+    } catch (err) {
+      console.error('Failed to fetch translations:', err);
+      res.status(500).json({ message: 'Failed to fetch translations' });
+    }
+  });
+
+  app.put('/api/admin/translations/:id', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const { text_value } = req.body;
+      if (!text_value || typeof text_value !== 'string') {
+        return res.status(400).json({ message: 'Text value is required' });
+      }
+
+      const translationId = Number(req.params.id);
+      const updatedTranslation = await storage.updateTranslation(translationId, text_value);
+      if (!updatedTranslation) {
+        return res.status(404).json({ message: 'Translation not found' });
+      }
+
+      res.json(updatedTranslation);
+    } catch (err) {
+      console.error('Failed to update translation:', err);
+      res.status(500).json({ message: 'Failed to update translation' });
+    }
+  });
+
+  app.get('/api/translations/:language', async (req, res) => {
+    try {
+      const language = req.params.language;
+      if (!language || !['en', 'bn'].includes(language)) {
+        return res.status(400).json({ message: 'Invalid language' });
+      }
+
+      const translations = await storage.getTranslationsByLanguage(language);
+      res.json(translations);
+    } catch (err) {
+      console.error('Failed to fetch translations:', err);
+      res.status(500).json({ message: 'Failed to fetch translations' });
+    }
+  });
 
   return httpServer;
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { capitalizeFirstLetter } from "@/lib/utils";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -61,7 +62,7 @@ export default function Admin() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Welcome, {me.name}</p>
+            <p className="text-muted-foreground mt-1">Welcome, {capitalizeFirstLetter(me.name)}</p>
           </div>
           <Button variant="destructive" onClick={handleLogout}>
             Sign Out

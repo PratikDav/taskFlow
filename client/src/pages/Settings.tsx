@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Shield, Palette, Globe } from "lucide-react";
+import { Bell, Shield, Palette } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/LanguageContext";
 
 export default function Settings() {
   const [settings, setSettings] = useState({
@@ -15,16 +16,26 @@ export default function Settings() {
     compactMode: false,
     emailNotifications: true,
     taskReminders: true,
-    language: "en",
   });
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Load settings from localStorage
     const savedSettings = localStorage.getItem("app-settings");
     if (savedSettings) {
       try {
-        setSettings(JSON.parse(savedSettings));
+        const parsed = JSON.parse(savedSettings);
+        setSettings({
+          darkMode: parsed.darkMode || false,
+          compactMode: parsed.compactMode || false,
+          emailNotifications: parsed.emailNotifications !== undefined ? parsed.emailNotifications : true,
+          taskReminders: parsed.taskReminders !== undefined ? parsed.taskReminders : true,
+        });
+        
+        // Apply settings immediately
+        document.documentElement.classList.toggle("dark", parsed.darkMode);
+        document.body.classList.toggle("compact-mode", parsed.compactMode);
       } catch (err) {
         console.error("Failed to parse saved settings:", err);
       }
@@ -41,16 +52,21 @@ export default function Settings() {
       document.documentElement.classList.toggle("dark", value);
     }
 
+    // Apply compact mode immediately
+    if (key === "compactMode") {
+      document.body.classList.toggle("compact-mode", value);
+    }
+
     toast({
-      title: "Settings Updated",
-      description: "Your preferences have been saved.",
+      title: t("settingsUpdated"),
+      description: t("settingsUpdatedDescription"),
     });
   };
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-4xl font-display font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account preferences and workspace settings.</p>
+        <h1 className="text-4xl font-display font-bold text-foreground">{t("settingsTitle")}</h1>
+        <p className="text-muted-foreground mt-1">{t("settingsDescription")}</p>
       </div>
 
       <div className="grid gap-6">
@@ -62,16 +78,16 @@ export default function Settings() {
                 <Palette className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle>Appearance</CardTitle>
-                <CardDescription>Customize how the app looks.</CardDescription>
+                <CardTitle>{t("appearance")}</CardTitle>
+                <CardDescription>{t("appearanceDescription")}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label className="text-base">Dark Mode</Label>
-                <p className="text-sm text-muted-foreground">Enable dark mode for the interface.</p>
+                <Label className="text-base">{t("darkMode")}</Label>
+                <p className="text-sm text-muted-foreground">{t("darkModeDescription")}</p>
               </div>
               <Switch
                 checked={settings.darkMode}
@@ -81,8 +97,8 @@ export default function Settings() {
             <Separator />
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label className="text-base">Compact Mode</Label>
-                <p className="text-sm text-muted-foreground">Reduce spacing in lists and tables.</p>
+                <Label className="text-base">{t("compactMode")}</Label>
+                <p className="text-sm text-muted-foreground">{t("compactModeDescription")}</p>
               </div>
               <Switch
                 checked={settings.compactMode}
@@ -100,16 +116,16 @@ export default function Settings() {
                 <Bell className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>Control when you get notified.</CardDescription>
+                <CardTitle>{t("notifications")}</CardTitle>
+                <CardDescription>{t("notificationsDescription")}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label className="text-base">Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive daily summaries via email.</p>
+                <Label className="text-base">{t("emailNotifications")}</Label>
+                <p className="text-sm text-muted-foreground">{t("emailNotificationsDescription")}</p>
               </div>
               <Switch
                 checked={settings.emailNotifications}
@@ -119,8 +135,8 @@ export default function Settings() {
             <Separator />
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label className="text-base">Task Reminders</Label>
-                <p className="text-sm text-muted-foreground">Get notified when a task is due.</p>
+                <Label className="text-base">{t("taskReminders")}</Label>
+                <p className="text-sm text-muted-foreground">{t("taskRemindersDescription")}</p>
               </div>
               <Switch
                 checked={settings.taskReminders}
@@ -130,48 +146,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Language Section */}
-        <Card className="rounded-2xl shadow-sm border-border/50">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-xl text-green-600">
-                <Globe className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>Language</CardTitle>
-                <CardDescription>Choose your preferred language.</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-base">Interface Language</Label>
-                <p className="text-sm text-muted-foreground">Select the language for the app interface.</p>
-              </div>
-              <Select
-                value={settings.language}
-                onValueChange={(value) => updateSetting("language", value)}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="de">Deutsch</SelectItem>
-                  <SelectItem value="it">Italiano</SelectItem>
-                  <SelectItem value="pt">Português</SelectItem>
-                  <SelectItem value="ru">Русский</SelectItem>
-                  <SelectItem value="ja">日本語</SelectItem>
-                  <SelectItem value="ko">한국어</SelectItem>
-                  <SelectItem value="zh">中文</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

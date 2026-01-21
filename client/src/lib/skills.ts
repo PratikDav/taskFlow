@@ -5,9 +5,38 @@ export interface Skill {
   icon: string; // Lucide icon name or custom icon
   category: string;
   color: string;
+  logoUrl?: string; // Optional custom logo URL
 }
 
-// Predefined skill collection
+// Cache for skills data
+let skillsCache: Skill[] | null = null;
+
+// Fetch skills from server
+export const fetchAvailableSkills = async (): Promise<Skill[]> => {
+  if (skillsCache) {
+    return skillsCache;
+  }
+
+  try {
+    const response = await fetch('/api/skills');
+    if (!response.ok) {
+      throw new Error('Failed to fetch skills');
+    }
+    skillsCache = await response.json();
+    return skillsCache || [];
+  } catch (error) {
+    console.error('Error fetching skills:', error);
+    // Fallback to hardcoded skills if server is unavailable
+    return AVAILABLE_SKILLS;
+  }
+};
+
+// Clear skills cache (useful for logout)
+export const clearSkillsCache = () => {
+  skillsCache = null;
+};
+
+// Predefined skill collection (fallback)
 export const AVAILABLE_SKILLS: Skill[] = [
   // Frontend
   { id: 'react', name: 'React.js', icon: 'React', category: 'Frontend', color: '#61DAFB' },
@@ -55,16 +84,19 @@ export const AVAILABLE_SKILLS: Skill[] = [
 ];
 
 // Get skill by ID
-export const getSkillById = (id: string): Skill | undefined => {
-  return AVAILABLE_SKILLS.find(skill => skill.id === id);
+export const getSkillById = (id: string, skills?: Skill[]): Skill | undefined => {
+  const skillList = skills || skillsCache || AVAILABLE_SKILLS;
+  return skillList.find(skill => skill.id === id);
 };
 
 // Get skills by category
-export const getSkillsByCategory = (category: string): Skill[] => {
-  return AVAILABLE_SKILLS.filter(skill => skill.category === category);
+export const getSkillsByCategory = (category: string, skills?: Skill[]): Skill[] => {
+  const skillList = skills || skillsCache || AVAILABLE_SKILLS;
+  return skillList.filter(skill => skill.category === category);
 };
 
 // Get all categories
-export const getSkillCategories = (): string[] => {
-  return Array.from(new Set(AVAILABLE_SKILLS.map(skill => skill.category)));
+export const getSkillCategories = (skills?: Skill[]): string[] => {
+  const skillList = skills || skillsCache || AVAILABLE_SKILLS;
+  return Array.from(new Set(skillList.map(skill => skill.category)));
 };

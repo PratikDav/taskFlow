@@ -20,6 +20,7 @@ export type UpdateTaskRequest = z.infer<typeof updateTaskSchema>;
 
 export const insertFolderSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  parentId: z.number().nullable(),
 });
 
 export type InsertFolder = z.infer<typeof insertFolderSchema>;
@@ -77,3 +78,29 @@ export const updateNotificationSchema = z.object({
 });
 
 export type UpdateNotificationRequest = z.infer<typeof updateNotificationSchema>;
+
+export const insertShareSchema = z.object({
+  shared_with_user_id: z.number(),
+  item_type: z.enum(["folder", "note"]),
+  item_id: z.number(),
+});
+
+export type InsertShare = z.infer<typeof insertShareSchema>;
+
+export interface Share extends InsertShare {
+  id: number;
+  user_id: number;
+  created_at: Date;
+}
+
+export const insertSavedPostSchema = z.object({
+  post_id: z.number(),
+});
+
+export type InsertSavedPost = z.infer<typeof insertSavedPostSchema>;
+
+export interface SavedPost extends InsertSavedPost {
+  id: number;
+  user_id: number;
+  created_at: Date;
+}

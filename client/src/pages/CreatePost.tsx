@@ -3,13 +3,14 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 export default function CreatePost() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
-  const [post, setPost] = useState({ title: "", content: "", codeBlockTheme: "light", privacy: "public" });
+  const [post, setPost] = useState({ title: "", content: "", codeBlockTheme: "light", privacy: "public", titleAlignment: "left" });
 
   const modules = {
     toolbar: [
@@ -132,14 +133,30 @@ export default function CreatePost() {
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 border rounded-lg bg-card space-y-4">
-        <input
-          type="text"
-          placeholder="Post title..."
-          value={post.title}
-          onChange={(e) => setPost({ ...post, title: e.target.value })}
-          className="w-full p-2 border rounded-md bg-background"
-          disabled={loading}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="title">Post Title</Label>
+          <div className="flex gap-2">
+            <Input
+              id="title"
+              type="text"
+              placeholder="Post title..."
+              value={post.title}
+              onChange={(e) => setPost({ ...post, title: e.target.value })}
+              className="flex-1"
+              disabled={loading}
+            />
+            <Select value={post.titleAlignment} onValueChange={(value) => setPost({ ...post, titleAlignment: value })}>
+              <SelectTrigger className="w-32 bg-slate-50 border-slate-300 hover:bg-slate-100 focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
+                <SelectValue placeholder="Left" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-slate-200 shadow-lg">
+                <SelectItem value="left" className="hover:bg-slate-50 focus:bg-slate-50">Left</SelectItem>
+                <SelectItem value="center" className="hover:bg-slate-50 focus:bg-slate-50">Center</SelectItem>
+                <SelectItem value="right" className="hover:bg-slate-50 focus:bg-slate-50">Right</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <ReactQuill
           theme="snow"
           value={post.content}

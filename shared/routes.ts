@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertTaskSchema, Task, insertFolderSchema, Folder, insertNoteSchema, Note } from './schema';
+import { insertTaskSchema, Task, insertFolderSchema, Folder, insertNoteSchema, Note, insertShareSchema, Share } from './schema';
 
 const taskResponseSchema = z.object({
   id: z.number(),
@@ -152,6 +152,65 @@ export const api = {
       responses: {
         204: z.void(),
         404: errorSchemas.notFound,
+      },
+    },
+  },
+  shares: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/shares',
+      responses: {
+        200: z.array(z.custom<Share>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/shares',
+      input: insertShareSchema,
+      responses: {
+        201: z.custom<Share>(),
+        400: errorSchemas.validation,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/shares/:id',
+      responses: {
+        204: z.void(),
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+  savedPosts: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/saved-posts',
+      responses: {
+        200: z.array(z.custom<any>()),
+      },
+    },
+    save: {
+      method: 'POST' as const,
+      path: '/api/saved-posts',
+      input: z.object({ post_id: z.number() }),
+      responses: {
+        201: z.custom<any>(),
+        400: errorSchemas.validation,
+      },
+    },
+    unsave: {
+      method: 'DELETE' as const,
+      path: '/api/saved-posts/:postId',
+      responses: {
+        204: z.void(),
+        404: errorSchemas.notFound,
+      },
+    },
+    check: {
+      method: 'GET' as const,
+      path: '/api/saved-posts/check/:postId',
+      responses: {
+        200: z.object({ saved: z.boolean() }),
       },
     },
   },

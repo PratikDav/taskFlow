@@ -8,6 +8,7 @@ import { User, Mail, Github, Linkedin, UserPlus, Users, UserCheck } from "lucide
 import { useToast } from "@/hooks/use-toast";
 import { useFriends } from "@/hooks/use-friends";
 import { useFriendsContent } from "@/hooks/use-friends-content";
+import { capitalizeFirstLetter } from "@/lib/utils";
 
 interface UserProfile {
   id: number;
@@ -16,6 +17,7 @@ interface UserProfile {
   gmailAddress?: string;
   githubLink?: string;
   linkedinLink?: string;
+  skills?: string[];
   created_at: string;
 }
 
@@ -114,7 +116,7 @@ export default function UserProfile() {
     <div className="space-y-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-display font-bold text-foreground">{user.name}'s Profile</h1>
+          <h1 className="text-4xl font-display font-bold text-foreground">{capitalizeFirstLetter(user.name)}'s Profile</h1>
           <p className="text-muted-foreground mt-1">View profile and connect.</p>
         </div>
         {!isCurrentUser && currentUser && (
@@ -138,7 +140,7 @@ export default function UserProfile() {
         )}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         {/* Basic Information */}
         <Card className="rounded-2xl shadow-sm border-border/50">
           <CardHeader>
@@ -155,7 +157,7 @@ export default function UserProfile() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Full Name</Label>
-              <p className="text-sm">{user.name}</p>
+              <p className="text-sm">{capitalizeFirstLetter(user.name)}</p>
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium">Email</Label>
@@ -224,6 +226,36 @@ export default function UserProfile() {
             )}
           </CardContent>
         </Card>
+
+        {/* Skills */}
+        <Card className="rounded-2xl shadow-sm border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-500/10 rounded-xl text-green-500">
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <CardTitle>Skills</CardTitle>
+                <CardDescription>Technical expertise.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {user.skills && user.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {user.skills.map((skill, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No skills specified.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Link Up Content - Only show if they are linked up */}
@@ -242,7 +274,7 @@ export default function UserProfile() {
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle>{user.name}'s Shared Content</CardTitle>
+                  <CardTitle>{capitalizeFirstLetter(user.name)}'s Shared Content</CardTitle>
                   <CardDescription>Link up-only posts and notes.</CardDescription>
                 </div>
               </div>

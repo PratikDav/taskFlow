@@ -7,6 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useFriends } from "@/hooks/use-friends";
+import { capitalizeFirstLetter } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
 import { 
   UserPlus, 
   UserCheck, 
@@ -47,6 +49,7 @@ export default function Friends() {
   
   const { friends, friendRequests, acceptFriendRequest, rejectFriendRequest, removeFriend } = useFriends();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
 
   // Filter and sort friends
@@ -175,7 +178,7 @@ export default function Friends() {
   if (me === undefined) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-center">Loading...</div>
+        <div className="text-center">{t('common.loading')}</div>
       </div>
     );
   }
@@ -185,7 +188,7 @@ export default function Friends() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">Please log in to view friends.</p>
+            <p className="text-center text-muted-foreground">{t('friends.login_required')}</p>
           </CardContent>
         </Card>
       </div>
@@ -195,8 +198,8 @@ export default function Friends() {
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Link Ups</h1>
-        <p className="text-sm text-muted-foreground">Manage your link ups and link up requests.</p>
+        <h1 className="text-2xl font-bold">{t('friends.friends')}</h1>
+        <p className="text-sm text-muted-foreground">{t('friends.manage_connections')}</p>
       </div>
 
       <div className="grid gap-6">
@@ -208,9 +211,9 @@ export default function Friends() {
                 <UserPlus className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle>Link Up Requests</CardTitle>
+                <CardTitle>{t('friends.link_up_requests')}</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {friendRequests.length} pending request{friendRequests.length !== 1 ? 's' : ''}
+                  {friendRequests.length} {friendRequests.length !== 1 ? t('friends.pending_requests') : t('friends.pending_request')}
                 </p>
               </div>
             </div>
@@ -218,14 +221,14 @@ export default function Friends() {
           <CardContent>
             {friendRequests.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
-                No pending link up requests.
+                {t('friends.no_pending_requests')}
               </p>
             ) : (
               <div className="space-y-3">
                 {friendRequests.map((request) => (
                   <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
-                      <p className="font-medium">{request.name}</p>
+                      <p className="font-medium">{capitalizeFirstLetter(request.name)}</p>
                       <p className="text-sm text-muted-foreground">{request.email}</p>
                     </div>
                     <div className="flex gap-2">
@@ -236,7 +239,7 @@ export default function Friends() {
                         className="bg-green-600 hover:bg-green-700"
                       >
                         <UserCheck className="h-4 w-4 mr-1" />
-                        Accept
+                        {t('friends.accept')}
                       </Button>
                       <Button
                         size="sm"
@@ -245,7 +248,7 @@ export default function Friends() {
                         disabled={loading}
                       >
                         <UserX className="h-4 w-4 mr-1" />
-                        Reject
+                        {t('friends.reject')}
                       </Button>
                     </div>
                   </div>
@@ -264,7 +267,7 @@ export default function Friends() {
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle>My Link Ups</CardTitle>
+                  <CardTitle>{t('friends.your_link_ups')}</CardTitle>
                   <p className="text-sm text-muted-foreground">
                     {filteredAndSortedFriends.length} link up{filteredAndSortedFriends.length !== 1 ? 's' : ''}
                     {searchQuery && ` (filtered from ${friends.length})`}
@@ -281,7 +284,7 @@ export default function Friends() {
           <CardContent>
             {friends.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
-                No link ups yet. Send some link up requests!
+                {t('friends.no_link_ups_yet')}
               </p>
             ) : (
               <div className="space-y-4">
@@ -291,7 +294,7 @@ export default function Friends() {
                   <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
-                      placeholder="Search link ups..."
+                      placeholder={t('friends.search_link_ups')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10"
@@ -305,9 +308,9 @@ export default function Friends() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="name">Name</SelectItem>
-                        <SelectItem value="email">Email</SelectItem>
-                        <SelectItem value="recent">Recent</SelectItem>
+                        <SelectItem value="name">{t('friends.name')}</SelectItem>
+                        <SelectItem value="email">{t('friends.email')}</SelectItem>
+                        <SelectItem value="recent">{t('friends.recent')}</SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -343,7 +346,7 @@ export default function Friends() {
                 {/* Friends Display */}
                 {paginatedFriends.length === 0 && searchQuery ? (
                   <p className="text-center text-muted-foreground py-8">
-                    No link ups found matching "{searchQuery}"
+                    {t('friends.no_link_ups_found')} "{searchQuery}"
                   </p>
                 ) : (
                   <>
@@ -364,7 +367,7 @@ export default function Friends() {
                                 {friend.name.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <p className="font-medium">{friend.name}</p>
+                                <p className="font-medium">{capitalizeFirstLetter(friend.name)}</p>
                                 <p className="text-sm text-muted-foreground">{friend.email}</p>
                               </div>
                               <Button
@@ -378,7 +381,7 @@ export default function Friends() {
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full"
                               >
                                 <UserX className="h-4 w-4 mr-1" />
-                                Remove
+                                {t('friends.remove')}
                               </Button>
                             </div>
                           </Card>
@@ -393,7 +396,7 @@ export default function Friends() {
                                 {friend.name.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <p className="font-medium">{friend.name}</p>
+                                <p className="font-medium">{capitalizeFirstLetter(friend.name)}</p>
                                 <p className="text-sm text-muted-foreground">{friend.email}</p>
                               </div>
                             </div>
@@ -408,7 +411,7 @@ export default function Friends() {
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <UserX className="h-4 w-4 mr-1" />
-                              Remove
+                              {t('friends.remove')}
                             </Button>
                           </div>
                         )
@@ -419,7 +422,7 @@ export default function Friends() {
                     {totalPages > 1 && (
                       <div className="flex items-center justify-between pt-4">
                         <p className="text-sm text-muted-foreground">
-                          Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedFriends.length)} of {filteredAndSortedFriends.length}
+                          {t('friends.showing')} {startIndex + 1}-{Math.min(endIndex, filteredAndSortedFriends.length)} {t('friends.of')} {filteredAndSortedFriends.length}
                         </p>
                         <div className="flex items-center gap-2">
                           <Button
@@ -429,10 +432,10 @@ export default function Friends() {
                             disabled={currentPage === 1}
                           >
                             <ChevronLeft className="h-4 w-4" />
-                            Previous
+                            {t('friends.previous')}
                           </Button>
                           <span className="text-sm text-muted-foreground px-2">
-                            Page {currentPage} of {totalPages}
+                            {t('friends.page')} {currentPage} {t('friends.of')} {totalPages}
                           </span>
                           <Button
                             variant="outline"
@@ -440,7 +443,7 @@ export default function Friends() {
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
                           >
-                            Next
+                            {t('friends.next')}
                             <ChevronRight className="h-4 w-4" />
                           </Button>
                         </div>
