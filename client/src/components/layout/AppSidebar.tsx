@@ -15,6 +15,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { capitalizeFirstLetter } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +55,7 @@ export function AppSidebar() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -80,17 +84,17 @@ export function AppSidebar() {
 
   // Show dashboard only for admins, My Tasks for all users, Settings only for admins
   const menuItems = [
-    { title: "Feed", url: "/posts", icon: Newspaper },
-    { title: "Link Ups", url: "/friends", icon: Users },
-    { title: "My Tasks", url: "/tasks", icon: CheckSquare },
-    { title: "Notes", url: "/notes", icon: FileText },
-    { title: "Trash", url: "/trash", icon: Trash2 },
     ...(currentUser?.role === "admin" 
-      ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
+      ? [{ title: t('nav.dashboard'), url: "/", icon: LayoutDashboard }]
       : []),
     ...(currentUser?.role === "admin" 
-      ? [{ title: "Settings", url: "/settings", icon: Settings }]
+      ? [{ title: t('nav.admin'), url: "/panel-settings", icon: Settings }]
       : []),
+    { title: t('nav.posts'), url: "/posts", icon: Newspaper },
+    { title: t('nav.friends'), url: "/friends", icon: Users },
+    { title: t('nav.tasks'), url: "/tasks", icon: CheckSquare },
+    { title: t('nav.notes'), url: "/notes", icon: FileText },
+    { title: t('nav.trash'), url: "/trash", icon: Trash2 },
   ];
 
   return (
@@ -150,10 +154,30 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
+      {/* Language Switcher */}
+      <div className="px-3 py-2 border-t border-sidebar-border">
+        <LanguageSwitcher />
+      </div>
+
       <SidebarFooter className="p-3 sm:p-4 border-t border-border/20">
         <div className="flex items-center gap-2 sm:gap-3 group-data-[collapsible=icon]:justify-center">
-          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white shadow-md flex-shrink-0">
-            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white shadow-md flex-shrink-0 overflow-hidden">
+            {currentUser?.avatar ? (
+              <img
+                src={currentUser.avatar}
+                alt={capitalizeFirstLetter(currentUser.name)}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = '<div class="w-full h-full rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white"><svg class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg></div>';
+                  }
+                }}
+              />
+            ) : (
+              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            )}
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden min-w-0 flex-1">
             <span className="text-xs sm:text-sm font-semibold truncate">{currentUser?.name || "Guest"}</span>
@@ -167,52 +191,53 @@ export function AppSidebar() {
                 <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 sm:w-52">
+            <DropdownMenuContent align="end" className="w-48 sm:w-52 bg-slate-50 border-slate-200">
               {currentUser ? (
                 <>
                   <DropdownMenuItem asChild className="h-9 sm:h-10">
                     <Link href="/profile" className="flex items-center gap-2 px-3">
                       <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span className="text-sm">My Profile</span>
+                      <span className="text-sm">{t('profile.my_profile')}</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="h-9 sm:h-10">
                     <Link href="/settings" className="flex items-center gap-2 px-3">
                       <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span className="text-sm">Settings</span>
+                      <span className="text-sm">{t('nav.settings')}</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setLogoutDialogOpen(true)} className="text-destructive focus:text-destructive h-9 sm:h-10 px-3">
                     <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-                    <span className="text-sm">Logout</span>
+                    <span className="text-sm">{t('nav.logout')}</span>
                   </DropdownMenuItem>
                 </>
               ) : (
                 <DropdownMenuItem asChild className="h-9 sm:h-10">
                   <Link href="/auth" className="flex items-center gap-2 px-3">
                     <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    <span className="text-sm">Login/Sign Up</span>
+                    <span className="text-sm">{t('common.login_signup')}</span>
                   </Link>
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
       </SidebarFooter>
 
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Logout</AlertDialogTitle>
+            <AlertDialogTitle>{t('common.logout')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to logout? You will be signed out and redirected to the posts page.
+              {t('common.logout_confirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Logout
+              {t('common.logout')}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

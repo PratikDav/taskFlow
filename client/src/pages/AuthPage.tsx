@@ -106,11 +106,11 @@ export default function AuthPage() {
               <TabsContent value="login" className="space-y-4">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">Email or Username</Label>
                     <Input
                       id="login-email"
-                      type="email"
-                      placeholder="your@email.com"
+                      type="text"
+                      placeholder="your@email.com or username"
                       value={loginCreds.email}
                       onChange={(e) =>
                         setLoginCreds({ ...loginCreds, email: e.target.value })

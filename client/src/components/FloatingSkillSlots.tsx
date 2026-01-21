@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { AVAILABLE_SKILLS, getSkillById, getSkillsByCategory, getSkillCategories, type Skill } from '@/lib/skills';
+import { fetchAvailableSkills, getSkillById, getSkillsByCategory, getSkillCategories, type Skill } from '@/lib/skills';
 
 interface SkillSlotProps {
   skill?: Skill;
   onSelect: (skill: Skill) => void;
   onRemove: () => void;
   size?: 'sm' | 'md' | 'lg';
+  tooltipStyle?: React.CSSProperties;
+  showRemove?: boolean;
+  isLeft?: boolean;
 }
 
-const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size = 'md' }) => {
+const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size = 'md', tooltipStyle, showRemove = true, isLeft = false }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const sizeClasses = {
@@ -31,37 +34,58 @@ const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size =
   return (
     <div
       className={`relative ${sizeClasses[size]} rounded-full border-2 border-white shadow-lg transition-all duration-300 ${skill ? 'hover:scale-110 hover:shadow-xl group' : ''}`}
-      style={{ backgroundColor: skill ? skill.color : '#f1f5f9', pointerEvents: skill ? 'auto' : 'none' }}
+      style={{ backgroundColor: skill && !skill.logoUrl ? skill.color : '#f1f5f9' }}
       onMouseEnter={skill ? () => setIsHovered(true) : undefined}
       onMouseLeave={skill ? () => setIsHovered(false) : undefined}
     >
       {skill ? (
         <>
           {/* Skill Icon */}
-          <div className="w-full h-full rounded-full flex items-center justify-center text-white">
-            <div className={iconSizes[size]} style={{ color: 'white' }}>
-              {/* For now, we'll use a simple circle. In a real app, you'd use actual icons */}
+          <div className="w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden">
+            {skill.logoUrl ? (
+              <img
+                src={skill.logoUrl}
+                alt={skill.name}
+                className="w-full h-full object-cover rounded-full"
+                onError={(e) => {
+                  // Fallback to first letter if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `<div class="w-full h-full rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">${skill.name.charAt(0)}</div>`;
+                    // Also set background color since image failed
+                    const grandParent = parent.parentElement?.parentElement;
+                    if (grandParent) {
+                      grandParent.style.backgroundColor = skill.color;
+                    }
+                  }
+                }}
+              />
+            ) : (
               <div className="w-full h-full rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
                 {skill.name.charAt(0)}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Remove button on hover */}
-          {isHovered && (
+          {showRemove && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove();
               }}
-              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+              className={`absolute -top-2 ${isLeft ? '-left-2' : '-right-2'} w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-700 transition-colors shadow-lg z-30 opacity-0 group-hover:opacity-100`}
+              aria-label="Remove skill"
+              title="Remove skill"
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </button>
           )}
 
           {/* Tooltip */}
-          <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
+          <div className="absolute px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20" style={tooltipStyle ?? {}}>
             {skill.name}
           </div>
         </>
@@ -93,11 +117,30 @@ const SkillSelectionDialog: React.FC<SkillSelectionDialogProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = ['All', ...getSkillCategories()];
+  useEffect(() => {
+    const loadSkills = async () => {
+      try {
+        const skills = await fetchAvailableSkills();
+        setAvailableSkills(skills);
+      } catch (error) {
+        console.error('Failed to load skills:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      loadSkills();
+    }
+  }, [isOpen]);
+
+  const categories = ['All', ...getSkillCategories(availableSkills)];
   const selectedSkillIds = selectedSkills.map(skill => skill.id);
 
-  const filteredSkills = AVAILABLE_SKILLS.filter(skill => {
+  const filteredSkills = availableSkills.filter(skill => {
     const matchesSearch = skill.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || skill.category === selectedCategory;
     const notSelected = !selectedSkillIds.includes(skill.id);
@@ -136,26 +179,53 @@ const SkillSelectionDialog: React.FC<SkillSelectionDialogProps> = ({
 
           {/* Skills Grid */}
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-96 overflow-y-auto">
-            {filteredSkills.map(skill => (
-              <button
-                key={skill.id}
-                onClick={() => {
-                  onSelectSkill(skill);
-                  onClose();
-                }}
-                className="flex flex-col items-center p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors group"
-              >
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold mb-2"
-                  style={{ backgroundColor: skill.color }}
+            {loading ? (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                Loading skills...
+              </div>
+            ) : (
+              filteredSkills.map(skill => (
+                <button
+                  key={skill.id}
+                  onClick={() => {
+                    onSelectSkill(skill);
+                    onClose();
+                  }}
+                  className="flex flex-col items-center p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors group"
                 >
-                  {skill.name.charAt(0)}
-                </div>
-                <span className="text-xs text-center group-hover:text-primary transition-colors">
-                  {skill.name}
-                </span>
-              </button>
-            ))}
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold mb-2 overflow-hidden"
+                    style={{ backgroundColor: skill.logoUrl ? 'transparent' : skill.color }}
+                  >
+                    {skill.logoUrl ? (
+                      <img
+                        src={skill.logoUrl}
+                        alt={skill.name}
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => {
+                          // Fallback to first letter if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.style.backgroundColor = skill.color;
+                            parent.innerHTML = skill.name.charAt(0);
+                            parent.style.display = 'flex';
+                            parent.style.alignItems = 'center';
+                            parent.style.justifyContent = 'center';
+                          }
+                        }}
+                      />
+                    ) : (
+                      skill.name.charAt(0)
+                    )}
+                  </div>
+                  <span className="text-xs text-center group-hover:text-primary transition-colors">
+                    {skill.name}
+                  </span>
+                </button>
+              ))
+            )}
           </div>
 
           {filteredSkills.length === 0 && (
@@ -214,11 +284,32 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
       {/* Circular slots around the center - top semicircle only to avoid extending below */}
       {Array.from({ length: visibleSlots }, (_, i) => {
         const angleRange = Math.PI; // 180 degrees for top semicircle only
-        const startAngle = -Math.PI / 2; // Start from top
+        const startAngle = -Math.PI / 2 - Math.PI / 2; // Start from top-left (rotated 90 degrees left)
         const angle = startAngle + (i / Math.max(1, visibleSlots - 1)) * angleRange;
-        const radius = 170; // Larger radius to prevent overlap in semicircle
+        const radius = 120; // Closer radius for better proximity to profile
         const x = Math.cos(angle) * radius;
         const y = Math.sin(angle) * radius;
+
+        // Determine tooltip position based on circle location
+        const tooltipStyle: React.CSSProperties = {};
+        if (Math.abs(angle + Math.PI / 2) < Math.PI / 6) { // Top circles (within 30° of vertical)
+          tooltipStyle.bottom = '100%';
+          tooltipStyle.left = '50%';
+          tooltipStyle.transform = 'translateX(-50%)';
+          tooltipStyle.marginBottom = '0.5rem';
+        } else if (x < 0) { // Left side circles
+          tooltipStyle.right = '100%';
+          tooltipStyle.top = '50%';
+          tooltipStyle.transform = 'translateY(-50%)';
+          tooltipStyle.marginRight = '0.5rem';
+        } else { // Right side circles
+          tooltipStyle.left = '100%';
+          tooltipStyle.top = '50%';
+          tooltipStyle.transform = 'translateY(-50%)';
+          tooltipStyle.marginLeft = '0.5rem';
+        }
+
+        const isLeft = x < 0;
 
         return (
           <div
@@ -236,6 +327,9 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
               skill={i < userSkills.length ? userSkills[i] : undefined}
               onSelect={handleSkillSelect}
               onRemove={() => handleSkillRemove(i)}
+              tooltipStyle={tooltipStyle}
+              showRemove={true}
+              isLeft={isLeft}
               size="md"
             />
           </div>
