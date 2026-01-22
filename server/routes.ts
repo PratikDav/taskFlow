@@ -1646,6 +1646,114 @@ export async function registerRoutes(
     }
   });
 
+  // Bug Report API
+  app.post("/api/bug-reports", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { type, message } = req.body;
+      if (!type || !message) {
+        return res.status(400).json({ message: "Type and message are required" });
+      }
+
+      if (!["bug", "feature_request"].includes(type)) {
+        return res.status(400).json({ message: "Invalid type" });
+      }
+
+      const bugReport = await storage.createBugReport(userId, type, message);
+      res.json(bugReport);
+    } catch (err) {
+      console.error("Failed to create bug report:", err);
+      res.status(500).json({ message: "Failed to create bug report" });
+    }
+  });
+
+  app.get("/api/admin/bug-reports", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const bugReports = await storage.getBugReports();
+      res.json(bugReports);
+    } catch (err) {
+      console.error("Failed to fetch bug reports:", err);
+      res.status(500).json({ message: "Failed to fetch bug reports" });
+    }
+  });
+
+  app.put("/api/admin/bug-reports/:id", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const reportId = parseInt(req.params.id);
+      const { status, admin_response } = req.body;
+
+      const updates: any = {};
+      if (status !== undefined) updates.status = status;
+      if (admin_response !== undefined) updates.admin_response = admin_response;
+
+      const updatedReport = await storage.updateBugReport(reportId, updates);
+
+      // If admin_response is provided, send notification to user
+      if (admin_response) {
+        const report = await storage.getBugReports().then(reports => reports.find(r => r.id === reportId));
+        if (report) {
+          await storage.createNotification({
+            user_id: report.user_id,
+            type: "system",
+            title: `Bug Report Update: ${report.type === 'bug' ? 'Bug' : 'Feature Request'}`,
+            message: `Your ${report.type === 'bug' ? 'bug report' : 'feature request'} has been updated: ${admin_response}`,
+            data: { bugReportId: reportId }
+          });
+        }
+      }
+
+      res.json(updatedReport);
+    } catch (err) {
+      console.error("Failed to update bug report:", err);
+      res.status(500).json({ message: "Failed to update bug report" });
+    }
+  });
+
+  app.delete("/api/admin/bug-reports/:id", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const reportId = parseInt(req.params.id);
+      await storage.deleteBugReport(reportId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Failed to delete bug report:", err);
+      res.status(500).json({ message: "Failed to delete bug report" });
+    }
+  });
+
   // Seed data
   const existingTasks = await storage.getTasks();
   if (existingTasks.length === 0) {

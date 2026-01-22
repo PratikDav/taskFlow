@@ -9,7 +9,10 @@ import {
   type InsertShare,
   type Share,
   type InsertSavedPost,
-  type SavedPost
+  type SavedPost,
+  type InsertBugReport,
+  type UpdateBugReportRequest,
+  type BugReport
 } from "@shared/schema";
 
 export interface User {
@@ -135,6 +138,12 @@ export interface IStorage {
   markNotificationAsRead(notificationId: number): Promise<void>;
   markAllNotificationsAsRead(userId: number): Promise<void>;
   deleteNotification(notificationId: number): Promise<void>;
+
+  // Bug report operations
+  createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport>;
+  getBugReports(): Promise<(BugReport & { userName: string; userEmail: string })[]>;
+  updateBugReport(id: number, updates: UpdateBugReportRequest): Promise<BugReport>;
+  deleteBugReport(id: number): Promise<void>;
 
   // Skills operations
   getUserSkills(userId: number): Promise<string[]>;
@@ -1178,6 +1187,93 @@ export class MySQLStorage implements IStorage {
     }
   }
 
+  // Bug report methods
+  async createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO bug_reports (user_id, type, message) VALUES (?, ?, ?)",
+        [userId, type, message]
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, message, status, admin_response, created_at, updated_at FROM bug_reports WHERE id = ?",
+        [result.insertId]
+      );
+
+      return rows[0];
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugReports(): Promise<(BugReport & { userName: string; userEmail: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT br.id, br.user_id, br.type, br.message, br.status, br.admin_response, br.created_at, br.updated_at,
+                u.name as userName, u.email as userEmail
+         FROM bug_reports br
+         JOIN users u ON br.user_id = u.id
+         ORDER BY br.created_at DESC`
+      );
+
+      return rows;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateBugReport(id: number, updates: UpdateBugReportRequest): Promise<BugReport> {
+    const conn = await pool.getConnection();
+    try {
+      const setParts: string[] = [];
+      const values: any[] = [];
+
+      if (updates.status !== undefined) {
+        setParts.push("status = ?");
+        values.push(updates.status);
+      }
+
+      if (updates.admin_response !== undefined) {
+        setParts.push("admin_response = ?");
+        values.push(updates.admin_response);
+      }
+
+      if (setParts.length === 0) {
+        throw new Error("No updates provided");
+      }
+
+      values.push(id);
+
+      await conn.execute(
+        `UPDATE bug_reports SET ${setParts.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, message, status, admin_response, created_at, updated_at FROM bug_reports WHERE id = ?",
+        [id]
+      );
+
+      return rows[0];
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteBugReport(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "DELETE FROM bug_reports WHERE id = ?",
+        [id]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
   // Share methods
   async createShare(userId: number, share: InsertShare): Promise<Share> {
     const conn = await pool.getConnection();
@@ -1260,24 +1356,6 @@ export class MySQLStorage implements IStorage {
         ...row,
         created_at: new Date(row.created_at)
       }));
-    } finally {
-      conn.release();
-    }
-  }
-
-  async getUserById(userId: number): Promise<User | null> {
-    const conn = await pool.getConnection();
-    try {
-      const [rows] = await conn.execute<any[]>(
-        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ? LIMIT 1",
-        [userId]
-      );
-      if (!rows || rows.length === 0) return null;
-      const row = rows[0];
-      return {
-        ...row,
-        created_at: new Date(row.created_at)
-      };
     } finally {
       conn.release();
     }

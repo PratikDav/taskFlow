@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { FloatingBugReportButton } from "@/components/FloatingBugReportButton";
 import { TranslationProvider } from "@/hooks/use-translation";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
@@ -26,6 +27,7 @@ import Trash from "@/pages/Trash";
 import UserProfile from "@/pages/UserProfile";
 import PanelSettings from "@/pages/PanelSettings";
 import SavedPosts from "@/pages/SavedPosts";
+import AdminBugMessages from "@/pages/AdminBugMessages";
 
 function Router() {
   return (
@@ -46,6 +48,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/saved-posts" component={SavedPosts} />
       <Route path="/panel-settings" component={PanelSettings} />
+      <Route path="/admin/bug-messages" component={AdminBugMessages} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -84,6 +87,8 @@ function App() {
                     <NotificationDropdown />
                   </div>
                 )}
+                {/* Floating bug report button on the left side - only show on non-fullscreen routes */}
+                {!isFullScreenRoute && <FloatingBugReportButton />}
               </div>
             </SidebarProvider>
           )}

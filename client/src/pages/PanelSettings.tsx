@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { AVAILABLE_SKILLS, getSkillById, clearSkillsCache } from "@/lib/skills";
-import { Upload, X, Languages } from "lucide-react";
+import { Upload, X, Languages, Bug } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PanelSettings() {
@@ -21,6 +21,8 @@ export default function PanelSettings() {
   const [editingTranslation, setEditingTranslation] = useState<any>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [savingTranslation, setSavingTranslation] = useState(false);
+  const [bugReports, setBugReports] = useState<any[]>([]);
+  const [updatingReport, setUpdatingReport] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,6 +46,7 @@ export default function PanelSettings() {
   useEffect(() => {
     if (currentUser) {
       loadTranslations();
+      loadBugReports();
     }
   }, [currentUser]);
 
@@ -58,6 +61,20 @@ export default function PanelSettings() {
       }
     } catch (err) {
       console.error("Error loading translations:", err);
+    }
+  };
+
+  const loadBugReports = async () => {
+    try {
+      const res = await fetch("/api/admin/bug-reports", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setBugReports(data);
+      } else {
+        console.error("Failed to load bug reports");
+      }
+    } catch (err) {
+      console.error("Error loading bug reports:", err);
     }
   };
 
@@ -108,6 +125,46 @@ export default function PanelSettings() {
   const handleCancelEdit = () => {
     setEditingTranslation(null);
     setEditValue("");
+  };
+
+  const handleUpdateBugReport = async (reportId: number, status: string, adminResponse: string) => {
+    setUpdatingReport(reportId);
+    try {
+      const res = await fetch(`/api/admin/bug-reports/${reportId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          status,
+          admin_response: adminResponse,
+        }),
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Bug report updated successfully.",
+        });
+        loadBugReports(); // Reload bug reports
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update bug report.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Error updating bug report:", err);
+      toast({
+        title: "Error",
+        description: "Failed to update bug report.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingReport(null);
+    }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {

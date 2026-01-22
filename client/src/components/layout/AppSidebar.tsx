@@ -46,7 +46,8 @@ import {
   , X,
   Trash2,
   Newspaper,
-  Users
+  Users,
+  Bug
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -86,6 +87,9 @@ export function AppSidebar() {
   const menuItems = [
     ...(currentUser?.role === "admin" 
       ? [{ title: t('nav.dashboard'), url: "/", icon: LayoutDashboard }]
+      : []),
+    ...(currentUser?.role === "admin" 
+      ? [{ title: t('nav.bug_messages'), url: "/admin/bug-messages", icon: Bug }]
       : []),
     ...(currentUser?.role === "admin" 
       ? [{ title: t('nav.admin'), url: "/panel-settings", icon: Settings }]

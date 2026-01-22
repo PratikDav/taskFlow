@@ -384,6 +384,23 @@ export async function initDatabase() {
 
     console.log("Translations table created");
 
+    // Create bug_reports table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS bug_reports (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type ENUM('bug', 'feature_request') NOT NULL,
+        message TEXT NOT NULL,
+        status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open',
+        admin_response TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    console.log("Bug reports table created");
+
     // Seed default translations
     const defaultTranslations = [
       // English translations
@@ -396,6 +413,7 @@ export async function initDatabase() {
       { key: 'nav.settings', lang: 'en', text: 'Settings' },
       { key: 'nav.profile', lang: 'en', text: 'Profile' },
       { key: 'nav.admin', lang: 'en', text: 'Admin' },
+      { key: 'nav.bug_messages', lang: 'en', text: 'Bug Messages' },
       { key: 'nav.logout', lang: 'en', text: 'Logout' },
       { key: 'profile.my_profile', lang: 'en', text: 'My Profile' },
       { key: 'profile.edit_profile', lang: 'en', text: 'Edit Profile' },
