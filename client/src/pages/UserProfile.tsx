@@ -8,7 +8,10 @@ import { User, Mail, Github, Linkedin, UserPlus, Users, UserCheck } from "lucide
 import { useToast } from "@/hooks/use-toast";
 import { useFriends } from "@/hooks/use-friends";
 import { useFriendsContent } from "@/hooks/use-friends-content";
+<<<<<<< HEAD
 import { capitalizeFirstLetter } from "@/lib/utils";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 
 interface UserProfile {
   id: number;
@@ -17,7 +20,10 @@ interface UserProfile {
   gmailAddress?: string;
   githubLink?: string;
   linkedinLink?: string;
+<<<<<<< HEAD
   skills?: string[];
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   created_at: string;
 }
 
@@ -116,7 +122,11 @@ export default function UserProfile() {
     <div className="space-y-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
+<<<<<<< HEAD
           <h1 className="text-4xl font-display font-bold text-foreground">{capitalizeFirstLetter(user.name)}'s Profile</h1>
+=======
+          <h1 className="text-4xl font-display font-bold text-foreground">{user.name}'s Profile</h1>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
           <p className="text-muted-foreground mt-1">View profile and connect.</p>
         </div>
         {!isCurrentUser && currentUser && (
@@ -140,7 +150,11 @@ export default function UserProfile() {
         )}
       </div>
 
+<<<<<<< HEAD
       <div className="grid md:grid-cols-3 gap-6">
+=======
+      <div className="grid md:grid-cols-2 gap-6">
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         {/* Basic Information */}
         <Card className="rounded-2xl shadow-sm border-border/50">
           <CardHeader>
@@ -157,7 +171,11 @@ export default function UserProfile() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Full Name</Label>
+<<<<<<< HEAD
               <p className="text-sm">{capitalizeFirstLetter(user.name)}</p>
+=======
+              <p className="text-sm">{user.name}</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium">Email</Label>
@@ -226,6 +244,7 @@ export default function UserProfile() {
             )}
           </CardContent>
         </Card>
+<<<<<<< HEAD
 
         {/* Skills */}
         <Card className="rounded-2xl shadow-sm border-border/50">
@@ -256,6 +275,8 @@ export default function UserProfile() {
             )}
           </CardContent>
         </Card>
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
       </div>
 
       {/* Link Up Content - Only show if they are linked up */}
@@ -274,7 +295,11 @@ export default function UserProfile() {
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
+<<<<<<< HEAD
                   <CardTitle>{capitalizeFirstLetter(user.name)}'s Shared Content</CardTitle>
+=======
+                  <CardTitle>{user.name}'s Shared Content</CardTitle>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
                   <CardDescription>Link up-only posts and notes.</CardDescription>
                 </div>
               </div>

@@ -78,6 +78,7 @@ export const updateNotificationSchema = z.object({
 });
 
 export type UpdateNotificationRequest = z.infer<typeof updateNotificationSchema>;
+<<<<<<< HEAD
 
 export const insertShareSchema = z.object({
   shared_with_user_id: z.number(),
@@ -127,3 +128,5 @@ export const updateBugReportSchema = z.object({
 });
 
 export type UpdateBugReportRequest = z.infer<typeof updateBugReportSchema>;
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f

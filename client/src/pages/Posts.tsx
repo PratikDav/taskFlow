@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { UserPlus, MoreHorizontal, Trash2, Bookmark, BookmarkCheck, User, ChevronDown, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { useFriends } from "@/hooks/use-friends";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
+=======
+import { UserPlus } from "lucide-react";
+import { useFriends } from "@/hooks/use-friends";
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 
 export default function Posts() {
   const [, setLocation] = useLocation();
@@ -16,7 +21,10 @@ export default function Posts() {
   const [loading, setLoading] = useState(false);
   const [newPost, setNewPost] = useState({ title: "", content: "" });
   const { friends, sendFriendRequest } = useFriends();
+<<<<<<< HEAD
   const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 
   // Check if user is logged in
   const isLoggedIn = !!me;
@@ -90,6 +98,7 @@ export default function Posts() {
     }
   };
 
+<<<<<<< HEAD
   const handleSavePost = async (postId: number) => {
     try {
       const res = await fetch("/api/saved-posts", {
@@ -126,10 +135,13 @@ export default function Posts() {
     }
   };
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   const handleAddFriend = async (userId: number) => {
     await sendFriendRequest(userId);
   };
 
+<<<<<<< HEAD
   const handleTitleAlignmentChange = async (postId: number, alignment: string) => {
     try {
       const res = await fetch(`/api/posts/${postId}`, {
@@ -152,6 +164,8 @@ export default function Posts() {
     }
   };
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   const applyThemeToElement = (element: HTMLElement, theme: string) => {
     // Minimal local theme map for code blocks. If you have a shared theme map,
     // replace this with an import from the shared file.
@@ -222,6 +236,7 @@ export default function Posts() {
             return (
               <div key={post.id} 
                    className="p-4 border rounded-lg bg-card hover:shadow-md transition">
+<<<<<<< HEAD
                 {/* Post Header with User Info */}
                 <div className="flex items-center justify-center mb-4 pb-3 border-b border-border/50">
                   <div className="flex items-center gap-3">
@@ -363,6 +378,60 @@ export default function Posts() {
                 </div>
                 <p className="mt-3 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
                 
+=======
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{post.title}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() => setLocation(`/profile/${post.user_id}`)}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                      >
+                        By {post.userName}
+                      </button>
+                      {canAddFriend && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleAddFriend(post.user_id)}
+                          className="h-6 w-6 p-0 hover:bg-primary/10"
+                          title="Add friend"
+                        >
+                          <UserPlus className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {isFriend && !isOwnPost && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded inline-block">
+                          Linked up
+                        </span>
+                      )}
+                      {isOwnPost && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded inline-block">
+                          Your Post
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {isOwnPost && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeletePost(post.id)}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
+                <p className="mt-3 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  {new Date(post.created_at).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
               </div>
             );
           })

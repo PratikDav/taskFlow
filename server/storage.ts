@@ -5,6 +5,7 @@ import {
   type UpdateTaskRequest,
   type Task,
   type InsertNotification,
+<<<<<<< HEAD
   type UpdateNotificationRequest,
   type InsertShare,
   type Share,
@@ -13,6 +14,10 @@ import {
   type InsertBugReport,
   type UpdateBugReportRequest,
   type BugReport
+=======
+  type Notification,
+  type UpdateNotificationRequest
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 } from "@shared/schema";
 
 export interface User {
@@ -39,7 +44,10 @@ export interface Post {
   content: string;
   code_block_theme?: string;
   privacy: 'public' | 'friends' | 'private';
+<<<<<<< HEAD
   title_alignment?: 'left' | 'center' | 'right';
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date;
@@ -95,10 +103,17 @@ export interface IStorage {
   registerUser(email: string, password: string, name: string, gmailAddress?: string, githubLink?: string, linkedinLink?: string): Promise<User>;
 
   // Post operations
+<<<<<<< HEAD
   getPosts(userId?: number): Promise<(Post & { userName: string; userAvatar: string | null })[]>;
   getPostById(id: number): Promise<(Post & { userName: string }) | undefined>;
   createPost(userId: number, title: string, content: string, codeBlockTheme?: string, privacy?: 'public' | 'friends' | 'private', titleAlignment?: 'left' | 'center' | 'right'): Promise<Post>;
   updatePost(id: number, title: string, content: string, privacy?: 'public' | 'friends' | 'private', titleAlignment?: 'left' | 'center' | 'right'): Promise<Post>;
+=======
+  getPosts(userId?: number): Promise<(Post & { userName: string })[]>;
+  getPostById(id: number): Promise<(Post & { userName: string }) | undefined>;
+  createPost(userId: number, title: string, content: string, codeBlockTheme?: string, privacy?: 'public' | 'friends' | 'private'): Promise<Post>;
+  updatePost(id: number, title: string, content: string): Promise<Post>;
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   deletePost(id: number): Promise<void>;
 
   // Saved post operations
@@ -117,7 +132,11 @@ export interface IStorage {
   getNotes(userId: number): Promise<(Note & { folderName?: string })[]>;
   getNoteById(id: number): Promise<(Note & { folderName?: string }) | undefined>;
   createNote(userId: number, title: string, content: string, folderId?: number, privacy?: 'public' | 'friends' | 'private'): Promise<Note>;
+<<<<<<< HEAD
   updateNote(id: number, title?: string, content?: string, folderId?: number, privacy?: 'public' | 'friends' | 'private'): Promise<Note>;
+=======
+  updateNote(id: number, title?: string, content?: string, folderId?: number): Promise<Note>;
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   deleteNote(id: number): Promise<void>;
 
   // Friend operations
@@ -127,7 +146,11 @@ export interface IStorage {
   removeFriend(userId: number, friendId: number): Promise<void>;
   getFriends(userId: number): Promise<User[]>;
   getFriendRequests(userId: number): Promise<User[]>;
+<<<<<<< HEAD
   getFriendsPosts(userId: number): Promise<(Post & { userName: string; userAvatar: string | null })[]>;
+=======
+  getFriendsPosts(userId: number): Promise<(Post & { userName: string })[]>;
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   getFriendsNotes(userId: number): Promise<(Note & { userName: string; folderName?: string })[]>;
   areFriends(userId: number, friendId: number): Promise<boolean>;
 
@@ -139,12 +162,15 @@ export interface IStorage {
   markAllNotificationsAsRead(userId: number): Promise<void>;
   deleteNotification(notificationId: number): Promise<void>;
 
+<<<<<<< HEAD
   // Bug report operations
   createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport>;
   getBugReports(): Promise<(BugReport & { userName: string; userEmail: string })[]>;
   updateBugReport(id: number, updates: UpdateBugReportRequest): Promise<BugReport>;
   deleteBugReport(id: number): Promise<void>;
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   // Skills operations
   getUserSkills(userId: number): Promise<string[]>;
   updateUserSkills(userId: number, skillIds: string[]): Promise<void>;
@@ -224,7 +250,11 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
+<<<<<<< HEAD
         "SELECT id, provider, name, email, password, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE email = ?",
+=======
+        "SELECT id, provider, name, email, password, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE email = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         [email]
       );
       return rows[0];
@@ -237,7 +267,11 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
+<<<<<<< HEAD
         "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ?",
+=======
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         [id]
       );
       return rows[0];
@@ -286,9 +320,14 @@ export class MySQLStorage implements IStorage {
   async loginWithCredentials(username: string, password: string): Promise<User | undefined> {
     const conn = await pool.getConnection();
     try {
+<<<<<<< HEAD
       // First try username
       let [rows] = await conn.execute<any[]>(
         "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at, password FROM users WHERE username = ?",
+=======
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE username = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         [username]
       );
       
@@ -328,7 +367,11 @@ export class MySQLStorage implements IStorage {
       );
 
       const [newUser] = await conn.execute<any[]>(
+<<<<<<< HEAD
         "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, role, created_at FROM users WHERE id = ?",
+=======
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         [result.insertId]
       );
 
@@ -361,7 +404,11 @@ export class MySQLStorage implements IStorage {
       );
 
       const [newUser] = await conn.execute<any[]>(
+<<<<<<< HEAD
         "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, role, created_at FROM users WHERE id = ?",
+=======
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         [result.insertId]
       );
 
@@ -372,11 +419,19 @@ export class MySQLStorage implements IStorage {
   }
 
   // Post operations
+<<<<<<< HEAD
   async getPosts(userId?: number): Promise<(Post & { userName: string; userAvatar: string | null })[]> {
     const conn = await pool.getConnection();
     try {
       let query = `
         SELECT p.*, u.name as userName, u.avatar as userAvatar FROM posts p
+=======
+  async getPosts(userId?: number): Promise<(Post & { userName: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      let query = `
+        SELECT p.*, u.name as userName FROM posts p
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         LEFT JOIN users u ON p.user_id = u.id
         WHERE p.deleted_at IS NULL
       `;
@@ -420,12 +475,21 @@ export class MySQLStorage implements IStorage {
     }
   }
 
+<<<<<<< HEAD
   async createPost(userId: number, title: string, content: string, codeBlockTheme: string = 'dark', privacy: 'public' | 'friends' | 'private' = 'public', titleAlignment: 'left' | 'center' | 'right' = 'left'): Promise<Post> {
     const conn = await pool.getConnection();
     try {
       const [result] = await conn.execute<any>(
         "INSERT INTO posts (user_id, title, content, code_block_theme, privacy, title_alignment) VALUES (?, ?, ?, ?, ?, ?)",
         [userId, title, content, codeBlockTheme, privacy, titleAlignment]
+=======
+  async createPost(userId: number, title: string, content: string, codeBlockTheme: string = 'dark', privacy: 'public' | 'friends' | 'private' = 'public'): Promise<Post> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO posts (user_id, title, content, code_block_theme, privacy) VALUES (?, ?, ?, ?, ?)",
+        [userId, title, content, codeBlockTheme, privacy]
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
       );
 
       const [rows] = await conn.execute<any[]>(
@@ -1036,11 +1100,19 @@ export class MySQLStorage implements IStorage {
     }
   }
 
+<<<<<<< HEAD
   async getFriendsPosts(userId: number): Promise<(Post & { userName: string; userAvatar: string | null })[]> {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
         `SELECT p.*, u.name as userName, u.avatar as userAvatar, p.user_id FROM posts p
+=======
+  async getFriendsPosts(userId: number): Promise<(Post & { userName: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT p.*, u.name as userName, p.user_id FROM posts p
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
          INNER JOIN users u ON p.user_id = u.id
          INNER JOIN friends f ON (f.friend_id = p.user_id OR f.user_id = p.user_id)
          WHERE ((f.user_id = ? AND f.friend_id = p.user_id) OR (f.friend_id = ? AND f.user_id = p.user_id))
@@ -1186,6 +1258,7 @@ export class MySQLStorage implements IStorage {
       conn.release();
     }
   }
+<<<<<<< HEAD
 
   // Bug report methods
   async createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport> {
@@ -1452,6 +1525,8 @@ export interface Translation {
   text_value: string;
   created_at: Date;
   updated_at: Date;
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 }
 
 export const storage = new MySQLStorage();
