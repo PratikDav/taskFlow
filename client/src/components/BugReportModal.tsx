@@ -89,7 +89,11 @@ export function BugReportModal({ children }: BugReportModalProps) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
+<<<<<<< HEAD
       <DialogContent className="sm:max-w-[500px] bg-white border-2 border-gray-200 shadow-2xl">
+=======
+      <DialogContent className="sm:max-w-[500px]">
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bug className="h-5 w-5" />
@@ -103,10 +107,17 @@ export function BugReportModal({ children }: BugReportModalProps) {
               value={form.watch("type")}
               onValueChange={(value) => form.setValue("type", value as "bug" | "feature_request")}
             >
+<<<<<<< HEAD
               <SelectTrigger className="bg-white border-2 border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white border-2 border-gray-200 shadow-lg">
+=======
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
                 <SelectItem value="bug">
                   <div className="flex items-center gap-2">
                     <Bug className="h-4 w-4 text-red-500" />

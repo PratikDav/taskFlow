@@ -21,7 +21,10 @@ export default function PanelSettings() {
   const [editingTranslation, setEditingTranslation] = useState<any>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [savingTranslation, setSavingTranslation] = useState(false);
+<<<<<<< HEAD
   const [searchQuery, setSearchQuery] = useState<string>("");
+=======
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
   const [bugReports, setBugReports] = useState<any[]>([]);
   const [updatingReport, setUpdatingReport] = useState<number | null>(null);
   const { toast } = useToast();

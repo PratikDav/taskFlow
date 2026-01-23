@@ -15,9 +15,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+<<<<<<< HEAD
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,8 +49,17 @@ import {
   X,
   Trash2,
   Newspaper,
+<<<<<<< HEAD
   Users,
   Bug
+=======
+<<<<<<< HEAD
+  Users,
+  Bug
+=======
+  Users
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -85,11 +97,31 @@ export function AppSidebar() {
 
   // Show dashboard only for admins, My Tasks for all users, Settings only for admins
   const menuItems = [
+<<<<<<< HEAD
     ...(currentUser?.role === "admin" 
       ? [{ titleKey: 'nav.dashboard', url: "/", icon: LayoutDashboard }]
       : []),
     ...(currentUser?.role === "admin" 
+<<<<<<< HEAD
       ? [{ titleKey: 'nav.bug_messages', url: "/admin/bug-messages", icon: Bug }]
+=======
+      ? [{ title: t('nav.bug_messages'), url: "/admin/bug-messages", icon: Bug }]
+=======
+    { title: "Feed", url: "/posts", icon: Newspaper },
+    { title: "Link Ups", url: "/friends", icon: Users },
+    { title: "My Tasks", url: "/tasks", icon: CheckSquare },
+    { title: "Notes", url: "/notes", icon: FileText },
+    { title: "Trash", url: "/trash", icon: Trash2 },
+    ...(currentUser?.role === "admin" 
+      ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }]
+      : []),
+    ...(currentUser?.role === "admin" 
+      ? [{ title: "Settings", url: "/settings", icon: Settings }]
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+      : []),
+    ...(currentUser?.role === "admin" 
+      ? [{ title: t('nav.admin'), url: "/panel-settings", icon: Settings }]
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
       : []),
     ...(currentUser?.role === "admin" 
       ? [{ titleKey: 'nav.admin', url: "/panel-settings", icon: Settings }]

@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+<<<<<<< HEAD
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Bug, MessageSquare, User, Calendar, CheckCircle, Clock, AlertTriangle, XCircle } from "lucide-react";
+=======
+import { Bug } from "lucide-react";
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminBugMessages() {
@@ -16,7 +20,10 @@ export default function AdminBugMessages() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [bugReports, setBugReports] = useState<any[]>([]);
   const [updatingReport, setUpdatingReport] = useState<number | null>(null);
+<<<<<<< HEAD
   const [localChanges, setLocalChanges] = useState<{[key: number]: {status: string, admin_response: string}}>({});
+=======
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,7 +56,10 @@ export default function AdminBugMessages() {
       if (res.ok) {
         const data = await res.json();
         setBugReports(data);
+<<<<<<< HEAD
         setLocalChanges({}); // Clear local changes when reloading
+=======
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
       } else {
         console.error("Failed to load bug reports");
       }
@@ -79,7 +89,10 @@ export default function AdminBugMessages() {
           description: "Bug report updated successfully.",
         });
         loadBugReports(); // Reload bug reports
+<<<<<<< HEAD
         // Local changes will be cleared by loadBugReports
+=======
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
       } else {
         toast({
           title: "Error",
@@ -99,6 +112,7 @@ export default function AdminBugMessages() {
     }
   };
 
+<<<<<<< HEAD
   const handleDeleteBugReport = async (reportId: number) => {
     if (!confirm('Are you sure you want to delete this resolved bug report? This action cannot be undone.')) {
       return;
@@ -136,6 +150,8 @@ export default function AdminBugMessages() {
     }
   };
 
+=======
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
@@ -162,6 +178,7 @@ export default function AdminBugMessages() {
               View and manage user-submitted bug reports and feature requests.
             </p>
           </CardHeader>
+<<<<<<< HEAD
           <CardContent className="p-0">
             <div className="max-h-[600px] overflow-y-auto">
               {bugReports.length === 0 ? (
@@ -328,6 +345,86 @@ export default function AdminBugMessages() {
                     </div>
                   ))}
                 </div>
+=======
+          <CardContent>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {bugReports.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No bug reports yet
+                </div>
+              ) : (
+                bugReports.map((report) => (
+                  <div key={report.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            report.type === 'bug'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {report.type === 'bug' ? 'Bug Report' : 'Feature Request'}
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            report.status === 'open' ? 'bg-green-100 text-green-800' :
+                            report.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            report.status === 'resolved' ? 'bg-purple-100 text-purple-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {report.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          From: {report.userName} ({report.userEmail})
+                        </p>
+                        <p className="text-sm">{report.message}</p>
+                        {report.admin_response && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-400">
+                            <p className="text-sm font-medium text-blue-800 mb-1">Admin Response:</p>
+                            <p className="text-sm text-blue-700">{report.admin_response}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Select
+                        value={report.status}
+                        onValueChange={(value) => handleUpdateBugReport(report.id, value, report.admin_response || '')}
+                        disabled={updatingReport === report.id}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Open</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="resolved">Resolved</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Textarea
+                        placeholder="Add admin response..."
+                        value={report.admin_response || ''}
+                        onChange={(e) => {
+                          const updatedReports = bugReports.map(r =>
+                            r.id === report.id ? { ...r, admin_response: e.target.value } : r
+                          );
+                          setBugReports(updatedReports);
+                        }}
+                        className="flex-1"
+                        disabled={updatingReport === report.id}
+                      />
+                      <Button
+                        onClick={() => handleUpdateBugReport(report.id, report.status, report.admin_response || '')}
+                        disabled={updatingReport === report.id}
+                        size="sm"
+                      >
+                        {updatingReport === report.id ? 'Updating...' : 'Update'}
+                      </Button>
+                    </div>
+                  </div>
+                ))
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
               )}
             </div>
           </CardContent>

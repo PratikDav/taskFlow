@@ -78,6 +78,7 @@ export const updateNotificationSchema = z.object({
 });
 
 export type UpdateNotificationRequest = z.infer<typeof updateNotificationSchema>;
+<<<<<<< HEAD
 
 export const insertShareSchema = z.object({
   shared_with_user_id: z.number(),
@@ -116,19 +117,31 @@ export interface BugReport extends InsertBugReport {
   id: number;
   user_id: number;
   status: "open" | "in_progress" | "resolved" | "closed";
+<<<<<<< HEAD
   admin_response: AdminResponse[] | null;
+=======
+  admin_response: string | null;
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
   created_at: Date;
   updated_at: Date;
 }
 
+<<<<<<< HEAD
 export interface AdminResponse {
   message: string;
   timestamp: Date;
 }
 
+=======
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
 export const updateBugReportSchema = z.object({
   status: z.enum(["open", "in_progress", "resolved", "closed"]).optional(),
   admin_response: z.string().optional(),
 });
 
 export type UpdateBugReportRequest = z.infer<typeof updateBugReportSchema>;
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b

@@ -1,9 +1,21 @@
+<<<<<<< HEAD
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express, { Request, Response } from "express";
+<<<<<<< HEAD
 import type { Server } from "http";
 import type { Express } from "express";
+=======
+=======
+import type { Express } from "express";
+import type { Server } from "http";
+import { storage, DEFAULT_USER_ID } from "./storage";
+import { NotificationService } from "./notification-service";
+import { api } from "@shared/routes";
+import { z } from "zod";
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { api } from "../shared/routes.js";
@@ -226,7 +238,11 @@ export async function registerRoutes(
     if (user) {
       // Fetch fresh user data from database to include any new fields
       const [updatedRows] = await storage.db.execute(
+<<<<<<< HEAD
         'SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ?',
+=======
+        'SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?',
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         [user.id]
       );
 
@@ -234,6 +250,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'User not found' });
       }
 
+<<<<<<< HEAD
       // Fetch user skills
       const skillIds = await storage.getUserSkills(user.id);
       // Get full skill objects from database
@@ -244,16 +261,21 @@ export async function registerRoutes(
         skills = skillRows as any[];
       }
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
       const freshUser = {
         id: (updatedRows as any[])[0].id,
         provider: (updatedRows as any[])[0].provider,
         name: (updatedRows as any[])[0].name,
         email: (updatedRows as any[])[0].email,
         designation: (updatedRows as any[])[0].designation,
+<<<<<<< HEAD
         skills: skills,
         avatar: (updatedRows as any[])[0].avatar,
         avatar_original: (updatedRows as any[])[0].avatar_original,
         avatar_crop: (updatedRows as any[])[0].avatar_crop,
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         gmailAddress: (updatedRows as any[])[0].gmail_address,
         githubLink: (updatedRows as any[])[0].github_link,
         linkedinLink: (updatedRows as any[])[0].linkedin_link,
@@ -273,6 +295,7 @@ export async function registerRoutes(
     res.json(null);
   });
 
+<<<<<<< HEAD
   // Get available skills for selection
   app.get('/api/skills', async (req, res) => {
     try {
@@ -284,6 +307,8 @@ export async function registerRoutes(
     }
   });
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   app.get('/api/users/:id', async (req, res) => {
     try {
       const userId = Number(req.params.id);
@@ -293,18 +318,27 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'User not found' });
       }
 
+<<<<<<< HEAD
       // Get user skills
       const skills = await storage.getUserSkills(userId);
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
       // Return public user info (exclude password and sensitive data)
       const publicUser = {
         id: user.id,
         name: user.name,
         email: user.email,
+<<<<<<< HEAD
         gmailAddress: user.gmail_address,
         githubLink: user.github_link,
         linkedinLink: user.linkedin_link,
         skills: skills,
+=======
+        gmailAddress: user.gmailAddress,
+        githubLink: user.githubLink,
+        linkedinLink: user.linkedinLink,
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         created_at: user.created_at,
       };
 
@@ -713,12 +747,20 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Forbidden' });
       }
 
+<<<<<<< HEAD
       const { title, content, privacy, titleAlignment } = req.body;
+=======
+      const { title, content, privacy } = req.body;
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
+<<<<<<< HEAD
       const updatedPost = await storage.updatePost(postId, title, content, privacy, titleAlignment);
+=======
+      const updatedPost = await storage.updatePost(postId, title, content, privacy);
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
       res.json(updatedPost);
     } catch (err) {
       console.error(err);
@@ -1403,6 +1445,7 @@ export async function registerRoutes(
     }
   });
 
+<<<<<<< HEAD
   // Shares API
   app.get("/api/shares", async (req, res) => {
     try {
@@ -1610,6 +1653,9 @@ export async function registerRoutes(
       res.status(500).json({ message: "Failed to check saved status" });
     }
   });
+=======
+  // Test endpoint to create sample notifications (for development)
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   app.post("/api/notifications/test", async (req, res) => {
     try {
       const userId = req.session?.user?.id;
@@ -1649,6 +1695,10 @@ export async function registerRoutes(
     }
   });
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
   // Bug Report API
   app.post("/api/bug-reports", async (req, res) => {
     try {
@@ -1715,6 +1765,7 @@ export async function registerRoutes(
 
       const updatedReport = await storage.updateBugReport(reportId, updates);
 
+<<<<<<< HEAD
       // Send notification to user when bug report is updated
       const report = await storage.getBugReports().then(reports => reports.find(r => r.id === reportId));
       if (report) {
@@ -1759,6 +1810,20 @@ export async function registerRoutes(
           data: { bugReportId: reportId, status, statusColor },
           is_read: false
         });
+=======
+      // If admin_response is provided, send notification to user
+      if (admin_response) {
+        const report = await storage.getBugReports().then(reports => reports.find(r => r.id === reportId));
+        if (report) {
+          await storage.createNotification({
+            user_id: report.user_id,
+            type: "system",
+            title: `Bug Report Update: ${report.type === 'bug' ? 'Bug' : 'Feature Request'}`,
+            message: `Your ${report.type === 'bug' ? 'bug report' : 'feature request'} has been updated: ${admin_response}`,
+            data: { bugReportId: reportId }
+          });
+        }
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
       }
 
       res.json(updatedReport);
@@ -1789,6 +1854,11 @@ export async function registerRoutes(
     }
   });
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
   // Seed data
   const existingTasks = await storage.getTasks();
   if (existingTasks.length === 0) {

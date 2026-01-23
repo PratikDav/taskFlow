@@ -96,6 +96,7 @@ export async function initDatabase() {
       }
     }
 
+<<<<<<< HEAD
     // Add avatar column if it doesn't exist
     try {
       await conn.execute(`
@@ -151,6 +152,8 @@ export async function initDatabase() {
       `, [skill.id, skill.name, skill.category, skill.color, skill.logoUrl || null]);
     }
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
     // Create user_skills table
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS user_skills (
@@ -159,7 +162,10 @@ export async function initDatabase() {
         skill_id VARCHAR(50) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+<<<<<<< HEAD
         FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE,
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         UNIQUE KEY unique_user_skill (user_id, skill_id)
       )
     `);
@@ -277,6 +283,7 @@ export async function initDatabase() {
       }
     }
 
+<<<<<<< HEAD
     // Add title_alignment column to posts table
     try {
       await conn.execute(`
@@ -289,6 +296,8 @@ export async function initDatabase() {
       }
     }
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
     // Add privacy column to notes table
     try {
       await conn.execute(`
@@ -336,6 +345,7 @@ export async function initDatabase() {
     `);
 
     console.log("Notifications table created");
+<<<<<<< HEAD
 
     // Create shares table
     await conn.execute(`
@@ -803,6 +813,8 @@ export async function initDatabase() {
     }
 
     console.log("Default translations seeded");
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
     const [users] = await conn.execute<any[]>("SELECT * FROM users WHERE id = 1");
     if (users.length === 0) {
       const hashedPassword = await bcrypt.hash("user123", 10);

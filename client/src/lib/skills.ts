@@ -5,6 +5,7 @@ export interface Skill {
   icon: string; // Lucide icon name or custom icon
   category: string;
   color: string;
+<<<<<<< HEAD
   logoUrl?: string; // Optional custom logo URL
 }
 
@@ -37,6 +38,11 @@ export const clearSkillsCache = () => {
 };
 
 // Predefined skill collection (fallback)
+=======
+}
+
+// Predefined skill collection
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 export const AVAILABLE_SKILLS: Skill[] = [
   // Frontend
   { id: 'react', name: 'React.js', icon: 'React', category: 'Frontend', color: '#61DAFB' },
@@ -58,7 +64,11 @@ export const AVAILABLE_SKILLS: Skill[] = [
   { id: 'php', name: 'PHP', icon: 'Php', category: 'Backend', color: '#777BB4' },
   { id: 'ruby', name: 'Ruby', icon: 'Ruby', category: 'Language', color: '#CC342D' },
   { id: 'go', name: 'Go', icon: 'Go', category: 'Language', color: '#00ADD8' },
+<<<<<<< HEAD
   { id: 'rust', name: 'Rust', icon: 'Rust', category: 'Language', color: '#000000' },
+=======
+  { id: 'rust', name: 'Rust', icon: 'Language', color: 'Rust', category: 'Language', color: '#000000' },
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 
   // Database
   { id: 'mysql', name: 'MySQL', icon: 'Database', category: 'Database', color: '#4479A1' },
@@ -84,6 +94,7 @@ export const AVAILABLE_SKILLS: Skill[] = [
 ];
 
 // Get skill by ID
+<<<<<<< HEAD
 export const getSkillById = (id: string, skills?: Skill[]): Skill | undefined => {
   const skillList = skills || skillsCache || AVAILABLE_SKILLS;
   return skillList.find(skill => skill.id === id);
@@ -99,4 +110,18 @@ export const getSkillsByCategory = (category: string, skills?: Skill[]): Skill[]
 export const getSkillCategories = (skills?: Skill[]): string[] => {
   const skillList = skills || skillsCache || AVAILABLE_SKILLS;
   return Array.from(new Set(skillList.map(skill => skill.category)));
+=======
+export const getSkillById = (id: string): Skill | undefined => {
+  return AVAILABLE_SKILLS.find(skill => skill.id === id);
+};
+
+// Get skills by category
+export const getSkillsByCategory = (category: string): Skill[] => {
+  return AVAILABLE_SKILLS.filter(skill => skill.category === category);
+};
+
+// Get all categories
+export const getSkillCategories = (): string[] => {
+  return Array.from(new Set(AVAILABLE_SKILLS.map(skill => skill.category)));
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 };

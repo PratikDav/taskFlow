@@ -3,14 +3,21 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+<<<<<<< HEAD
 import { Input } from "@/components/ui/input";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 export default function CreatePost() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
   const [post, setPost] = useState({ title: "", content: "", codeBlockTheme: "light", privacy: "public", titleAlignment: "left" });
+=======
+  const [post, setPost] = useState({ title: "", content: "", codeBlockTheme: "light", privacy: "public" });
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 
   const modules = {
     toolbar: [
