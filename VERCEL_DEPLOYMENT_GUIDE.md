@@ -1,22 +1,91 @@
 # TaskFlow Deployment Guide
 
-## 🚀 Deploying to Vercel + cPanel
+## 🚀 Deploying to Vercel + Railway (Recommended)
 
-This guide will help you deploy your TaskFlow application with Vercel (frontend) and cPanel (backend/database).
+**Note**: If your cPanel doesn't support Node.js (which is common), use Railway instead of cPanel for the backend. Railway offers a generous free tier and excellent Node.js support.
 
 ### Prerequisites
 
 1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
-2. **cPanel Hosting**: With MySQL database access, Node.js support, and SSH access
-3. **Git Repository**: Your code should be in a Git repository
-4. **PM2**: Process manager for Node.js (install with `npm install -g pm2`)
+2. **Railway Account**: Sign up at [railway.app](https://railway.app) - **Free tier available!**
+3. **cPanel/MySQL**: Your database (already set up)
+4. **Git Repository**: Your code in Git
 
-### Step 1: Prepare Your Database
+### Step 1: Deploy Backend to Railway
 
-Since you mentioned you've already uploaded the database to cPanel:
+#### Quick Railway Setup:
 
-1. **Verify Database Access**: Ensure your database is accessible from external connections
-2. **Note Credentials**: Keep your database credentials ready (host, username, password, database name)
+1. **Install Railway CLI**:
+   ```bash
+   npm install -g @railway/cli
+   railway login
+   ```
+
+2. **Initialize Project**:
+   ```bash
+   cd your-project-directory
+   railway init
+   railway link
+   ```
+
+3. **Set Environment Variables**:
+   ```bash
+   railway variables set DB_HOST=your-cpanel-mysql-host
+   railway variables set DB_USER=your-cpanel-db-username
+   railway variables set DB_PASSWORD=your-cpanel-db-password
+   railway variables set DB_NAME=your-database-name
+   railway variables set SESSION_SECRET=your-secure-random-secret
+   railway variables set NODE_ENV=production
+   railway variables set PORT=3000
+   ```
+
+4. **Deploy**:
+   ```bash
+   git add .
+   git commit -m "Deploy to Railway"
+   git push origin main
+   ```
+
+Railway will give you a URL like: `https://your-app.up.railway.app`
+
+### Step 2: Deploy Frontend to Vercel
+
+#### Using Vercel CLI:
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+vercel login
+
+# Deploy frontend
+cd client
+vercel --prod
+
+# Set API URL
+vercel env add VITE_API_URL
+# Enter: https://your-app.up.railway.app
+```
+
+### Step 3: Test Your Deployment
+
+1. **Backend**: `https://your-app.up.railway.app/api/me`
+2. **Frontend**: Your Vercel domain
+3. **Full App**: Test login and features
+
+## 📖 Detailed Guides
+
+- **Railway Deployment**: See `RAILWAY_DEPLOYMENT_GUIDE.md`
+- **Alternative Options**: See `BACKEND_DEPLOYMENT_ALTERNATIVES.md`
+
+## 🎉 Your App is Live!
+
+With Railway + Vercel, you get:
+- ✅ **Free hosting** (Railway free tier + Vercel free tier)
+- ✅ **Global CDN** and SSL
+- ✅ **Automatic deployments**
+- ✅ **Your existing cPanel database**
+
+Visit your Vercel domain to see your TaskFlow app in action! 🚀
 
 ### Step 2: Deploy Backend to cPanel
 
