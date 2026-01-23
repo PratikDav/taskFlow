@@ -5,6 +5,7 @@ export interface TranslationContextType {
   language: string;
   setLanguage: (lang: string) => void;
   isLoading: boolean;
+  allTranslations: Record<string, string>;
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined);
@@ -13,9 +14,27 @@ interface TranslationProviderProps {
   children: ReactNode;
 }
 
+// Translation component that displays the translation or the key if missing
+export function Translation({ translationKey }: { translationKey: string }) {
+  const context = useContext(TranslationContext);
+  if (!context) throw new Error('Translation must be used within TranslationProvider');
+
+  const { t } = context;
+  const translation = t(translationKey);
+
+  // If translation exists, return it as a string
+  if (translation !== translationKey) {
+    return <>{translation}</>;
+  }
+
+  // If translation is missing, just display the key itself
+  return <>{translationKey}</>;
+}
+
 export function TranslationProvider({ children }: TranslationProviderProps) {
   const [language, setLanguageState] = useState('en');
   const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [allTranslations, setAllTranslations] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   // Load translations for the current language
@@ -27,14 +46,17 @@ export function TranslationProvider({ children }: TranslationProviderProps) {
         if (response.ok) {
           const data = await response.json();
           setTranslations(data);
+          setAllTranslations(data);
         } else {
           console.error('Failed to load translations');
           // Fallback to empty translations
           setTranslations({});
+          setAllTranslations({});
         }
       } catch (error) {
         console.error('Error loading translations:', error);
         setTranslations({});
+        setAllTranslations({});
       } finally {
         setIsLoading(false);
       }
@@ -58,7 +80,19 @@ export function TranslationProvider({ children }: TranslationProviderProps) {
   }, []);
 
   const t = (key: string): string => {
-    return translations[key] || key; // Fallback to key if translation not found
+    // If we have a translation for this key, return it
+    if (translations[key]) {
+      return translations[key];
+    }
+
+    // If we're still loading, return the key
+    if (isLoading) {
+      return key;
+    }
+
+    // If no translation exists, return the key itself
+    // The Translation component will handle showing the fallback UI
+    return key;
   };
 
   const value: TranslationContextType = {
@@ -66,6 +100,7 @@ export function TranslationProvider({ children }: TranslationProviderProps) {
     language,
     setLanguage,
     isLoading,
+    allTranslations,
   };
 
   return (

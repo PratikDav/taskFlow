@@ -9,7 +9,10 @@ import {
   type InsertShare,
   type Share,
   type InsertSavedPost,
-  type SavedPost
+  type SavedPost,
+  type InsertBugReport,
+  type UpdateBugReportRequest,
+  type BugReport
 } from "@shared/schema";
 
 export interface User {
@@ -135,6 +138,12 @@ export interface IStorage {
   markNotificationAsRead(notificationId: number): Promise<void>;
   markAllNotificationsAsRead(userId: number): Promise<void>;
   deleteNotification(notificationId: number): Promise<void>;
+
+  // Bug report operations
+  createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport>;
+  getBugReports(): Promise<(BugReport & { userName: string; userEmail: string })[]>;
+  updateBugReport(id: number, updates: UpdateBugReportRequest): Promise<BugReport>;
+  deleteBugReport(id: number): Promise<void>;
 
   // Skills operations
   getUserSkills(userId: number): Promise<string[]>;
@@ -799,13 +808,14 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute(
-        "SELECT id, user_id, name, created_at, deleted_at FROM folders WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC",
+        "SELECT id, user_id, name, parent_id, created_at, deleted_at FROM folders WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC",
         [userId]
       );
       return (rows as any[]).map(row => ({
         id: row.id,
         user_id: row.user_id,
         name: row.name,
+        parentId: row.parent_id,
         created_at: row.created_at,
         deleted_at: row.deleted_at,
       }));
@@ -1178,6 +1188,158 @@ export class MySQLStorage implements IStorage {
     }
   }
 
+  // Bug report methods
+  async createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO bug_reports (user_id, type, message) VALUES (?, ?, ?)",
+        [userId, type, message]
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, message, status, admin_response, created_at, updated_at FROM bug_reports WHERE id = ?",
+        [result.insertId]
+      );
+
+      return rows[0];
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugReports(): Promise<(BugReport & { userName: string; userEmail: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT br.id, br.user_id, br.type, br.message, br.status, br.admin_response, br.created_at, br.updated_at,
+                u.name as userName, u.email as userEmail
+         FROM bug_reports br
+         JOIN users u ON br.user_id = u.id
+         ORDER BY br.created_at DESC`
+      );
+
+      return rows.map(row => {
+        let adminResponse = null;
+        if (row.admin_response) {
+          try {
+            // Try to parse as JSON (new format)
+            adminResponse = JSON.parse(row.admin_response);
+            // If it's not an array, convert it to array format (migration for old data)
+            if (!Array.isArray(adminResponse)) {
+              adminResponse = [{ message: adminResponse, timestamp: row.updated_at || row.created_at }];
+            }
+          } catch (e) {
+            // If parsing fails, treat as old string format and convert to array
+            adminResponse = [{ message: row.admin_response, timestamp: row.updated_at || row.created_at }];
+          }
+        }
+        return {
+          ...row,
+          admin_response: adminResponse
+        };
+      });
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateBugReport(id: number, updates: UpdateBugReportRequest): Promise<BugReport> {
+    const conn = await pool.getConnection();
+    try {
+      // First get the current bug report to handle admin_response appending
+      const [currentRows] = await conn.execute<any[]>(
+        "SELECT admin_response FROM bug_reports WHERE id = ?",
+        [id]
+      );
+
+      if (currentRows.length === 0) {
+        throw new Error("Bug report not found");
+      }
+
+      const currentAdminResponse = currentRows[0].admin_response;
+      let adminResponses: any[] = [];
+
+      // Parse existing admin responses or initialize empty array
+      if (currentAdminResponse) {
+        try {
+          adminResponses = JSON.parse(currentAdminResponse);
+        } catch (e) {
+          // If parsing fails, treat as legacy string and convert to array
+          adminResponses = [{ message: currentAdminResponse, timestamp: new Date() }];
+        }
+      }
+
+      const setParts: string[] = [];
+      const values: any[] = [];
+
+      if (updates.status !== undefined) {
+        setParts.push("status = ?");
+        values.push(updates.status);
+      }
+
+      if (updates.admin_response !== undefined && updates.admin_response.trim() !== '') {
+        // Append new response to the array
+        adminResponses.push({
+          message: updates.admin_response.trim(),
+          timestamp: new Date()
+        });
+
+        setParts.push("admin_response = ?");
+        values.push(JSON.stringify(adminResponses));
+      }
+
+      if (setParts.length === 0) {
+        throw new Error("No updates provided");
+      }
+
+      values.push(id);
+
+      await conn.execute(
+        `UPDATE bug_reports SET ${setParts.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, message, status, admin_response, created_at, updated_at FROM bug_reports WHERE id = ?",
+        [id]
+      );
+
+      const result = rows[0];
+      // Parse admin_response for the returned result with migration support
+      if (result.admin_response) {
+        try {
+          result.admin_response = JSON.parse(result.admin_response);
+          // If it's not an array, convert it to array format (migration for old data)
+          if (!Array.isArray(result.admin_response)) {
+            result.admin_response = [{ message: result.admin_response, timestamp: result.updated_at || result.created_at }];
+          }
+        } catch (e) {
+          // If parsing fails, treat as old string format and convert to array
+          result.admin_response = [{ message: result.admin_response, timestamp: result.updated_at || result.created_at }];
+        }
+      } else {
+        result.admin_response = null;
+      }
+
+      return result;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteBugReport(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "DELETE FROM bug_reports WHERE id = ?",
+        [id]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
   // Share methods
   async createShare(userId: number, share: InsertShare): Promise<Share> {
     const conn = await pool.getConnection();
@@ -1265,24 +1427,6 @@ export class MySQLStorage implements IStorage {
     }
   }
 
-  async getUserById(userId: number): Promise<User | null> {
-    const conn = await pool.getConnection();
-    try {
-      const [rows] = await conn.execute<any[]>(
-        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ? LIMIT 1",
-        [userId]
-      );
-      if (!rows || rows.length === 0) return null;
-      const row = rows[0];
-      return {
-        ...row,
-        created_at: new Date(row.created_at)
-      };
-    } finally {
-      conn.release();
-    }
-  }
-
   // Skills operations
   async getUserSkills(userId: number): Promise<string[]> {
     const conn = await pool.getConnection();
@@ -1360,7 +1504,38 @@ export class MySQLStorage implements IStorage {
         [id]
       );
 
-      return rows.length > 0 ? (rows[0] as Translation) : null;
+      const resultRows = rows as any[];
+      return resultRows.length > 0 ? (resultRows[0] as Translation) : null;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async createTranslation(keyName: string, language: string, textValue: string): Promise<Translation> {
+    const conn = await pool.getConnection();
+    try {
+      // Prevent duplicates at DB layer by checking existing
+      const [existingRows] = await conn.execute(
+        "SELECT id FROM translations WHERE key_name = ? AND language = ?",
+        [keyName, language]
+      );
+      if ((existingRows as any[]).length > 0) {
+        throw new Error("duplicate");
+      }
+
+      const [result] = await conn.execute<any>(
+        "INSERT INTO translations (key_name, language, text_value, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())",
+        [keyName, language, textValue]
+      );
+
+      const insertId = result.insertId;
+      const [rows] = await conn.execute(
+        "SELECT * FROM translations WHERE id = ?",
+        [insertId]
+      );
+
+      const resultRows = rows as any[];
+      return resultRows[0] as Translation;
     } finally {
       conn.release();
     }

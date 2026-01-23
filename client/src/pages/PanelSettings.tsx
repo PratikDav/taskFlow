@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { AVAILABLE_SKILLS, getSkillById, clearSkillsCache } from "@/lib/skills";
-import { Upload, X, Languages } from "lucide-react";
+import { Upload, X, Languages, Bug } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PanelSettings() {
@@ -21,6 +21,9 @@ export default function PanelSettings() {
   const [editingTranslation, setEditingTranslation] = useState<any>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [savingTranslation, setSavingTranslation] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [bugReports, setBugReports] = useState<any[]>([]);
+  const [updatingReport, setUpdatingReport] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,6 +47,7 @@ export default function PanelSettings() {
   useEffect(() => {
     if (currentUser) {
       loadTranslations();
+      loadBugReports();
     }
   }, [currentUser]);
 
@@ -58,6 +62,20 @@ export default function PanelSettings() {
       }
     } catch (err) {
       console.error("Error loading translations:", err);
+    }
+  };
+
+  const loadBugReports = async () => {
+    try {
+      const res = await fetch("/api/admin/bug-reports", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setBugReports(data);
+      } else {
+        console.error("Failed to load bug reports");
+      }
+    } catch (err) {
+      console.error("Error loading bug reports:", err);
     }
   };
 
@@ -108,6 +126,46 @@ export default function PanelSettings() {
   const handleCancelEdit = () => {
     setEditingTranslation(null);
     setEditValue("");
+  };
+
+  const handleUpdateBugReport = async (reportId: number, status: string, adminResponse: string) => {
+    setUpdatingReport(reportId);
+    try {
+      const res = await fetch(`/api/admin/bug-reports/${reportId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          status,
+          admin_response: adminResponse,
+        }),
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Bug report updated successfully.",
+        });
+        loadBugReports(); // Reload bug reports
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update bug report.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Error updating bug report:", err);
+      toast({
+        title: "Error",
+        description: "Failed to update bug report.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingReport(null);
+    }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -358,7 +416,7 @@ export default function PanelSettings() {
                 Language Translations
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Manage text translations for different languages. Changes will be reflected across the website.
+                Manage text translations for different languages. Missing translations will show a dropdown with existing translations for runtime connection.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -377,57 +435,76 @@ export default function PanelSettings() {
                 </div>
               </div>
 
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {translations
-                  .filter((t) => t.language === selectedLanguage)
-                  .sort((a, b) => a.key_name.localeCompare(b.key_name))
-                  .map((translation) => (
-                    <div key={translation.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-muted-foreground mb-1">
-                          {translation.key_name}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Input
+                    placeholder="Search translations (ex: nav.link_ups)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {translations
+                    .filter((t) => t.language === selectedLanguage)
+                    .filter((t) => {
+                      if (!searchQuery.trim()) return true;
+                      const q = searchQuery.toLowerCase();
+                      return (
+                        t.key_name.toLowerCase().includes(q) ||
+                        String(t.text_value || '').toLowerCase().includes(q)
+                      );
+                    })
+                    .sort((a, b) => a.key_name.localeCompare(b.key_name))
+                    .map((translation) => (
+                      <div key={translation.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-muted-foreground mb-1">
+                            {translation.key_name}
+                          </div>
+                          {editingTranslation?.id === translation.id ? (
+                            <Textarea
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              className="min-h-[60px]"
+                              placeholder="Enter translation text..."
+                            />
+                          ) : (
+                            <div className="text-sm">{translation.text_value}</div>
+                          )}
                         </div>
-                        {editingTranslation?.id === translation.id ? (
-                          <Textarea
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            className="min-h-[60px]"
-                            placeholder="Enter translation text..."
-                          />
-                        ) : (
-                          <div className="text-sm">{translation.text_value}</div>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        {editingTranslation?.id === translation.id ? (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={handleSaveTranslation}
-                              disabled={savingTranslation}
-                            >
-                              {savingTranslation ? "Saving..." : "Save"}
-                            </Button>
+                        <div className="flex gap-2">
+                          {editingTranslation?.id === translation.id ? (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={handleSaveTranslation}
+                                disabled={savingTranslation}
+                              >
+                                {savingTranslation ? "Saving..." : "Save"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={handleCancelEdit}
+                              onClick={() => handleEditTranslation(translation)}
                             >
-                              Cancel
+                              Edit
                             </Button>
-                          </>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditTranslation(translation)}
-                          >
-                            Edit
-                          </Button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
 
               {translations.filter((t) => t.language === selectedLanguage).length === 0 && (

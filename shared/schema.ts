@@ -104,3 +104,31 @@ export interface SavedPost extends InsertSavedPost {
   user_id: number;
   created_at: Date;
 }
+
+export const insertBugReportSchema = z.object({
+  type: z.enum(["bug", "feature_request"]),
+  message: z.string().min(1, "Message is required"),
+});
+
+export type InsertBugReport = z.infer<typeof insertBugReportSchema>;
+
+export interface BugReport extends InsertBugReport {
+  id: number;
+  user_id: number;
+  status: "open" | "in_progress" | "resolved" | "closed";
+  admin_response: AdminResponse[] | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface AdminResponse {
+  message: string;
+  timestamp: Date;
+}
+
+export const updateBugReportSchema = z.object({
+  status: z.enum(["open", "in_progress", "resolved", "closed"]).optional(),
+  admin_response: z.string().optional(),
+});
+
+export type UpdateBugReportRequest = z.infer<typeof updateBugReportSchema>;

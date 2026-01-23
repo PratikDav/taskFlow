@@ -35,10 +35,16 @@ export function useNotifications() {
 
   const fetchUnreadCount = async () => {
     try {
+      const previousCount = unreadCount;
       const res = await fetch('/api/notifications/unread-count', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setUnreadCount(data.count);
+        
+        // If unread count increased, fetch new notifications
+        if (data.count > previousCount) {
+          fetchNotifications();
+        }
       }
     } catch (err) {
       console.error('Failed to fetch unread count:', err);

@@ -260,17 +260,22 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
   const rightSlots = visibleSlots - leftSlots;
 
   const handleSkillSelect = (skill: Skill) => {
+    console.log('handleSkillSelect called with skill:', skill);
     if (skill.id) {
-      // Adding a skill
+      // Adding a skill - let parent handle the update
+      console.log('Adding skill:', skill);
       onUpdateSkills([...userSkills, skill]);
     } else {
       // Opening dialog for selection
+      console.log('Opening skill dialog');
       setShowSkillDialog(true);
     }
   };
 
   const handleSkillRemove = (index: number) => {
+    console.log('handleSkillRemove called with index:', index);
     const newSkills = userSkills.filter((_, i) => i !== index);
+    console.log('New skills after removal:', newSkills);
     onUpdateSkills(newSkills);
   };
 
@@ -313,7 +318,7 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
 
         return (
           <div
-            key={`slot-${i}`}
+            key={i < userSkills.length ? `skill-${userSkills[i].id}` : `empty-${i}`}
             className="absolute animate-fade-in"
             style={{
               left: '50%',

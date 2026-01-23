@@ -384,6 +384,23 @@ export async function initDatabase() {
 
     console.log("Translations table created");
 
+    // Create bug_reports table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS bug_reports (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type ENUM('bug', 'feature_request') NOT NULL,
+        message TEXT NOT NULL,
+        status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open',
+        admin_response TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    console.log("Bug reports table created");
+
     // Seed default translations
     const defaultTranslations = [
       // English translations
@@ -396,6 +413,7 @@ export async function initDatabase() {
       { key: 'nav.settings', lang: 'en', text: 'Settings' },
       { key: 'nav.profile', lang: 'en', text: 'Profile' },
       { key: 'nav.admin', lang: 'en', text: 'Admin' },
+      { key: 'nav.bug_messages', lang: 'en', text: 'Bug Messages' },
       { key: 'nav.logout', lang: 'en', text: 'Logout' },
       { key: 'profile.my_profile', lang: 'en', text: 'My Profile' },
       { key: 'profile.edit_profile', lang: 'en', text: 'Edit Profile' },
@@ -588,6 +606,7 @@ export async function initDatabase() {
       { key: 'nav.settings', lang: 'bn', text: 'সেটিংস' },
       { key: 'nav.profile', lang: 'bn', text: 'প্রোফাইল' },
       { key: 'nav.admin', lang: 'bn', text: 'অ্যাডমিন' },
+      { key: 'nav.bug_messages', lang: 'bn', text: 'বাগ মেসেজ' },
       { key: 'nav.logout', lang: 'bn', text: 'লগ আউট' },
       { key: 'profile.my_profile', lang: 'bn', text: 'আমার প্রোফাইল' },
       { key: 'profile.edit_profile', lang: 'bn', text: 'প্রোফাইল সম্পাদনা' },
@@ -770,11 +789,17 @@ export async function initDatabase() {
       { key: 'profile.no_saved_posts', lang: 'bn', text: 'এখনও কোন সংরক্ষিত পোস্ট নেই।' },
     ];
 
+    console.log(`Starting to seed ${defaultTranslations.length} translations...`);
+    let seededCount = 0;
     for (const translation of defaultTranslations) {
       await conn.execute(`
-        INSERT IGNORE INTO translations (key_name, language, text_value)
-        VALUES (?, ?, ?)
+        INSERT IGNORE INTO translations (key_name, language, text_value, created_at, updated_at)
+        VALUES (?, ?, ?, NOW(), NOW())
       `, [translation.key, translation.lang, translation.text]);
+      seededCount++;
+      if (seededCount % 50 === 0) {
+        console.log(`Seeded ${seededCount}/${defaultTranslations.length} translations...`);
+      }
     }
 
     console.log("Default translations seeded");

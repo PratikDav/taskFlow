@@ -17,6 +17,7 @@ export default function Posts() {
   const [newPost, setNewPost] = useState({ title: "", content: "" });
   const { friends, sendFriendRequest } = useFriends();
   const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
+  const [showLoggedInMessage, setShowLoggedInMessage] = useState(false);
 
   // Check if user is logged in
   const isLoggedIn = !!me;
@@ -27,6 +28,12 @@ export default function Posts() {
         const meRes = await fetch("/api/me", { credentials: "include" });
         const meData = await meRes.json();
         setMe(meData); // will be null for guests
+
+        // Check if we should show logged in message
+        if (meData && sessionStorage.getItem('showLoggedInMessage') === 'true') {
+          setShowLoggedInMessage(true);
+          sessionStorage.removeItem('showLoggedInMessage');
+        }
 
         const postsRes = await fetch("/api/posts");
         const postsData = await postsRes.json();
@@ -182,6 +189,22 @@ export default function Posts() {
 
   return (
     <div className="max-w-2xl mx-auto p-8">
+      {/* Logged In Message */}
+      {showLoggedInMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+            <span className="text-green-800 font-medium">{t('posts.logged_in')}</span>
+          </div>
+          <button
+            onClick={() => setShowLoggedInMessage(false)}
+            className="text-green-600 hover:text-green-800 text-xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Header with User Info */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -261,6 +284,52 @@ export default function Posts() {
                             {t('posts.your_post')}
                           </span>
                         )}
+                        {canAddFriend && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleAddFriend(post.user_id)}
+                            className="h-7 w-7 p-0 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-md transition-all duration-200 rounded-full"
+                            title="Add friend"
+                          >
+                            <UserPlus className="h-3.5 w-3.5 text-blue-600 hover:text-blue-700 transition-colors" />
+                          </Button>
+                        )}
+                        {me && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-50">
+                                <MoreHorizontal className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40 bg-white border border-gray-200 shadow-lg">
+                              {isOwnPost && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeletePost(post.id)}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  {t('posts.delete')}
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => savedPosts.has(post.id) ? handleUnsavePost(post.id) : handleSavePost(post.id)}
+                              >
+                                {savedPosts.has(post.id) ? (
+                                  <>
+                                    <BookmarkCheck className="h-4 w-4 mr-2" />
+                                    {t('posts.unsave')}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Bookmark className="h-4 w-4 mr-2" />
+                                    {t('posts.save')}
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {new Date(post.created_at).toLocaleDateString("en-US", {
@@ -278,90 +347,13 @@ export default function Posts() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className={`font-semibold text-lg flex-1 ${post.title_alignment === 'center' ? 'text-center' : post.title_alignment === 'right' ? 'text-right' : 'text-left'}`}>{post.title}</h3>
-                      {isOwnPost && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 bg-white border border-gray-200 hover:bg-gray-50">
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg">
-                            <DropdownMenuItem 
-                              onClick={() => handleTitleAlignmentChange(post.id, 'left')}
-                              className="hover:bg-gray-50 focus:bg-gray-50"
-                            >
-                              <AlignLeft className="h-4 w-4 mr-2" />
-                              {t('create_post.left')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleTitleAlignmentChange(post.id, 'center')}
-                              className="hover:bg-gray-50 focus:bg-gray-50"
-                            >
-                              <AlignCenter className="h-4 w-4 mr-2" />
-                              {t('create_post.center')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleTitleAlignmentChange(post.id, 'right')}
-                              className="hover:bg-gray-50 focus:bg-gray-50"
-                            >
-                              <AlignRight className="h-4 w-4 mr-2" />
-                              {t('create_post.right')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      {canAddFriend && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleAddFriend(post.user_id)}
-                          className="h-6 w-6 p-0 hover:bg-primary/10"
-                          title="Add friend"
-                        >
-                          <UserPlus className="h-3 w-3" />
-                        </Button>
-                      )}
                     </div>
                   </div>
-                  {me && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40 bg-white border border-gray-200 shadow-lg">
-                        {isOwnPost && (
-                          <DropdownMenuItem
-                            onClick={() => handleDeletePost(post.id)}
-                            className="text-red-600 focus:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            {t('posts.delete')}
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          onClick={() => savedPosts.has(post.id) ? handleUnsavePost(post.id) : handleSavePost(post.id)}
-                        >
-                          {savedPosts.has(post.id) ? (
-                            <>
-                              <BookmarkCheck className="h-4 w-4 mr-2" />
-                              {t('posts.unsave')}
-                            </>
-                          ) : (
-                            <>
-                              <Bookmark className="h-4 w-4 mr-2" />
-                              {t('posts.save')}
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
                 </div>
-                <p className="mt-3 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
+                
+                <div className="flex justify-between items-start mt-2">
+                  <p className="flex-1 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
+                </div>
                 
               </div>
             );

@@ -445,9 +445,11 @@ export default function Profile() {
   };
 
   const handleSkillsUpdate = async (skills: Skill[]) => {
+    console.log('handleSkillsUpdate called with skills:', skills);
     if (!user) return;
 
     try {
+      console.log('Sending skills to API:', skills.map(skill => skill.id));
       const res = await fetch("/api/me/skills", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -456,6 +458,7 @@ export default function Profile() {
       });
 
       if (res.ok) {
+        console.log('API call successful, updating state');
         setUserSkills(skills);
         setUser(prev => prev ? { ...prev, skills } : null);
         toast({
