@@ -136,6 +136,55 @@ export const translations = {
     deleted: "Deleted",
     created: "Created",
     updated: "Updated",
+    taskCreatedSuccessfully: "Task created successfully",
+    profilePictureUpdated: "Profile picture updated",
+    failedToUploadAvatar: "Failed to upload avatar",
+    failedToLoadImage: "Failed to load image for editing",
+
+    // Bug Reports
+    bugReport: "Bug Report",
+    featureRequest: "Feature Request",
+    reportBugOrFeature: "Report Bug or Feature",
+    selectType: "Select Type",
+    description: "Description",
+    describeIssueOrRequest: "Describe your issue or request...",
+    submitting: "Submitting...",
+    thankYouFeedback: "Thank you for your feedback!",
+    failedToSubmit: "Failed to submit. Please try again.",
+    responses: "Responses",
+    noResponsesYet: "No responses yet.",
+    addResponse: "Add Response",
+    typeYourResponse: "Type your response to the reporter...",
+    sendResponse: "Send Response",
+    clear: "Clear",
+    failedToAddResponse: "Failed to add response",
+    viewDetails: "View Details",
+    hideDetails: "Hide Details",
+    reporter: "Reporter",
+    totalReports: "Total Reports",
+    open: "Open",
+    resolved: "Resolved",
+    featureRequests: "Feature Requests",
+    allReports: "All Reports",
+    reviewAndRespond: "Review and respond to user bug reports and feature requests.",
+    noReports: "No reports",
+    getStartedWaiting: "Get started while waiting for user feedback.",
+    helpUsImprove: "Help us improve by sharing your feedback",
+    bugReportToastMessage: "If you face any bugs (or issues while using the website) or want to request a new update or feature, you can message the administration",
+    reportIssuesOrProblems: "Report issues or problems",
+    suggestNewFeatures: "Suggest new features",
+    beDetailedAsPossible: "Be as detailed as possible to help us better understand your feedback.",
+
+    // Trophy Reactions
+    goldTrophy: "Gold Trophy",
+    silverTrophy: "Silver Trophy", 
+    bronzeTrophy: "Bronze Trophy",
+    goldTrophyDesc: "Outstanding! Show your highest appreciation",
+    silverTrophyDesc: "Great work! Well deserved recognition",
+    bronzeTrophyDesc: "Good job! Keep up the great work",
+
+    // Post Actions
+    comment: "Comment",
   },
   es: {
     // Navigation
@@ -1378,6 +1427,11 @@ export const translations = {
     deleted: "已删除",
     created: "已创建",
     updated: "已更新",
+
+    // Bug Reports Admin
+    admin: "Admin",
+    failedToUpdateStatus: "Failed to update status",
+    bugMessage: "Bug Message",
   },
   bn: {
     // Navigation
@@ -1454,6 +1508,7 @@ export const translations = {
     high: "উচ্চ",
     dueDate: "নির্ধারিত তারিখ",
     assignedTo: "অর্পিত",
+    closed: "বন্ধ",
 
     // Notes
     allNotes: "সব নোট",
@@ -1516,6 +1571,69 @@ export const translations = {
     deleted: "মুছে ফেলা হয়েছে",
     created: "তৈরি করা হয়েছে",
     updated: "আপডেট করা হয়েছে",
+    taskCreatedSuccessfully: "টাস্ক সফলভাবে তৈরি করা হয়েছে",
+    profilePictureUpdated: "প্রোফাইল ছবি আপডেট করা হয়েছে",
+    failedToUploadAvatar: "অ্যাভাটার আপলোড করতে ব্যর্থ",
+    failedToLoadImage: "সম্পাদনার জন্য ছবি লোড করতে ব্যর্থ",
+
+    // Bug Reports
+    bugReport: "বাগ রিপোর্ট",
+    featureRequest: "ফিচার রিকোয়েস্ট",
+    reportBugOrFeature: "বাগ রিপোর্ট করুন বা ফিচার রিকোয়েস্ট করুন",
+    selectType: "টাইপ নির্বাচন করুন",
+    description: "বিবরণ",
+    describeIssueOrRequest: "সমস্যা বা ফিচার রিকোয়েস্টের বিবরণ দিন...",
+    submitting: "জমা দেওয়া হচ্ছে...",
+    thankYouFeedback: "আপনার ফিডব্যাকের জন্য ধন্যবাদ!",
+    failedToSubmit: "জমা দিতে ব্যর্থ। আবার চেষ্টা করুন।",
+    responses: "প্রতিক্রিয়া",
+    noResponsesYet: "এখনও কোন প্রতিক্রিয়া নেই।",
+    addResponse: "প্রতিক্রিয়া যোগ করুন",
+    typeYourResponse: "রিপোর্টারের কাছে আপনার প্রতিক্রিয়া টাইপ করুন...",
+    sendResponse: "প্রতিক্রিয়া পাঠান",
+    clear: "পরিষ্কার",
+    failedToAddResponse: "প্রতিক্রিয়া যোগ করতে ব্যর্থ",
+    viewDetails: "বিস্তারিত দেখুন",
+    hideDetails: "বিস্তারিত লুকান",
+    reporter: "রিপোর্টার",
+    totalReports: "মোট রিপোর্ট",
+    open: "খোলা",
+    resolved: "সমাধান করা",
+    featureRequests: "ফিচার রিকোয়েস্ট",
+    allReports: "সব রিপোর্ট",
+    reviewAndRespond: "ব্যবহারকারীদের বাগ রিপোর্ট এবং ফিচার রিকোয়েস্ট পর্যালোচনা এবং প্রতিক্রিয়া করুন।",
+    noReports: "কোন রিপোর্ট নেই",
+    getStartedWaiting: "ব্যবহারকারী ফিডব্যাকের জন্য অপেক্ষা করে শুরু করুন।",
+    helpUsImprove: "আপনার ফিডব্যাক শেয়ার করে আমাদের উন্নত করতে সাহায্য করুন",
+    bugReportToastMessage: "যদি আপনি কোনো বাগ (বা ওয়েবসাইট ব্যবহার করার সময় কোনো সমস্যা) সম্মুখীন হন বা নতুন আপডেট বা ফিচার রিকোয়েস্ট করতে চান, তাহলে আপনি অ্যাডমিনিস্ট্রেশনে মেসেজ পাঠাতে পারেন",
+    reportIssuesOrProblems: "সমস্যা বা সমস্যাগুলি রিপোর্ট করুন",
+    suggestNewFeatures: "নতুন ফিচার পরামর্শ দিন",
+    beDetailedAsPossible: "আপনার ফিডব্যাক আরও ভালভাবে বুঝতে সাহায্য করার জন্য যতটা সম্ভব বিস্তারিত হন।",
+
+    // Bug Reports Admin
+    admin: "অ্যাডমিন",
+    failedToUpdateStatus: "স্ট্যাটাস আপডেট করতে ব্যর্থ",
+    bugMessage: "বাগ মেসেজ",
+
+    // Trash
+    itemsInTrashKeptFor30Days: "ট্র্যাশের আইটেমগুলি স্থায়ী মুছে ফেলার আগে 30 দিন রাখা হয়",
+    selected: "নির্বাচিত",
+    restore: "পুনরুদ্ধার",
+    permanentDelete: "স্থায়ীভাবে মুছুন",
+    trashIsEmpty: "ট্র্যাশ খালি",
+    deletedItemsWillAppearHere: "মুছে ফেলা আইটেমগুলি এখানে প্রদর্শিত হবে। আইটেমগুলি 30 দিন পর স্বয়ংক্রিয়ভাবে সরানো হয়।",
+    itemsKeptFor30Days: "আইটেমগুলি স্থায়ী মুছে ফেলার আগে 30 দিন রাখা হয়",
+
+    // Trophy Reactions
+    goldTrophy: "গোল্ড ট্রফি",
+    silverTrophy: "সিলভার ট্রফি",
+    bronzeTrophy: "ব্রোঞ্জ ট্রফি",
+    goldTrophyDesc: "অসাধারণ! আপনার সর্বোচ্চ প্রশংসা দেখান",
+    silverTrophyDesc: "দারুণ কাজ! ভালো প্রাপ্য স্বীকৃতি",
+    bronzeTrophyDesc: "ভালো কাজ! দারুণ কাজ চালিয়ে যান",
+
+    // Post Actions
+    comment: "মন্তব্য",
   },
 };
 

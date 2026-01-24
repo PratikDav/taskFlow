@@ -104,3 +104,45 @@ export interface SavedPost extends InsertSavedPost {
   user_id: number;
   created_at: Date;
 }
+
+export const insertBugReportSchema = z.object({
+  type: z.enum(["bug", "feature"]),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+});
+
+export type InsertBugReport = z.infer<typeof insertBugReportSchema>;
+
+export interface BugReport extends InsertBugReport {
+  id: number;
+  user_id: number;
+  status: "open" | "in_progress" | "resolved" | "closed";
+  created_at: Date;
+  updated_at: Date;
+}
+
+export const insertBugResponseSchema = z.object({
+  message: z.string().min(1, "Message is required"),
+});
+
+export type InsertBugResponse = z.infer<typeof insertBugResponseSchema>;
+
+export interface BugResponse extends InsertBugResponse {
+  id: number;
+  bug_report_id: number;
+  user_id: number;
+  created_at: Date;
+}
+
+export const insertPostReactionSchema = z.object({
+  post_id: z.number(),
+  reaction_type: z.enum(["gold", "silver", "bronze"]),
+});
+
+export type InsertPostReaction = z.infer<typeof insertPostReactionSchema>;
+
+export interface PostReaction extends InsertPostReaction {
+  id: number;
+  user_id: number;
+  created_at: Date;
+}

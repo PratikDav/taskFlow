@@ -1,7 +1,8 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import express, { Request, Response } from "express";
+import express, { type Request, type Response, type Express } from "express";
+import { type Server } from "http";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { api } from "../shared/routes.js";
@@ -441,19 +442,21 @@ export async function registerRoutes(
       }
 
       // Validate skill IDs against available skills in database
+      let validSkills: number[] = [];
       if (skills.length > 0) {
         const placeholders = skills.map(() => '?').join(',');
         const [skillRows] = await pool.execute(`SELECT id FROM skills WHERE id IN (${placeholders})`, skills);
-        const validSkillIds = (skillRows as any[]).map(row => row.id);
-        const validSkills = skills.filter(skillId => validSkillIds.includes(skillId));
+        const skillRowsArr = skillRows as any[];
+        const validSkillIds = skillRowsArr.map((row) => row.id);
+        validSkills = skills.filter((skillId: number) => validSkillIds.includes(skillId));
 
         if (validSkills.length !== skills.length) {
           return res.status(400).json({ message: 'Invalid skill IDs provided' });
         }
       }
 
-      // Update user skills
-      await storage.updateUserSkills(user.id, validSkills);
+      // Update user skills (storage expects string[] for skill ids)
+      await storage.updateUserSkills(user.id, validSkills.map(String));
 
       res.json({ message: 'Skills updated successfully' });
     } catch (err) {
@@ -554,7 +557,8 @@ export async function registerRoutes(
 
       // Check if skill exists in database
       const [skillRows] = await pool.execute('SELECT id FROM skills WHERE id = ?', [skillId]);
-      if (skillRows.length === 0) {
+      const skillRowsArr = skillRows as any[];
+      if (skillRowsArr.length === 0) {
         return res.status(404).json({ message: 'Skill not found' });
       }
 
@@ -748,6 +752,95 @@ export async function registerRoutes(
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Failed to delete post' });
+    }
+  });
+
+  // Post reactions API
+  app.post('/api/posts/:postId/reactions', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const postId = Number(req.params.postId);
+      const { reactionType } = req.body;
+
+      if (!['gold', 'silver', 'bronze'].includes(reactionType)) {
+        return res.status(400).json({ message: 'Invalid reaction type' });
+      }
+
+      // Check if post exists
+      const post = await storage.getPostById(postId);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+
+      const reaction = await storage.addPostReaction(userId, postId, reactionType);
+      res.json(reaction);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to add reaction' });
+    }
+  });
+
+  app.delete('/api/posts/:postId/reactions', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const postId = Number(req.params.postId);
+      await storage.removePostReaction(userId, postId);
+      res.status(204).send();
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to remove reaction' });
+    }
+  });
+
+  app.get('/api/posts/:postId/reactions', async (req, res) => {
+    try {
+      const postId = Number(req.params.postId);
+      const reactions = await storage.getPostReactions(postId);
+      res.json(reactions);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch reactions' });
+    }
+  });
+
+  app.get('/api/posts/:postId/reactions/counts', async (req, res) => {
+    try {
+      const postId = Number(req.params.postId);
+      const counts = await storage.getPostReactionCounts(postId);
+      res.json(counts);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch reaction counts' });
+    }
+  });
+
+  app.get('/api/posts/:postId/reactions/user', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const postId = Number(req.params.postId);
+      const reaction = await storage.getUserPostReaction(userId, postId);
+      res.json(reaction);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch user reaction' });
     }
   });
 
@@ -1738,6 +1831,155 @@ export async function registerRoutes(
     } catch (err) {
       console.error('Failed to fetch translations:', err);
       res.status(500).json({ message: 'Failed to fetch translations' });
+    }
+  });
+
+  // Bug Report API
+  app.post('/api/bug-reports', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const { type, title, description } = req.body;
+      const bugReport = await storage.createBugReport({
+        user_id: userId,
+        type,
+        title,
+        description
+      });
+
+      // Send notification to admin
+      const admins = await storage.getUsersByRole('admin');
+      await NotificationService.createSystemNotification(
+        admins.map(a => a.id),
+        "New Bug Report/Feature Request",
+        `${req.session.user.name} submitted a ${type}: ${title}`
+      );
+
+      res.json(bugReport);
+    } catch (err) {
+      console.error('Failed to create bug report:', err);
+      res.status(500).json({ message: 'Failed to create bug report' });
+    }
+  });
+
+  app.get('/api/admin/bug-reports', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const bugReports = await storage.getBugReports();
+      res.json(bugReports);
+    } catch (err) {
+      console.error('Failed to fetch bug reports:', err);
+      res.status(500).json({ message: 'Failed to fetch bug reports' });
+    }
+  });
+
+  app.get('/api/admin/bug-reports/:id', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const bugReportId = parseInt(req.params.id);
+      const bugReport = await storage.getBugReportById(bugReportId);
+      if (!bugReport) {
+        return res.status(404).json({ message: 'Bug report not found' });
+      }
+
+      const responses = await storage.getBugResponses(bugReportId);
+      res.json({ ...bugReport, responses });
+    } catch (err) {
+      console.error('Failed to fetch bug report:', err);
+      res.status(500).json({ message: 'Failed to fetch bug report' });
+    }
+  });
+
+  app.put('/api/admin/bug-reports/:id/status', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const bugReportId = parseInt(req.params.id);
+      const { status } = req.body;
+
+      await storage.updateBugReportStatus(bugReportId, status);
+
+      // Get the bug report to send notification
+      const bugReport = await storage.getBugReportById(bugReportId);
+      if (bugReport) {
+        await NotificationService.createSystemNotification(
+          [bugReport.user_id],
+          "Bug Report/Feature Request Update",
+          `Your ${bugReport.type} "${bugReport.title}" status has been updated to: ${status}`
+        );
+      }
+
+      res.json({ message: 'Status updated successfully' });
+    } catch (err) {
+      console.error('Failed to update bug report status:', err);
+      res.status(500).json({ message: 'Failed to update status' });
+    }
+  });
+
+  app.post('/api/admin/bug-reports/:id/responses', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const bugReportId = parseInt(req.params.id);
+      const { message } = req.body;
+
+      const response = await storage.createBugResponse({
+        bug_report_id: bugReportId,
+        user_id: userId,
+        message
+      });
+
+      // Send notification to the user who reported
+      const bugReport = await storage.getBugReportById(bugReportId);
+      if (bugReport) {
+        await NotificationService.createSystemNotification(
+          [bugReport.user_id],
+          "Response to Your Bug Report/Feature Request",
+          `Admin responded to your ${bugReport.type}: ${bugReport.title}`
+        );
+      }
+
+      res.json(response);
+    } catch (err) {
+      console.error('Failed to create bug response:', err);
+      res.status(500).json({ message: 'Failed to create response' });
     }
   });
 

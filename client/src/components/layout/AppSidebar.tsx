@@ -88,7 +88,10 @@ export function AppSidebar() {
       ? [{ title: t('nav.dashboard'), url: "/", icon: LayoutDashboard }]
       : []),
     ...(currentUser?.role === "admin" 
-      ? [{ title: t('nav.admin'), url: "/panel-settings", icon: Settings }]
+      ? [
+          { title: t('nav.admin'), url: "/panel-settings", icon: Settings },
+          { title: t('bugMessage'), url: '/admin/bug-reports', icon: FileText }
+        ]
       : []),
     { title: t('nav.posts'), url: "/posts", icon: Newspaper },
     { title: t('nav.friends'), url: "/friends", icon: Users },
@@ -98,13 +101,14 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar/50 backdrop-blur-sm">
-      <SidebarHeader className="h-14 sm:h-16 flex items-center justify-center border-b border-border/20 px-3 sm:px-4">
-        <Link href="/posts" className="flex items-center gap-2 sm:gap-3 w-full group-data-[collapsible=icon]:justify-center hover:opacity-80 transition-opacity">
-          <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30">
-            <Command className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+    <Sidebar collapsible="icon" className="border-r border-border/40 bg-gradient-to-b from-sidebar/60 via-sidebar/40 to-sidebar/60 backdrop-blur-xl shadow-xl">
+      <SidebarHeader className="h-16 sm:h-18 flex items-center justify-center border-b border-border/30 px-4 sm:px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5"></div>
+        <Link href="/posts" className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center hover:scale-105 transition-all duration-300 relative z-10">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground font-bold shadow-lg shadow-primary/40 hover:shadow-primary/60 transition-all duration-300">
+            <Command className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
           </div>
-          <span className="font-display font-bold text-base sm:text-lg tracking-tight group-data-[collapsible=icon]:hidden">
+          <span className="font-display font-bold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent group-data-[collapsible=icon]:hidden">
             TaskFlow
           </span>
         </Link>
@@ -112,19 +116,19 @@ export function AppSidebar() {
         <button
           aria-label="Close sidebar"
           onClick={() => setOpenMobile(false)}
-          className="inline-flex md:hidden absolute right-3 top-3 items-center justify-center h-9 w-9 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="inline-flex md:hidden absolute right-4 top-4 items-center justify-center h-8 w-8 rounded-lg hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-200 hover:scale-110"
         >
           <X className="h-4 w-4" />
         </button>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-3 sm:px-2 sm:py-4">
+      <SidebarContent className="px-3 py-4 sm:px-4 sm:py-6">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground/70 font-medium px-2 mb-2 text-xs sm:text-sm">
-            Menu
+          <SidebarGroupLabel className="text-muted-foreground/80 font-semibold px-3 mb-3 text-xs sm:text-sm uppercase tracking-wider">
+            Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
@@ -132,19 +136,33 @@ export function AppSidebar() {
                     isActive={location === item.url}
                     tooltip={item.title}
                     className={`
-                      rounded-lg sm:rounded-xl transition-all duration-200 ease-out h-9 sm:h-10 px-3 sm:px-4
-                      focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-primary/5
+                      group relative rounded-xl sm:rounded-2xl transition-all duration-300 ease-out h-11 sm:h-12 px-4 sm:px-5
+                      focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-primary/5
+                      hover:scale-[1.02] hover:shadow-md
                       ${location === item.url 
-                        ? 'bg-primary/10 text-primary font-medium shadow-sm' 
+                        ? 'bg-gradient-to-r from-primary/15 to-primary/10 text-primary font-semibold shadow-lg shadow-primary/20 border border-primary/20' 
                         : item.title === 'Notes'
-                        ? 'text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 focus:bg-yellow-50 font-medium'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground focus:bg-muted'
+                        ? 'text-amber-600 hover:bg-gradient-to-r hover:from-amber-50 hover:to-amber-25 hover:text-amber-700 focus:bg-amber-50 font-medium hover:shadow-amber-100/50'
+                        : 'text-muted-foreground hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30 hover:text-foreground focus:bg-muted/50 hover:shadow-lg hover:shadow-muted/20'
                       }
                     `}
                   >
-                    <Link href={item.url}>
-                      <item.icon className={`h-4 w-4 sm:h-4 sm:w-4 ${location === item.url ? "text-primary" : item.title === 'Notes' ? "text-yellow-600" : ""}`} />
-                      <span className="text-sm sm:text-sm">{item.title}</span>
+                    <Link href={item.url} className="flex items-center gap-3 sm:gap-4 w-full">
+                      <div className={`
+                        flex items-center justify-center w-5 h-5 rounded-lg transition-all duration-300
+                        ${location === item.url 
+                          ? 'bg-primary/20 text-primary' 
+                          : item.title === 'Notes'
+                          ? 'bg-amber-100 text-amber-600 group-hover:bg-amber-200'
+                          : 'bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground'
+                        }
+                      `}>
+                        <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </div>
+                      <span className="text-sm sm:text-sm font-medium">{item.title}</span>
+                      {location === item.url && (
+                        <div className="absolute right-2 w-1.5 h-6 bg-primary rounded-full animate-pulse"></div>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -155,13 +173,14 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* Language Switcher */}
-      <div className="px-3 py-2 border-t border-sidebar-border">
+      <div className="px-4 py-3 border-t border-border/30 bg-gradient-to-r from-muted/20 to-transparent">
         <LanguageSwitcher />
       </div>
 
-      <SidebarFooter className="p-3 sm:p-4 border-t border-border/20">
-        <div className="flex items-center gap-2 sm:gap-3 group-data-[collapsible=icon]:justify-center">
-          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white shadow-md flex-shrink-0 overflow-hidden">
+      <SidebarFooter className="p-4 sm:p-5 border-t border-border/30 bg-gradient-to-t from-muted/10 to-transparent">
+        <div className="flex items-center gap-3 sm:gap-4 group-data-[collapsible=icon]:justify-center relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-xl"></div>
+          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300 flex-shrink-0 overflow-hidden ring-2 ring-white/20 hover:ring-white/40 relative z-10">
             {currentUser?.avatar ? (
               <img
                 src={currentUser.avatar}
@@ -171,59 +190,66 @@ export function AppSidebar() {
                   const target = e.target as HTMLImageElement;
                   const parent = target.parentElement;
                   if (parent) {
-                    parent.innerHTML = '<div class="w-full h-full rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white"><svg class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg></div>';
+                    parent.innerHTML = '<div class="w-full h-full rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white"><svg class="h-4 w-4 sm:h-4.5 sm:w-4.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg></div>';
                   }
                 }}
               />
             ) : (
-              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <User className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             )}
           </div>
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden min-w-0 flex-1">
-            <span className="text-xs sm:text-sm font-semibold truncate">{currentUser?.name || "Guest"}</span>
-            <span className="text-xs text-muted-foreground capitalize">
-              {currentUser?.role === "admin" ? "Admin" : currentUser ? "User" : "Not logged in"}
+          <div className="flex flex-col group-data-[collapsible=icon]:hidden min-w-0 flex-1 relative z-10">
+            <span className="text-sm sm:text-base font-bold truncate text-foreground">{currentUser?.name || "Guest"}</span>
+            <span className="text-xs text-muted-foreground/80 capitalize font-medium">
+              {currentUser?.role === "admin" ? "Administrator" : currentUser ? "Member" : "Not logged in"}
             </span>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="ml-auto text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/20 flex-shrink-0" aria-label="User menu">
-                <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <button className="ml-auto text-muted-foreground hover:text-foreground transition-all duration-200 p-2 rounded-lg hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-primary/30 hover:scale-110 flex-shrink-0 relative z-10" aria-label="User menu">
+                <ChevronUp className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 sm:w-52 bg-slate-50 border-slate-200">
+            <DropdownMenuContent align="end" className="w-52 sm:w-56 bg-white/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-xl">
               {currentUser ? (
                 <>
-                  <DropdownMenuItem asChild className="h-9 sm:h-10">
-                    <Link href="/profile" className="flex items-center gap-2 px-3">
-                      <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span className="text-sm">{t('profile.my_profile')}</span>
+                  <DropdownMenuItem asChild className="h-11 rounded-lg mx-1 my-1 hover:bg-primary/10 focus:bg-primary/10">
+                    <Link href="/profile" className="flex items-center gap-3 px-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <User className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <span className="text-sm font-medium">{t('profile.my_profile')}</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="h-9 sm:h-10">
-                    <Link href="/settings" className="flex items-center gap-2 px-3">
-                      <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span className="text-sm">{t('nav.settings')}</span>
+                  <DropdownMenuItem asChild className="h-11 rounded-lg mx-1 my-1 hover:bg-primary/10 focus:bg-primary/10">
+                    <Link href="/settings" className="flex items-center gap-3 px-3">
+                      <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                        <Settings className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="text-sm font-medium">{t('nav.settings')}</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setLogoutDialogOpen(true)} className="text-destructive focus:text-destructive h-9 sm:h-10 px-3">
-                    <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-                    <span className="text-sm">{t('nav.logout')}</span>
+                  <DropdownMenuSeparator className="my-2" />
+                  <DropdownMenuItem onClick={() => setLogoutDialogOpen(true)} className="text-red-600 focus:text-red-600 focus:bg-red-50 h-11 rounded-lg mx-1 my-1 hover:bg-red-50">
+                    <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center mr-3">
+                      <LogOut className="h-4 w-4 text-red-600" />
+                    </div>
+                    <span className="text-sm font-medium">{t('nav.logout')}</span>
                   </DropdownMenuItem>
                 </>
               ) : (
-                <DropdownMenuItem asChild className="h-9 sm:h-10">
-                  <Link href="/auth" className="flex items-center gap-2 px-3">
-                    <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    <span className="text-sm">{t('common.login_signup')}</span>
+                <DropdownMenuItem asChild className="h-11 rounded-lg mx-1 my-1 hover:bg-primary/10 focus:bg-primary/10">
+                  <Link href="/auth" className="flex items-center gap-3 px-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <User className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <span className="text-sm font-medium">{t('common.login_signup')}</span>
                   </Link>
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-
       </SidebarFooter>
 
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>

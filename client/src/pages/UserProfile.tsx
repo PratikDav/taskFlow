@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { User, Mail, Github, Linkedin, UserPlus, Users, UserCheck } from "lucide-react";

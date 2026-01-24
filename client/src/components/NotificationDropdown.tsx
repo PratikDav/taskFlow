@@ -180,13 +180,13 @@ export function NotificationDropdown() {
         <Button 
           variant="ghost" 
           size="default" 
-          className="relative h-11 w-11 rounded-full hover:bg-slate-100 hover:shadow-md transition-all duration-200 border border-transparent hover:border-slate-200"
+          className={`relative h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 via-purple-600 to-blue-700 hover:from-blue-600 hover:via-purple-700 hover:to-blue-800 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 border-3 border-white/30 hover:border-white/50 hover:scale-110 ${unreadCount > 0 ? 'animate-pulse' : ''}`}
         >
-          <Bell className="h-8 w-8" />
+          <Bell className={`h-7 w-7 ${unreadCount > 0 ? 'animate-bounce' : ''}`} />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse"
+              className="absolute -top-2 -right-2 h-7 w-7 flex items-center justify-center p-0 text-sm font-bold animate-ping bg-red-500 hover:bg-red-600 border-3 border-white shadow-xl"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>

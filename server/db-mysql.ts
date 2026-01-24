@@ -369,6 +369,22 @@ export async function initDatabase() {
 
     console.log("Saved posts table created");
 
+    // Create post_reactions table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS post_reactions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        post_id INT NOT NULL,
+        reaction_type ENUM('gold', 'silver', 'bronze') NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_user_post_reaction (user_id, post_id)
+      )
+    `);
+
+    console.log("Post reactions table created");
+
     // Create translations table
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS translations (
@@ -778,6 +794,39 @@ export async function initDatabase() {
     }
 
     console.log("Default translations seeded");
+
+    // Create bug_reports table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS bug_reports (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type ENUM('bug', 'feature') NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    console.log("Bug reports table created");
+
+    // Create bug_responses table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS bug_responses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        bug_report_id INT NOT NULL,
+        user_id INT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (bug_report_id) REFERENCES bug_reports(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    console.log("Bug responses table created");
+
     const [users] = await conn.execute<any[]>("SELECT * FROM users WHERE id = 1");
     if (users.length === 0) {
       const hashedPassword = await bcrypt.hash("user123", 10);

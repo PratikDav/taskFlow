@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTaskSchema, type InsertTask } from "@shared/schema";
 import { useCreateTask } from "@/hooks/use-tasks";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/lib/LanguageContext";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ import { Plus } from "lucide-react";
 export function CreateTaskDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
   const createTask = useCreateTask();
   
   const form = useForm<InsertTask>({
@@ -44,8 +46,8 @@ export function CreateTaskDialog() {
         setOpen(false);
         form.reset();
         toast({
-          title: "Success",
-          description: "Task created successfully",
+          title: t('success'),
+          description: t('taskCreatedSuccessfully'),
         });
       },
       onError: (error) => {

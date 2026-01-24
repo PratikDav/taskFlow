@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sid
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { TranslationProvider } from "@/hooks/use-translation";
+import BugReportIcon from "@/components/BugReportIcon";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Tasks from "@/pages/Tasks";
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/login" component={Login} />
       <Route path="/admin" component={Admin} />
+      <Route path="/admin/bug-reports" component={Admin} />
       <Route path="/posts/create" component={CreatePost} />
       <Route path="/posts" component={Posts} />
       <Route path="/friends" component={Friends} />
@@ -80,9 +82,12 @@ function App() {
                 </main>
                 {/* Notification dropdown on the right side - only show on non-fullscreen routes */}
                 {!isFullScreenRoute && (
-                  <div className="fixed top-4 right-4 z-50">
-                    <NotificationDropdown />
-                  </div>
+                  <>
+                    <div className="fixed top-4 right-4 z-50">
+                      <NotificationDropdown />
+                    </div>
+                    <BugReportIcon />
+                  </>
                 )}
               </div>
             </SidebarProvider>

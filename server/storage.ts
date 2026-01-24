@@ -9,7 +9,13 @@ import {
   type InsertShare,
   type Share,
   type InsertSavedPost,
-  type SavedPost
+  type SavedPost,
+  type InsertBugReport,
+  type BugReport,
+  type InsertBugResponse,
+  type BugResponse,
+  type InsertPostReaction,
+  type PostReaction
 } from "@shared/schema";
 
 export interface User {
@@ -84,7 +90,8 @@ export interface IStorage {
   // User operations
   findOrCreateUser(provider: string, email: string, name: string): Promise<User>;
   findUserByEmail(email: string): Promise<User | undefined>;
-  getUserById(id: number): Promise<User | undefined>;
+  getUserById(id: number): Promise<User | null>;
+  getUsersByRole(role: string): Promise<User[]>;
   updateUserAvatar(userId: number, avatarUrl: string, originalUrl?: string | null, cropJson?: string | null): Promise<void>;
   setUserRole(userId: number, role: "user" | "admin"): Promise<void>;
   loginWithCredentials(username: string, password: string): Promise<User | undefined>;
@@ -139,6 +146,21 @@ export interface IStorage {
   // Skills operations
   getUserSkills(userId: number): Promise<string[]>;
   updateUserSkills(userId: number, skillIds: string[]): Promise<void>;
+
+  // Bug report operations
+  createBugReport(bugReport: InsertBugReport & { user_id: number }): Promise<BugReport>;
+  getBugReports(): Promise<BugReport[]>;
+  getBugReportById(id: number): Promise<BugReport | null>;
+  updateBugReportStatus(id: number, status: string): Promise<void>;
+  createBugResponse(response: InsertBugResponse & { bug_report_id: number, user_id: number }): Promise<BugResponse>;
+  getBugResponses(bugReportId: number): Promise<BugResponse[]>;
+
+  // Post reaction operations
+  addPostReaction(userId: number, postId: number, reactionType: "gold" | "silver" | "bronze"): Promise<PostReaction>;
+  removePostReaction(userId: number, postId: number): Promise<void>;
+  getPostReactions(postId: number): Promise<PostReaction[]>;
+  getUserPostReaction(userId: number, postId: number): Promise<PostReaction | null>;
+  getPostReactionCounts(postId: number): Promise<{ gold: number; silver: number; bronze: number }>;
 }
 
 export class MySQLStorage implements IStorage {
@@ -224,14 +246,14 @@ export class MySQLStorage implements IStorage {
     }
   }
 
-  async getUserById(id: number): Promise<User | undefined> {
+  async getUsersByRole(role: string): Promise<User[]> {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
-        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ?",
-        [id]
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE role = ?",
+        [role]
       );
-      return rows[0];
+      return rows;
     } finally {
       conn.release();
     }
@@ -806,6 +828,7 @@ export class MySQLStorage implements IStorage {
         id: row.id,
         user_id: row.user_id,
         name: row.name,
+        parentId: row.parent_id ?? null,
         created_at: row.created_at,
         deleted_at: row.deleted_at,
       }));
@@ -1360,7 +1383,182 @@ export class MySQLStorage implements IStorage {
         [id]
       );
 
-      return rows.length > 0 ? (rows[0] as Translation) : null;
+      return (rows as any[]).length > 0 ? ((rows as any[])[0] as Translation) : null;
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Bug report operations
+  async createBugReport(bugReport: InsertBugReport & { user_id: number }): Promise<BugReport> {
+    const conn = await this.db.getConnection();
+    try {
+      const [result] = await conn.execute(
+        "INSERT INTO bug_reports (user_id, type, title, description) VALUES (?, ?, ?, ?)",
+        [bugReport.user_id, bugReport.type, bugReport.title, bugReport.description]
+      );
+      const insertId = (result as any).insertId;
+      const [rows] = await conn.execute("SELECT * FROM bug_reports WHERE id = ?", [insertId]);
+      return (rows as any[])[0] as BugReport;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugReports(): Promise<BugReport[]> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute("SELECT * FROM bug_reports ORDER BY created_at DESC");
+      return (rows as any[]) as BugReport[];
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugReportById(id: number): Promise<BugReport | null> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute("SELECT * FROM bug_reports WHERE id = ?", [id]);
+      return (rows as any[]).length > 0 ? ((rows as any[])[0] as BugReport) : null;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateBugReportStatus(id: number, status: string): Promise<void> {
+    const conn = await this.db.getConnection();
+    try {
+      await conn.execute("UPDATE bug_reports SET status = ?, updated_at = NOW() WHERE id = ?", [status, id]);
+    } finally {
+      conn.release();
+    }
+  }
+
+  async createBugResponse(response: InsertBugResponse & { bug_report_id: number, user_id: number }): Promise<BugResponse> {
+    const conn = await this.db.getConnection();
+    try {
+      const [result] = await conn.execute(
+        "INSERT INTO bug_responses (bug_report_id, user_id, message) VALUES (?, ?, ?)",
+        [response.bug_report_id, response.user_id, response.message]
+      );
+      const insertId = (result as any).insertId;
+      const [rows] = await conn.execute("SELECT * FROM bug_responses WHERE id = ?", [insertId]);
+      return (rows as any[])[0] as BugResponse;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugResponses(bugReportId: number): Promise<BugResponse[]> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        "SELECT br.*, u.name as user_name FROM bug_responses br JOIN users u ON br.user_id = u.id WHERE br.bug_report_id = ? ORDER BY br.created_at ASC",
+        [bugReportId]
+      );
+      return (rows as any[]) as BugResponse[];
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Post reaction operations
+  async addPostReaction(userId: number, postId: number, reactionType: "gold" | "silver" | "bronze"): Promise<PostReaction> {
+    const conn = await this.db.getConnection();
+    try {
+      // First, remove any existing reaction from this user on this post
+      await conn.execute(
+        'DELETE FROM post_reactions WHERE user_id = ? AND post_id = ?',
+        [userId, postId]
+      );
+
+      // Then add the new reaction
+      const [result] = await conn.execute(
+        'INSERT INTO post_reactions (user_id, post_id, reaction_type, created_at) VALUES (?, ?, ?, NOW())',
+        [userId, postId, reactionType]
+      );
+
+      return {
+        id: (result as any).insertId,
+        user_id: userId,
+        post_id: postId,
+        reaction_type: reactionType,
+        created_at: new Date()
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async removePostReaction(userId: number, postId: number): Promise<void> {
+    const conn = await this.db.getConnection();
+    try {
+      await conn.execute(
+        'DELETE FROM post_reactions WHERE user_id = ? AND post_id = ?',
+        [userId, postId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getPostReactions(postId: number): Promise<PostReaction[]> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        'SELECT * FROM post_reactions WHERE post_id = ? ORDER BY created_at DESC',
+        [postId]
+      );
+      return (rows as any[]).map(row => ({
+        id: row.id,
+        user_id: row.user_id,
+        post_id: row.post_id,
+        reaction_type: row.reaction_type,
+        created_at: new Date(row.created_at)
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getUserPostReaction(userId: number, postId: number): Promise<PostReaction | null> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        'SELECT * FROM post_reactions WHERE user_id = ? AND post_id = ?',
+        [userId, postId]
+      );
+      if ((rows as any[]).length === 0) return null;
+      const row = (rows as any[])[0];
+      return {
+        id: row.id,
+        user_id: row.user_id,
+        post_id: row.post_id,
+        reaction_type: row.reaction_type,
+        created_at: new Date(row.created_at)
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getPostReactionCounts(postId: number): Promise<{ gold: number; silver: number; bronze: number }> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        `SELECT 
+          COUNT(CASE WHEN reaction_type = 'gold' THEN 1 END) as gold_count,
+          COUNT(CASE WHEN reaction_type = 'silver' THEN 1 END) as silver_count,
+          COUNT(CASE WHEN reaction_type = 'bronze' THEN 1 END) as bronze_count
+         FROM post_reactions WHERE post_id = ?`,
+        [postId]
+      );
+      const row = (rows as any[])[0];
+      return {
+        gold: row.gold_count || 0,
+        silver: row.silver_count || 0,
+        bronze: row.bronze_count || 0
+      };
     } finally {
       conn.release();
     }
