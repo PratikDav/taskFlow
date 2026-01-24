@@ -2,13 +2,21 @@ import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { User, Mail, Github, Linkedin, UserPlus, Users, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFriends } from "@/hooks/use-friends";
 import { useFriendsContent } from "@/hooks/use-friends-content";
+<<<<<<< HEAD
 import { capitalizeFirstLetter } from "@/lib/utils";
+=======
+<<<<<<< HEAD
+import { capitalizeFirstLetter } from "@/lib/utils";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
 interface UserProfile {
   id: number;
@@ -17,7 +25,14 @@ interface UserProfile {
   gmailAddress?: string;
   githubLink?: string;
   linkedinLink?: string;
+<<<<<<< HEAD
   skills?: string[];
+=======
+<<<<<<< HEAD
+  skills?: string[];
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   created_at: string;
 }
 
@@ -116,7 +131,15 @@ export default function UserProfile() {
     <div className="space-y-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
+<<<<<<< HEAD
           <h1 className="text-4xl font-display font-bold text-foreground">{capitalizeFirstLetter(user.name)}'s Profile</h1>
+=======
+<<<<<<< HEAD
+          <h1 className="text-4xl font-display font-bold text-foreground">{capitalizeFirstLetter(user.name)}'s Profile</h1>
+=======
+          <h1 className="text-4xl font-display font-bold text-foreground">{user.name}'s Profile</h1>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
           <p className="text-muted-foreground mt-1">View profile and connect.</p>
         </div>
         {!isCurrentUser && currentUser && (
@@ -140,7 +163,15 @@ export default function UserProfile() {
         )}
       </div>
 
+<<<<<<< HEAD
       <div className="grid md:grid-cols-3 gap-6">
+=======
+<<<<<<< HEAD
+      <div className="grid md:grid-cols-3 gap-6">
+=======
+      <div className="grid md:grid-cols-2 gap-6">
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         {/* Basic Information */}
         <Card className="rounded-2xl shadow-sm border-border/50">
           <CardHeader>
@@ -157,7 +188,15 @@ export default function UserProfile() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Full Name</Label>
+<<<<<<< HEAD
               <p className="text-sm">{capitalizeFirstLetter(user.name)}</p>
+=======
+<<<<<<< HEAD
+              <p className="text-sm">{capitalizeFirstLetter(user.name)}</p>
+=======
+              <p className="text-sm">{user.name}</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium">Email</Label>
@@ -226,6 +265,10 @@ export default function UserProfile() {
             )}
           </CardContent>
         </Card>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
         {/* Skills */}
         <Card className="rounded-2xl shadow-sm border-border/50">
@@ -256,6 +299,11 @@ export default function UserProfile() {
             )}
           </CardContent>
         </Card>
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       </div>
 
       {/* Link Up Content - Only show if they are linked up */}
@@ -274,7 +322,15 @@ export default function UserProfile() {
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
+<<<<<<< HEAD
                   <CardTitle>{capitalizeFirstLetter(user.name)}'s Shared Content</CardTitle>
+=======
+<<<<<<< HEAD
+                  <CardTitle>{capitalizeFirstLetter(user.name)}'s Shared Content</CardTitle>
+=======
+                  <CardTitle>{user.name}'s Shared Content</CardTitle>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                   <CardDescription>Link up-only posts and notes.</CardDescription>
                 </div>
               </div>

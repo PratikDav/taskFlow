@@ -5,16 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+<<<<<<< HEAD
 import { User, Mail, Github, Linkedin, Lock, Eye, EyeOff, Users, UserPlus, UserCheck, UserX, Edit, Check, X, Bookmark } from "lucide-react";
+=======
+<<<<<<< HEAD
+import { User, Mail, Github, Linkedin, Lock, Eye, EyeOff, Users, UserPlus, UserCheck, UserX, Edit, Check, X, Bookmark } from "lucide-react";
+=======
+import { User, Mail, Github, Linkedin, Lock, Eye, EyeOff, Users, UserPlus, UserCheck, UserX, Edit, Check, X } from "lucide-react";
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 import { useToast } from "@/hooks/use-toast";
 import { useFriends } from "@/hooks/use-friends";
 import { useFriendsContent } from "@/hooks/use-friends-content";
 import { Badge } from "@/components/ui/badge";
 import { FloatingSkillSlots } from "@/components/FloatingSkillSlots";
 import { type Skill } from "@/lib/skills";
+<<<<<<< HEAD
 import { type Share } from "@shared/schema";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
+=======
+<<<<<<< HEAD
+import { type Share } from "@shared/schema";
+import { capitalizeFirstLetter } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
 interface UserProfile {
   id: number;
@@ -61,6 +78,10 @@ export default function Profile() {
   const { toast } = useToast();
   const { friends, friendRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend } = useFriends();
   const { posts: friendsPosts, notes: friendsNotes, loading: friendsContentLoading } = useFriendsContent();
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   const [sharedItems, setSharedItems] = useState<Share[]>([]);
   const [sharedFolders, setSharedFolders] = useState<any[]>([]);
   const [sharedNotes, setSharedNotes] = useState<any[]>([]);
@@ -76,6 +97,11 @@ export default function Profile() {
       setCropRect({ x: 50, y: 50, w: 100, h: 100 });
     }
   }, [isDragMode]);
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
   useEffect(() => {
     fetchUserProfile();
@@ -113,10 +139,19 @@ export default function Profile() {
         const userData = await res.json();
         setUser(userData);
         setUserSkills(userData.skills || []);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         // set avatar if returned
         if (userData.avatar) {
           setAvatarPreview(userData.avatar);
         }
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         setFormData({
           name: userData.name || "",
           email: userData.email || "",
@@ -445,9 +480,23 @@ export default function Profile() {
   };
 
   const handleSkillsUpdate = async (skills: Skill[]) => {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+    console.log('handleSkillsUpdate called with skills:', skills);
     if (!user) return;
 
     try {
+      console.log('Sending skills to API:', skills.map(skill => skill.id));
+<<<<<<< HEAD
+=======
+=======
+    if (!user) return;
+
+    try {
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
       const res = await fetch("/api/me/skills", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -456,6 +505,14 @@ export default function Profile() {
       });
 
       if (res.ok) {
+<<<<<<< HEAD
+        console.log('API call successful, updating state');
+=======
+<<<<<<< HEAD
+        console.log('API call successful, updating state');
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
         setUserSkills(skills);
         setUser(prev => prev ? { ...prev, skills } : null);
         toast({
@@ -579,7 +636,15 @@ export default function Profile() {
   }
 
   return (
+<<<<<<< HEAD
     <div className="h-[90vh] bg-slate-50">
+=======
+<<<<<<< HEAD
+    <div className="h-[90vh] bg-slate-50">
+=======
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Profile Header Section */}
         <div className="text-center mb-12">
@@ -593,12 +658,21 @@ export default function Profile() {
           </div>
 
           {/* Profile Image with Floating Skill Slots */}
+<<<<<<< HEAD
           <div className="relative mb-4 flex items-center justify-center h-40">
+=======
+<<<<<<< HEAD
+          <div className="relative mb-4 flex items-center justify-center h-40">
+=======
+          <div className="relative mb-6">
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
             <FloatingSkillSlots
               userSkills={userSkills}
               onUpdateSkills={handleSkillsUpdate}
               maxSlots={8}
             />
+<<<<<<< HEAD
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative">
                 <div onClick={handleAvatarClick} className="w-32 h-32 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-xl border-4 border-white relative z-10 cursor-pointer overflow-hidden">
@@ -625,6 +699,8 @@ export default function Profile() {
                 </button>
               </div>
               <input id="avatar-input" type="file" accept="image/*" onChange={handleAvatarSelected} className="hidden" />
+<<<<<<< HEAD
+=======
             </div>
           </div>
 
@@ -712,6 +788,98 @@ export default function Profile() {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+=======
+            <div className="w-32 h-32 mx-auto bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-xl border-4 border-white relative z-10">
+              <User className="h-16 w-16 text-white" />
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+            </div>
+          </div>
+
+          {/* User Name */}
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">{capitalizeFirstLetter(user.name)}</h1>
+
+          {/* Avatar crop modal */}
+          {showAvatarModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div className="bg-white rounded p-4 w-[90vw] max-w-2xl">
+                <h3 className="font-semibold mb-2">{t('profile.crop_picture')}</h3>              <div className="mb-2">
+                <button onClick={() => setIsDragMode(!isDragMode)} className="btn btn-sm">
+                  Mode: {isDragMode ? t('profile.drag_select') : t('profile.box_select')}
+                </button>
+              </div>                <div ref={previewContainerRef} onMouseDown={handlePreviewMouseDown} onMouseMove={handlePreviewMouseMove} onMouseUp={handlePreviewMouseUp} onTouchStart={handlePreviewTouchStart} onTouchMove={handlePreviewTouchMove} onTouchEnd={handlePreviewTouchEnd} className="relative bg-slate-100 flex items-center justify-center" style={{height: 360}}>
+                  {avatarPreview && (
+                    <img id="avatar-preview-img" src={avatarPreview} alt="preview" className="max-h-[340px] object-contain" />
+                  )}
+                  {cropRect.w > 0 && cropRect.h > 0 && (
+                    <div 
+                      style={{ left: cropRect.x, top: cropRect.y, width: Math.max(cropRect.w, 10), height: Math.max(cropRect.h, 10) }}
+                      className={`absolute border-2 border-red-500 bg-red-500/20 ${isDragMode ? 'pointer-events-none' : 'cursor-move'}`}
+                      onMouseDown={(e) => {
+                        if (!isDragMode) {
+                          e.stopPropagation();
+                          const containerRect = previewContainerRef.current?.getBoundingClientRect();
+                          if (containerRect) {
+                            startMoveRef.current = { x: e.clientX - cropRect.x, y: e.clientY - cropRect.y };
+                            setIsMoving(true);
+                          }
+                        }
+                      }}
+                      onTouchStart={(e) => {
+                        if (!isDragMode) {
+                          e.stopPropagation();
+                          const containerRect = previewContainerRef.current?.getBoundingClientRect();
+                          if (containerRect) {
+                            const touch = e.touches[0];
+                            startMoveRef.current = { x: touch.clientX - cropRect.x, y: touch.clientY - cropRect.y };
+                            setIsMoving(true);
+                          }
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="flex justify-end gap-2 mt-3">
+                  <button onClick={() => { setShowAvatarModal(false); setAvatarFile(null); }} className="btn">Cancel</button>
+                  <button onClick={confirmAvatarCropAndUpload} className="btn btn-primary">Save</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Designation */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            {isEditingDesignation ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={formData.designation}
+                  onChange={(e) => handleInputChange("designation", e.target.value)}
+                  placeholder="Enter your designation"
+                  className="w-64 text-center text-sm font-medium border-slate-300 focus:border-primary"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleDesignationSave();
+                    if (e.key === "Escape") handleDesignationCancel();
+                  }}
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  onClick={handleDesignationSave}
+                  disabled={updating}
+                  className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleDesignationCancel}
+                  disabled={updating}
+                  variant="outline"
+                  className="h-8 w-8 p-0 border-red-300 text-red-600 hover:bg-red-50"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
             ) : (
               <div className="flex items-center gap-2">
                 <span
@@ -723,7 +891,15 @@ export default function Profile() {
                   onClick={handleDesignationEdit}
                   title="Click to edit designation"
                 >
+<<<<<<< HEAD
                   {user.designation || t('profile.add_designation')}
+=======
+<<<<<<< HEAD
+                  {user.designation || t('profile.add_designation')}
+=======
+                  {user.designation || "Add designation"}
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                 </span>
                 <Button
                   size="sm"
@@ -752,7 +928,15 @@ export default function Profile() {
                       <User className="h-6 w-6" />
                     </div>
                     <div>
+<<<<<<< HEAD
                       <CardTitle className="text-xl">{t('profile.basic_info')}</CardTitle>
+=======
+<<<<<<< HEAD
+                      <CardTitle className="text-xl">{t('profile.basic_info')}</CardTitle>
+=======
+                      <CardTitle className="text-xl">Basic Information</CardTitle>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       <CardDescription>Update your personal details</CardDescription>
                     </div>
                   </div>
@@ -760,7 +944,15 @@ export default function Profile() {
                 <CardContent className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
+<<<<<<< HEAD
                       <Label htmlFor="name" className="text-sm font-medium text-slate-700">{t('profile.name')}</Label>
+=======
+<<<<<<< HEAD
+                      <Label htmlFor="name" className="text-sm font-medium text-slate-700">{t('profile.name')}</Label>
+=======
+                      <Label htmlFor="name" className="text-sm font-medium text-slate-700">Full Name</Label>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       <Input
                         id="name"
                         value={formData.name}
@@ -770,7 +962,15 @@ export default function Profile() {
                       />
                     </div>
                     <div className="space-y-2">
+<<<<<<< HEAD
                       <Label htmlFor="email" className="text-sm font-medium text-slate-700">{t('profile.email')}</Label>
+=======
+<<<<<<< HEAD
+                      <Label htmlFor="email" className="text-sm font-medium text-slate-700">{t('profile.email')}</Label>
+=======
+                      <Label htmlFor="email" className="text-sm font-medium text-slate-700">Email Address</Label>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       <Input
                         id="email"
                         type="email"
@@ -792,14 +992,30 @@ export default function Profile() {
                       <Lock className="h-6 w-6" />
                     </div>
                     <div>
+<<<<<<< HEAD
                       <CardTitle className="text-xl">{t('profile.change_password')}</CardTitle>
+=======
+<<<<<<< HEAD
+                      <CardTitle className="text-xl">{t('profile.change_password')}</CardTitle>
+=======
+                      <CardTitle className="text-xl">Change Password</CardTitle>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       <CardDescription>Update your account password</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
+<<<<<<< HEAD
                     <Label htmlFor="currentPassword" className="text-sm font-medium text-slate-700">{t('profile.current_password')}</Label>
+=======
+<<<<<<< HEAD
+                    <Label htmlFor="currentPassword" className="text-sm font-medium text-slate-700">{t('profile.current_password')}</Label>
+=======
+                    <Label htmlFor="currentPassword" className="text-sm font-medium text-slate-700">Current Password</Label>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                     <div className="relative">
                       <Input
                         id="currentPassword"
@@ -819,7 +1035,15 @@ export default function Profile() {
                   </div>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
+<<<<<<< HEAD
                       <Label htmlFor="newPassword" className="text-sm font-medium text-slate-700">{t('profile.new_password')}</Label>
+=======
+<<<<<<< HEAD
+                      <Label htmlFor="newPassword" className="text-sm font-medium text-slate-700">{t('profile.new_password')}</Label>
+=======
+                      <Label htmlFor="newPassword" className="text-sm font-medium text-slate-700">New Password</Label>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       <Input
                         id="newPassword"
                         type="password"
@@ -829,7 +1053,15 @@ export default function Profile() {
                       />
                     </div>
                     <div className="space-y-2">
+<<<<<<< HEAD
                       <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">{t('profile.confirm_password')}</Label>
+=======
+<<<<<<< HEAD
+                      <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">{t('profile.confirm_password')}</Label>
+=======
+                      <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">Confirm New Password</Label>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       <Input
                         id="confirmPassword"
                         type="password"
@@ -850,14 +1082,30 @@ export default function Profile() {
                       <Mail className="h-6 w-6" />
                     </div>
                     <div>
+<<<<<<< HEAD
                       <CardTitle className="text-xl">{t('profile.social_links')}</CardTitle>
+=======
+<<<<<<< HEAD
+                      <CardTitle className="text-xl">{t('profile.social_links')}</CardTitle>
+=======
+                      <CardTitle className="text-xl">Social Media Links</CardTitle>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       <CardDescription>Add your social media profiles</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
+<<<<<<< HEAD
                     <Label htmlFor="gmailAddress" className="text-sm font-medium text-slate-700">{t('profile.gmail_address')}</Label>
+=======
+<<<<<<< HEAD
+                    <Label htmlFor="gmailAddress" className="text-sm font-medium text-slate-700">{t('profile.gmail_address')}</Label>
+=======
+                    <Label htmlFor="gmailAddress" className="text-sm font-medium text-slate-700">Gmail Address</Label>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                     <Input
                       id="gmailAddress"
                       type="text"
@@ -868,7 +1116,15 @@ export default function Profile() {
                     />
                   </div>
                   <div className="space-y-2">
+<<<<<<< HEAD
                     <Label htmlFor="githubLink" className="text-sm font-medium text-slate-700">{t('profile.github_link')}</Label>
+=======
+<<<<<<< HEAD
+                    <Label htmlFor="githubLink" className="text-sm font-medium text-slate-700">{t('profile.github_link')}</Label>
+=======
+                    <Label htmlFor="githubLink" className="text-sm font-medium text-slate-700">GitHub Profile</Label>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                     <div className="relative">
                       <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                       <Input
@@ -881,7 +1137,15 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="space-y-2">
+<<<<<<< HEAD
                     <Label htmlFor="linkedinLink" className="text-sm font-medium text-slate-700">{t('profile.linkedin_link')}</Label>
+=======
+<<<<<<< HEAD
+                    <Label htmlFor="linkedinLink" className="text-sm font-medium text-slate-700">{t('profile.linkedin_link')}</Label>
+=======
+                    <Label htmlFor="linkedinLink" className="text-sm font-medium text-slate-700">LinkedIn Profile</Label>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                     <div className="relative">
                       <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                       <Input
@@ -902,7 +1166,15 @@ export default function Profile() {
                   disabled={updating}
                   className="rounded-xl px-8 py-3 bg-primary hover:bg-primary/90 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                 >
+<<<<<<< HEAD
                   {updating ? t('profile.updating') : t('profile.save_changes')}
+=======
+<<<<<<< HEAD
+                  {updating ? t('profile.updating') : t('profile.save_changes')}
+=======
+                  {updating ? "Updating..." : "Save Changes"}
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                 </Button>
               </div>
             </form>
@@ -918,8 +1190,18 @@ export default function Profile() {
                     <Users className="h-6 w-6" />
                   </div>
                   <div>
+<<<<<<< HEAD
                     <CardTitle className="text-lg">{t('profile.friends')}</CardTitle>
                     <CardDescription>{friends.length} {friends.length !== 1 ? t('profile.connections_plural') : t('profile.connections')}</CardDescription>
+=======
+<<<<<<< HEAD
+                    <CardTitle className="text-lg">{t('profile.friends')}</CardTitle>
+                    <CardDescription>{friends.length} {friends.length !== 1 ? t('profile.connections_plural') : t('profile.connections')}</CardDescription>
+=======
+                    <CardTitle className="text-lg">Friends</CardTitle>
+                    <CardDescription>{friends.length} connection{friends.length !== 1 ? 's' : ''}</CardDescription>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                   </div>
                 </div>
               </CardHeader>
@@ -931,21 +1213,45 @@ export default function Profile() {
                         <User className="h-4 w-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
+<<<<<<< HEAD
                         <p className="text-sm font-medium text-slate-800 truncate">{capitalizeFirstLetter(friend.name)}</p>
+=======
+<<<<<<< HEAD
+                        <p className="text-sm font-medium text-slate-800 truncate">{capitalizeFirstLetter(friend.name)}</p>
+=======
+                        <p className="text-sm font-medium text-slate-800 truncate">{friend.name}</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                         <p className="text-xs text-slate-500 truncate">{friend.email}</p>
                       </div>
                     </div>
                   ))}
                   {friends.length > 5 && (
                     <p className="text-xs text-slate-500 text-center pt-2">
+<<<<<<< HEAD
                       +{friends.length - 5} {t('profile.more_friends')}
+=======
+<<<<<<< HEAD
+                      +{friends.length - 5} {t('profile.more_friends')}
+=======
+                      +{friends.length - 5} more friends
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                     </p>
                   )}
                 </CardContent>
               ) : (
                 <CardContent>
                   <p className="text-sm text-slate-500 text-center py-4">
+<<<<<<< HEAD
                     {t('profile.no_friends')}
+=======
+<<<<<<< HEAD
+                    {t('profile.no_friends')}
+=======
+                    No friends yet
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                   </p>
                 </CardContent>
               )}
@@ -973,7 +1279,15 @@ export default function Profile() {
                           <User className="h-4 w-4 text-primary" />
                         </div>
                         <div>
+<<<<<<< HEAD
                           <p className="text-sm font-medium text-slate-800">{capitalizeFirstLetter(request.name)}</p>
+=======
+<<<<<<< HEAD
+                          <p className="text-sm font-medium text-slate-800">{capitalizeFirstLetter(request.name)}</p>
+=======
+                          <p className="text-sm font-medium text-slate-800">{request.name}</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                           <p className="text-xs text-slate-500">{request.email}</p>
                         </div>
                       </div>
@@ -1008,8 +1322,18 @@ export default function Profile() {
                     <Users className="h-6 w-6" />
                   </div>
                   <div>
+<<<<<<< HEAD
                     <CardTitle className="text-lg">{t('profile.friends_activity')}</CardTitle>
                     <CardDescription>{t('profile.recent_posts_notes')}</CardDescription>
+=======
+<<<<<<< HEAD
+                    <CardTitle className="text-lg">{t('profile.friends_activity')}</CardTitle>
+                    <CardDescription>{t('profile.recent_posts_notes')}</CardDescription>
+=======
+                    <CardTitle className="text-lg">Friends' Activity</CardTitle>
+                    <CardDescription>Recent posts and notes</CardDescription>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                   </div>
                 </div>
               </CardHeader>
@@ -1046,11 +1370,23 @@ export default function Profile() {
               ) : (
                 <CardContent>
                   <p className="text-sm text-slate-500 text-center py-4">
+<<<<<<< HEAD
                     {t('profile.no_activity')}
+=======
+<<<<<<< HEAD
+                    {t('profile.no_activity')}
+=======
+                    No recent activity
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                   </p>
                 </CardContent>
               )}
             </Card>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
             {/* Shared Section */}
             <Card className="rounded-2xl shadow-lg border-0 bg-white/80 backdrop-blur-sm">
@@ -1147,6 +1483,11 @@ export default function Profile() {
                 )}
               </CardContent>
             </Card>
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
           </div>
         </div>
       </div>

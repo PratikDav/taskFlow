@@ -7,8 +7,16 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useFriends } from "@/hooks/use-friends";
+<<<<<<< HEAD
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
+=======
+<<<<<<< HEAD
+import { capitalizeFirstLetter } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 import { 
   UserPlus, 
   UserCheck, 
@@ -49,7 +57,14 @@ export default function Friends() {
   
   const { friends, friendRequests, acceptFriendRequest, rejectFriendRequest, removeFriend } = useFriends();
   const { toast } = useToast();
+<<<<<<< HEAD
   const { t } = useTranslation();
+=======
+<<<<<<< HEAD
+  const { t } = useTranslation();
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   const [, setLocation] = useLocation();
 
   // Filter and sort friends
@@ -178,7 +193,15 @@ export default function Friends() {
   if (me === undefined) {
     return (
       <div className="p-8 flex items-center justify-center min-h-screen">
+<<<<<<< HEAD
         <div className="text-center">{t('common.loading')}</div>
+=======
+<<<<<<< HEAD
+        <div className="text-center">{t('common.loading')}</div>
+=======
+        <div className="text-center">Loading...</div>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       </div>
     );
   }
@@ -188,7 +211,15 @@ export default function Friends() {
       <div className="p-8 flex items-center justify-center min-h-screen">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
+<<<<<<< HEAD
             <p className="text-center text-muted-foreground">{t('friends.login_required')}</p>
+=======
+<<<<<<< HEAD
+            <p className="text-center text-muted-foreground">{t('friends.login_required')}</p>
+=======
+            <p className="text-center text-muted-foreground">Please log in to view friends.</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
           </CardContent>
         </Card>
       </div>
@@ -198,8 +229,18 @@ export default function Friends() {
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="mb-6">
+<<<<<<< HEAD
         <h1 className="text-2xl font-bold">{t('friends.friends')}</h1>
         <p className="text-sm text-muted-foreground">{t('friends.manage_connections')}</p>
+=======
+<<<<<<< HEAD
+        <h1 className="text-2xl font-bold">{t('friends.friends')}</h1>
+        <p className="text-sm text-muted-foreground">{t('friends.manage_connections')}</p>
+=======
+        <h1 className="text-2xl font-bold">Link Ups</h1>
+        <p className="text-sm text-muted-foreground">Manage your link ups and link up requests.</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       </div>
 
       <div className="grid gap-6">
@@ -211,9 +252,21 @@ export default function Friends() {
                 <UserPlus className="h-5 w-5" />
               </div>
               <div>
+<<<<<<< HEAD
                 <CardTitle>{t('friends.link_up_requests')}</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {friendRequests.length} {friendRequests.length !== 1 ? t('friends.pending_requests') : t('friends.pending_request')}
+=======
+<<<<<<< HEAD
+                <CardTitle>{t('friends.link_up_requests')}</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {friendRequests.length} {friendRequests.length !== 1 ? t('friends.pending_requests') : t('friends.pending_request')}
+=======
+                <CardTitle>Link Up Requests</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {friendRequests.length} pending request{friendRequests.length !== 1 ? 's' : ''}
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                 </p>
               </div>
             </div>
@@ -221,14 +274,30 @@ export default function Friends() {
           <CardContent>
             {friendRequests.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
+<<<<<<< HEAD
                 {t('friends.no_pending_requests')}
+=======
+<<<<<<< HEAD
+                {t('friends.no_pending_requests')}
+=======
+                No pending link up requests.
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
               </p>
             ) : (
               <div className="space-y-3">
                 {friendRequests.map((request) => (
                   <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
+<<<<<<< HEAD
                       <p className="font-medium">{capitalizeFirstLetter(request.name)}</p>
+=======
+<<<<<<< HEAD
+                      <p className="font-medium">{capitalizeFirstLetter(request.name)}</p>
+=======
+                      <p className="font-medium">{request.name}</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       <p className="text-sm text-muted-foreground">{request.email}</p>
                     </div>
                     <div className="flex gap-2">
@@ -239,7 +308,15 @@ export default function Friends() {
                         className="bg-green-600 hover:bg-green-700"
                       >
                         <UserCheck className="h-4 w-4 mr-1" />
+<<<<<<< HEAD
                         {t('friends.accept')}
+=======
+<<<<<<< HEAD
+                        {t('friends.accept')}
+=======
+                        Accept
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       </Button>
                       <Button
                         size="sm"
@@ -248,7 +325,15 @@ export default function Friends() {
                         disabled={loading}
                       >
                         <UserX className="h-4 w-4 mr-1" />
+<<<<<<< HEAD
                         {t('friends.reject')}
+=======
+<<<<<<< HEAD
+                        {t('friends.reject')}
+=======
+                        Reject
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       </Button>
                     </div>
                   </div>
@@ -267,7 +352,15 @@ export default function Friends() {
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
+<<<<<<< HEAD
                   <CardTitle>{t('friends.your_link_ups')}</CardTitle>
+=======
+<<<<<<< HEAD
+                  <CardTitle>{t('friends.your_link_ups')}</CardTitle>
+=======
+                  <CardTitle>My Link Ups</CardTitle>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                   <p className="text-sm text-muted-foreground">
                     {filteredAndSortedFriends.length} link up{filteredAndSortedFriends.length !== 1 ? 's' : ''}
                     {searchQuery && ` (filtered from ${friends.length})`}
@@ -284,7 +377,15 @@ export default function Friends() {
           <CardContent>
             {friends.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
+<<<<<<< HEAD
                 {t('friends.no_link_ups_yet')}
+=======
+<<<<<<< HEAD
+                {t('friends.no_link_ups_yet')}
+=======
+                No link ups yet. Send some link up requests!
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
               </p>
             ) : (
               <div className="space-y-4">
@@ -294,7 +395,15 @@ export default function Friends() {
                   <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
+<<<<<<< HEAD
                       placeholder={t('friends.search_link_ups')}
+=======
+<<<<<<< HEAD
+                      placeholder={t('friends.search_link_ups')}
+=======
+                      placeholder="Search link ups..."
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10"
@@ -308,9 +417,21 @@ export default function Friends() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+<<<<<<< HEAD
                         <SelectItem value="name">{t('friends.name')}</SelectItem>
                         <SelectItem value="email">{t('friends.email')}</SelectItem>
                         <SelectItem value="recent">{t('friends.recent')}</SelectItem>
+=======
+<<<<<<< HEAD
+                        <SelectItem value="name">{t('friends.name')}</SelectItem>
+                        <SelectItem value="email">{t('friends.email')}</SelectItem>
+                        <SelectItem value="recent">{t('friends.recent')}</SelectItem>
+=======
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="recent">Recent</SelectItem>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                       </SelectContent>
                     </Select>
 
@@ -346,7 +467,15 @@ export default function Friends() {
                 {/* Friends Display */}
                 {paginatedFriends.length === 0 && searchQuery ? (
                   <p className="text-center text-muted-foreground py-8">
+<<<<<<< HEAD
                     {t('friends.no_link_ups_found')} "{searchQuery}"
+=======
+<<<<<<< HEAD
+                    {t('friends.no_link_ups_found')} "{searchQuery}"
+=======
+                    No link ups found matching "{searchQuery}"
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                   </p>
                 ) : (
                   <>
@@ -367,7 +496,15 @@ export default function Friends() {
                                 {friend.name.charAt(0).toUpperCase()}
                               </div>
                               <div>
+<<<<<<< HEAD
                                 <p className="font-medium">{capitalizeFirstLetter(friend.name)}</p>
+=======
+<<<<<<< HEAD
+                                <p className="font-medium">{capitalizeFirstLetter(friend.name)}</p>
+=======
+                                <p className="font-medium">{friend.name}</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                                 <p className="text-sm text-muted-foreground">{friend.email}</p>
                               </div>
                               <Button
@@ -381,7 +518,15 @@ export default function Friends() {
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full"
                               >
                                 <UserX className="h-4 w-4 mr-1" />
+<<<<<<< HEAD
                                 {t('friends.remove')}
+=======
+<<<<<<< HEAD
+                                {t('friends.remove')}
+=======
+                                Remove
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                               </Button>
                             </div>
                           </Card>
@@ -396,7 +541,15 @@ export default function Friends() {
                                 {friend.name.charAt(0).toUpperCase()}
                               </div>
                               <div>
+<<<<<<< HEAD
                                 <p className="font-medium">{capitalizeFirstLetter(friend.name)}</p>
+=======
+<<<<<<< HEAD
+                                <p className="font-medium">{capitalizeFirstLetter(friend.name)}</p>
+=======
+                                <p className="font-medium">{friend.name}</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                                 <p className="text-sm text-muted-foreground">{friend.email}</p>
                               </div>
                             </div>
@@ -411,7 +564,15 @@ export default function Friends() {
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <UserX className="h-4 w-4 mr-1" />
+<<<<<<< HEAD
                               {t('friends.remove')}
+=======
+<<<<<<< HEAD
+                              {t('friends.remove')}
+=======
+                              Remove
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                             </Button>
                           </div>
                         )
@@ -422,7 +583,15 @@ export default function Friends() {
                     {totalPages > 1 && (
                       <div className="flex items-center justify-between pt-4">
                         <p className="text-sm text-muted-foreground">
+<<<<<<< HEAD
                           {t('friends.showing')} {startIndex + 1}-{Math.min(endIndex, filteredAndSortedFriends.length)} {t('friends.of')} {filteredAndSortedFriends.length}
+=======
+<<<<<<< HEAD
+                          {t('friends.showing')} {startIndex + 1}-{Math.min(endIndex, filteredAndSortedFriends.length)} {t('friends.of')} {filteredAndSortedFriends.length}
+=======
+                          Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedFriends.length)} of {filteredAndSortedFriends.length}
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                         </p>
                         <div className="flex items-center gap-2">
                           <Button
@@ -432,10 +601,24 @@ export default function Friends() {
                             disabled={currentPage === 1}
                           >
                             <ChevronLeft className="h-4 w-4" />
+<<<<<<< HEAD
                             {t('friends.previous')}
                           </Button>
                           <span className="text-sm text-muted-foreground px-2">
                             {t('friends.page')} {currentPage} {t('friends.of')} {totalPages}
+=======
+<<<<<<< HEAD
+                            {t('friends.previous')}
+                          </Button>
+                          <span className="text-sm text-muted-foreground px-2">
+                            {t('friends.page')} {currentPage} {t('friends.of')} {totalPages}
+=======
+                            Previous
+                          </Button>
+                          <span className="text-sm text-muted-foreground px-2">
+                            Page {currentPage} of {totalPages}
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                           </span>
                           <Button
                             variant="outline"
@@ -443,7 +626,15 @@ export default function Friends() {
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
                           >
+<<<<<<< HEAD
                             {t('friends.next')}
+=======
+<<<<<<< HEAD
+                            {t('friends.next')}
+=======
+                            Next
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
                             <ChevronRight className="h-4 w-4" />
                           </Button>
                         </div>

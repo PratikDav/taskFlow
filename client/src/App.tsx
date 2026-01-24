@@ -7,7 +7,18 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+<<<<<<< HEAD
 import { TranslationProvider } from "@/hooks/use-translation";
+=======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+import { FloatingBugReportButton } from "@/components/FloatingBugReportButton";
+import { TranslationProvider } from "@/hooks/use-translation";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Tasks from "@/pages/Tasks";
@@ -24,8 +35,21 @@ import NoteDetail from "@/pages/NoteDetail";
 import NoteEdit from "@/pages/NoteEdit";
 import Trash from "@/pages/Trash";
 import UserProfile from "@/pages/UserProfile";
+<<<<<<< HEAD
 import PanelSettings from "@/pages/PanelSettings";
 import SavedPosts from "@/pages/SavedPosts";
+=======
+<<<<<<< HEAD
+import PanelSettings from "@/pages/PanelSettings";
+import SavedPosts from "@/pages/SavedPosts";
+import AdminBugMessages from "@/pages/AdminBugMessages";
+<<<<<<< HEAD
+=======
+=======
+import Friends from "@/pages/Friends";
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
 function Router() {
   return (
@@ -44,8 +68,21 @@ function Router() {
       <Route path="/tasks" component={Tasks} />
       <Route path="/settings" component={Settings} />
       <Route path="/profile" component={Profile} />
+<<<<<<< HEAD
       <Route path="/saved-posts" component={SavedPosts} />
       <Route path="/panel-settings" component={PanelSettings} />
+=======
+<<<<<<< HEAD
+      <Route path="/saved-posts" component={SavedPosts} />
+      <Route path="/panel-settings" component={PanelSettings} />
+      <Route path="/admin/bug-messages" component={AdminBugMessages} />
+<<<<<<< HEAD
+=======
+=======
+      <Route path="/profile/:id" component={UserProfile} />
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       <Route component={NotFound} />
     </Switch>
   );
@@ -60,12 +97,44 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       <TranslationProvider>
         <TooltipProvider>
           {isFullScreenRoute ? (
             // Full screen layout for auth pages
             <div className="min-h-screen w-full">
               <Router />
+<<<<<<< HEAD
+=======
+=======
+      <TooltipProvider>
+        {isFullScreenRoute ? (
+          // Full screen layout for auth pages
+          <div className="min-h-screen w-full">
+            <Router />
+          </div>
+        ) : (
+          // Standard layout with sidebar
+          <SidebarProvider>
+            <div className="flex min-h-screen w-full bg-background/50">
+              <AppSidebar />
+              <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                <MobileHeader />
+                <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 pt-2 md:pt-4 pb-4 md:pb-6">
+                  <Router />
+                </div>
+              </main>
+              {/* Notification dropdown on the right side - only show on non-fullscreen routes */}
+              {!isFullScreenRoute && (
+                <div className="fixed top-4 right-4 z-50">
+                  <NotificationDropdown />
+                </div>
+              )}
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
             </div>
           ) : (
             // Standard layout with sidebar
@@ -84,6 +153,11 @@ function App() {
                     <NotificationDropdown />
                   </div>
                 )}
+<<<<<<< HEAD
+=======
+                {/* Floating bug report button on the left side - only show on non-fullscreen routes */}
+                {!isFullScreenRoute && <FloatingBugReportButton />}
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
               </div>
             </SidebarProvider>
           )}

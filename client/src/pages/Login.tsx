@@ -26,6 +26,9 @@ export default function Login() {
       }
       const data = await res.json();
       
+      // Set flag to show logged in message on posts page
+      sessionStorage.setItem('showLoggedInMessage', 'true');
+      
       // Redirect based on user role
       if (data.user?.role === "admin") {
         setLocation("/");

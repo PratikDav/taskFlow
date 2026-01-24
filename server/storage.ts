@@ -5,11 +5,29 @@ import {
   type UpdateTaskRequest,
   type Task,
   type InsertNotification,
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   type UpdateNotificationRequest,
   type InsertShare,
   type Share,
   type InsertSavedPost,
+<<<<<<< HEAD
   type SavedPost
+=======
+  type SavedPost,
+  type InsertBugReport,
+  type UpdateBugReportRequest,
+  type BugReport
+<<<<<<< HEAD
+=======
+=======
+  type Notification,
+  type UpdateNotificationRequest
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 } from "@shared/schema";
 
 export interface User {
@@ -36,7 +54,14 @@ export interface Post {
   content: string;
   code_block_theme?: string;
   privacy: 'public' | 'friends' | 'private';
+<<<<<<< HEAD
   title_alignment?: 'left' | 'center' | 'right';
+=======
+<<<<<<< HEAD
+  title_alignment?: 'left' | 'center' | 'right';
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date;
@@ -92,10 +117,24 @@ export interface IStorage {
   registerUser(email: string, password: string, name: string, gmailAddress?: string, githubLink?: string, linkedinLink?: string): Promise<User>;
 
   // Post operations
+<<<<<<< HEAD
   getPosts(userId?: number): Promise<(Post & { userName: string; userAvatar: string | null })[]>;
   getPostById(id: number): Promise<(Post & { userName: string }) | undefined>;
   createPost(userId: number, title: string, content: string, codeBlockTheme?: string, privacy?: 'public' | 'friends' | 'private', titleAlignment?: 'left' | 'center' | 'right'): Promise<Post>;
   updatePost(id: number, title: string, content: string, privacy?: 'public' | 'friends' | 'private', titleAlignment?: 'left' | 'center' | 'right'): Promise<Post>;
+=======
+<<<<<<< HEAD
+  getPosts(userId?: number): Promise<(Post & { userName: string; userAvatar: string | null })[]>;
+  getPostById(id: number): Promise<(Post & { userName: string }) | undefined>;
+  createPost(userId: number, title: string, content: string, codeBlockTheme?: string, privacy?: 'public' | 'friends' | 'private', titleAlignment?: 'left' | 'center' | 'right'): Promise<Post>;
+  updatePost(id: number, title: string, content: string, privacy?: 'public' | 'friends' | 'private', titleAlignment?: 'left' | 'center' | 'right'): Promise<Post>;
+=======
+  getPosts(userId?: number): Promise<(Post & { userName: string })[]>;
+  getPostById(id: number): Promise<(Post & { userName: string }) | undefined>;
+  createPost(userId: number, title: string, content: string, codeBlockTheme?: string, privacy?: 'public' | 'friends' | 'private'): Promise<Post>;
+  updatePost(id: number, title: string, content: string): Promise<Post>;
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   deletePost(id: number): Promise<void>;
 
   // Saved post operations
@@ -114,7 +153,11 @@ export interface IStorage {
   getNotes(userId: number): Promise<(Note & { folderName?: string })[]>;
   getNoteById(id: number): Promise<(Note & { folderName?: string }) | undefined>;
   createNote(userId: number, title: string, content: string, folderId?: number, privacy?: 'public' | 'friends' | 'private'): Promise<Note>;
+<<<<<<< HEAD
   updateNote(id: number, title?: string, content?: string, folderId?: number, privacy?: 'public' | 'friends' | 'private'): Promise<Note>;
+=======
+  updateNote(id: number, title?: string, content?: string, folderId?: number): Promise<Note>;
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
   deleteNote(id: number): Promise<void>;
 
   // Friend operations
@@ -124,7 +167,15 @@ export interface IStorage {
   removeFriend(userId: number, friendId: number): Promise<void>;
   getFriends(userId: number): Promise<User[]>;
   getFriendRequests(userId: number): Promise<User[]>;
+<<<<<<< HEAD
   getFriendsPosts(userId: number): Promise<(Post & { userName: string; userAvatar: string | null })[]>;
+=======
+<<<<<<< HEAD
+  getFriendsPosts(userId: number): Promise<(Post & { userName: string; userAvatar: string | null })[]>;
+=======
+  getFriendsPosts(userId: number): Promise<(Post & { userName: string })[]>;
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   getFriendsNotes(userId: number): Promise<(Note & { userName: string; folderName?: string })[]>;
   areFriends(userId: number, friendId: number): Promise<boolean>;
 
@@ -136,6 +187,21 @@ export interface IStorage {
   markAllNotificationsAsRead(userId: number): Promise<void>;
   deleteNotification(notificationId: number): Promise<void>;
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+  // Bug report operations
+  createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport>;
+  getBugReports(): Promise<(BugReport & { userName: string; userEmail: string })[]>;
+  updateBugReport(id: number, updates: UpdateBugReportRequest): Promise<BugReport>;
+  deleteBugReport(id: number): Promise<void>;
+
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
   // Skills operations
   getUserSkills(userId: number): Promise<string[]>;
   updateUserSkills(userId: number, skillIds: string[]): Promise<void>;
@@ -215,7 +281,15 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
+<<<<<<< HEAD
         "SELECT id, provider, name, email, password, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE email = ?",
+=======
+<<<<<<< HEAD
+        "SELECT id, provider, name, email, password, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE email = ?",
+=======
+        "SELECT id, provider, name, email, password, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE email = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         [email]
       );
       return rows[0];
@@ -228,7 +302,15 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
+<<<<<<< HEAD
         "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ?",
+=======
+<<<<<<< HEAD
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ?",
+=======
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         [id]
       );
       return rows[0];
@@ -277,9 +359,20 @@ export class MySQLStorage implements IStorage {
   async loginWithCredentials(username: string, password: string): Promise<User | undefined> {
     const conn = await pool.getConnection();
     try {
+<<<<<<< HEAD
       // First try username
       let [rows] = await conn.execute<any[]>(
         "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at, password FROM users WHERE username = ?",
+=======
+<<<<<<< HEAD
+      // First try username
+      let [rows] = await conn.execute<any[]>(
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at, password FROM users WHERE username = ?",
+=======
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE username = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         [username]
       );
       
@@ -319,7 +412,15 @@ export class MySQLStorage implements IStorage {
       );
 
       const [newUser] = await conn.execute<any[]>(
+<<<<<<< HEAD
         "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, role, created_at FROM users WHERE id = ?",
+=======
+<<<<<<< HEAD
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, role, created_at FROM users WHERE id = ?",
+=======
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         [result.insertId]
       );
 
@@ -352,7 +453,15 @@ export class MySQLStorage implements IStorage {
       );
 
       const [newUser] = await conn.execute<any[]>(
+<<<<<<< HEAD
         "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, role, created_at FROM users WHERE id = ?",
+=======
+<<<<<<< HEAD
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, role, created_at FROM users WHERE id = ?",
+=======
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?",
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         [result.insertId]
       );
 
@@ -363,11 +472,27 @@ export class MySQLStorage implements IStorage {
   }
 
   // Post operations
+<<<<<<< HEAD
   async getPosts(userId?: number): Promise<(Post & { userName: string; userAvatar: string | null })[]> {
     const conn = await pool.getConnection();
     try {
       let query = `
         SELECT p.*, u.name as userName, u.avatar as userAvatar FROM posts p
+=======
+<<<<<<< HEAD
+  async getPosts(userId?: number): Promise<(Post & { userName: string; userAvatar: string | null })[]> {
+    const conn = await pool.getConnection();
+    try {
+      let query = `
+        SELECT p.*, u.name as userName, u.avatar as userAvatar FROM posts p
+=======
+  async getPosts(userId?: number): Promise<(Post & { userName: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      let query = `
+        SELECT p.*, u.name as userName FROM posts p
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         LEFT JOIN users u ON p.user_id = u.id
         WHERE p.deleted_at IS NULL
       `;
@@ -411,12 +536,30 @@ export class MySQLStorage implements IStorage {
     }
   }
 
+<<<<<<< HEAD
   async createPost(userId: number, title: string, content: string, codeBlockTheme: string = 'dark', privacy: 'public' | 'friends' | 'private' = 'public', titleAlignment: 'left' | 'center' | 'right' = 'left'): Promise<Post> {
     const conn = await pool.getConnection();
     try {
       const [result] = await conn.execute<any>(
         "INSERT INTO posts (user_id, title, content, code_block_theme, privacy, title_alignment) VALUES (?, ?, ?, ?, ?, ?)",
         [userId, title, content, codeBlockTheme, privacy, titleAlignment]
+=======
+<<<<<<< HEAD
+  async createPost(userId: number, title: string, content: string, codeBlockTheme: string = 'dark', privacy: 'public' | 'friends' | 'private' = 'public', titleAlignment: 'left' | 'center' | 'right' = 'left'): Promise<Post> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO posts (user_id, title, content, code_block_theme, privacy, title_alignment) VALUES (?, ?, ?, ?, ?, ?)",
+        [userId, title, content, codeBlockTheme, privacy, titleAlignment]
+=======
+  async createPost(userId: number, title: string, content: string, codeBlockTheme: string = 'dark', privacy: 'public' | 'friends' | 'private' = 'public'): Promise<Post> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO posts (user_id, title, content, code_block_theme, privacy) VALUES (?, ?, ?, ?, ?)",
+        [userId, title, content, codeBlockTheme, privacy]
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       );
 
       const [rows] = await conn.execute<any[]>(
@@ -799,13 +942,14 @@ export class MySQLStorage implements IStorage {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute(
-        "SELECT id, user_id, name, created_at, deleted_at FROM folders WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC",
+        "SELECT id, user_id, name, parent_id, created_at, deleted_at FROM folders WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC",
         [userId]
       );
       return (rows as any[]).map(row => ({
         id: row.id,
         user_id: row.user_id,
         name: row.name,
+        parentId: row.parent_id,
         created_at: row.created_at,
         deleted_at: row.deleted_at,
       }));
@@ -1027,11 +1171,27 @@ export class MySQLStorage implements IStorage {
     }
   }
 
+<<<<<<< HEAD
   async getFriendsPosts(userId: number): Promise<(Post & { userName: string; userAvatar: string | null })[]> {
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.execute<any[]>(
         `SELECT p.*, u.name as userName, u.avatar as userAvatar, p.user_id FROM posts p
+=======
+<<<<<<< HEAD
+  async getFriendsPosts(userId: number): Promise<(Post & { userName: string; userAvatar: string | null })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT p.*, u.name as userName, u.avatar as userAvatar, p.user_id FROM posts p
+=======
+  async getFriendsPosts(userId: number): Promise<(Post & { userName: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT p.*, u.name as userName, p.user_id FROM posts p
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
          INNER JOIN users u ON p.user_id = u.id
          INNER JOIN friends f ON (f.friend_id = p.user_id OR f.user_id = p.user_id)
          WHERE ((f.user_id = ? AND f.friend_id = p.user_id) OR (f.friend_id = ? AND f.user_id = p.user_id))
@@ -1173,6 +1333,333 @@ export class MySQLStorage implements IStorage {
         "DELETE FROM notifications WHERE id = ?",
         [notificationId]
       );
+    } finally {
+      conn.release();
+    }
+  }
+<<<<<<< HEAD
+
+  // Bug report methods
+  async createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO bug_reports (user_id, type, message) VALUES (?, ?, ?)",
+        [userId, type, message]
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, message, status, admin_response, created_at, updated_at FROM bug_reports WHERE id = ?",
+        [result.insertId]
+      );
+
+      return rows[0];
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugReports(): Promise<(BugReport & { userName: string; userEmail: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT br.id, br.user_id, br.type, br.message, br.status, br.admin_response, br.created_at, br.updated_at,
+                u.name as userName, u.email as userEmail
+         FROM bug_reports br
+         JOIN users u ON br.user_id = u.id
+         ORDER BY br.created_at DESC`
+      );
+
+      return rows;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateBugReport(id: number, updates: UpdateBugReportRequest): Promise<BugReport> {
+    const conn = await pool.getConnection();
+    try {
+      const setParts: string[] = [];
+      const values: any[] = [];
+
+      if (updates.status !== undefined) {
+        setParts.push("status = ?");
+        values.push(updates.status);
+      }
+
+      if (updates.admin_response !== undefined) {
+        setParts.push("admin_response = ?");
+        values.push(updates.admin_response);
+      }
+
+      if (setParts.length === 0) {
+        throw new Error("No updates provided");
+      }
+
+      values.push(id);
+
+      await conn.execute(
+        `UPDATE bug_reports SET ${setParts.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, message, status, admin_response, created_at, updated_at FROM bug_reports WHERE id = ?",
+        [id]
+      );
+
+      return rows[0];
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteBugReport(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "DELETE FROM bug_reports WHERE id = ?",
+        [id]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Bug report methods
+  async createBugReport(userId: number, type: "bug" | "feature_request", message: string): Promise<BugReport> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO bug_reports (user_id, type, message) VALUES (?, ?, ?)",
+        [userId, type, message]
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, message, status, admin_response, created_at, updated_at FROM bug_reports WHERE id = ?",
+        [result.insertId]
+      );
+
+      return rows[0];
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugReports(): Promise<(BugReport & { userName: string; userEmail: string })[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT br.id, br.user_id, br.type, br.message, br.status, br.admin_response, br.created_at, br.updated_at,
+                u.name as userName, u.email as userEmail
+         FROM bug_reports br
+         JOIN users u ON br.user_id = u.id
+         ORDER BY br.created_at DESC`
+      );
+
+      return rows.map(row => {
+        let adminResponse = null;
+        if (row.admin_response) {
+          try {
+            // Try to parse as JSON (new format)
+            adminResponse = JSON.parse(row.admin_response);
+            // If it's not an array, convert it to array format (migration for old data)
+            if (!Array.isArray(adminResponse)) {
+              adminResponse = [{ message: adminResponse, timestamp: row.updated_at || row.created_at }];
+            }
+          } catch (e) {
+            // If parsing fails, treat as old string format and convert to array
+            adminResponse = [{ message: row.admin_response, timestamp: row.updated_at || row.created_at }];
+          }
+        }
+        return {
+          ...row,
+          admin_response: adminResponse
+        };
+      });
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateBugReport(id: number, updates: UpdateBugReportRequest): Promise<BugReport> {
+    const conn = await pool.getConnection();
+    try {
+      // First get the current bug report to handle admin_response appending
+      const [currentRows] = await conn.execute<any[]>(
+        "SELECT admin_response FROM bug_reports WHERE id = ?",
+        [id]
+      );
+
+      if (currentRows.length === 0) {
+        throw new Error("Bug report not found");
+      }
+
+      const currentAdminResponse = currentRows[0].admin_response;
+      let adminResponses: any[] = [];
+
+      // Parse existing admin responses or initialize empty array
+      if (currentAdminResponse) {
+        try {
+          adminResponses = JSON.parse(currentAdminResponse);
+        } catch (e) {
+          // If parsing fails, treat as legacy string and convert to array
+          adminResponses = [{ message: currentAdminResponse, timestamp: new Date() }];
+        }
+      }
+
+      const setParts: string[] = [];
+      const values: any[] = [];
+
+      if (updates.status !== undefined) {
+        setParts.push("status = ?");
+        values.push(updates.status);
+      }
+
+      if (updates.admin_response !== undefined && updates.admin_response.trim() !== '') {
+        // Append new response to the array
+        adminResponses.push({
+          message: updates.admin_response.trim(),
+          timestamp: new Date()
+        });
+
+        setParts.push("admin_response = ?");
+        values.push(JSON.stringify(adminResponses));
+      }
+
+      if (setParts.length === 0) {
+        throw new Error("No updates provided");
+      }
+
+      values.push(id);
+
+      await conn.execute(
+        `UPDATE bug_reports SET ${setParts.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        values
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, type, message, status, admin_response, created_at, updated_at FROM bug_reports WHERE id = ?",
+        [id]
+      );
+
+      const result = rows[0];
+      // Parse admin_response for the returned result with migration support
+      if (result.admin_response) {
+        try {
+          result.admin_response = JSON.parse(result.admin_response);
+          // If it's not an array, convert it to array format (migration for old data)
+          if (!Array.isArray(result.admin_response)) {
+            result.admin_response = [{ message: result.admin_response, timestamp: result.updated_at || result.created_at }];
+          }
+        } catch (e) {
+          // If parsing fails, treat as old string format and convert to array
+          result.admin_response = [{ message: result.admin_response, timestamp: result.updated_at || result.created_at }];
+        }
+      } else {
+        result.admin_response = null;
+      }
+
+      return result;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteBugReport(id: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "DELETE FROM bug_reports WHERE id = ?",
+        [id]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Share methods
+  async createShare(userId: number, share: InsertShare): Promise<Share> {
+    const conn = await pool.getConnection();
+    try {
+      const [result] = await conn.execute<any>(
+        "INSERT INTO shares (user_id, shared_with_user_id, item_type, item_id) VALUES (?, ?, ?, ?)",
+        [userId, share.shared_with_user_id, share.item_type, share.item_id]
+      );
+      
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, shared_with_user_id, item_type, item_id, created_at FROM shares WHERE id = ?",
+        [result.insertId]
+      );
+      
+      const row = rows[0];
+      return {
+        ...row,
+        created_at: new Date(row.created_at)
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getShares(userId: number): Promise<Share[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, shared_with_user_id, item_type, item_id, created_at FROM shares WHERE user_id = ? ORDER BY created_at DESC",
+        [userId]
+      );
+      
+      return rows.map(row => ({
+        ...row,
+        created_at: new Date(row.created_at)
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getSharedWithMe(userId: number): Promise<Share[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, user_id, shared_with_user_id, item_type, item_id, created_at FROM shares WHERE shared_with_user_id = ? ORDER BY created_at DESC",
+        [userId]
+      );
+      
+      return rows.map(row => ({
+        ...row,
+        created_at: new Date(row.created_at)
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteShare(shareId: number): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+      await conn.execute(
+        "DELETE FROM shares WHERE id = ?",
+        [shareId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async searchUsersByEmail(email: string): Promise<User[]> {
+    const conn = await pool.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        "SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE email LIKE ? AND role = 'user' LIMIT 10",
+        [`%${email}%`]
+      );
+      
+      return rows.map(row => ({
+        ...row,
+        created_at: new Date(row.created_at)
+      }));
     } finally {
       conn.release();
     }
@@ -1360,7 +1847,42 @@ export class MySQLStorage implements IStorage {
         [id]
       );
 
+<<<<<<< HEAD
       return rows.length > 0 ? (rows[0] as Translation) : null;
+=======
+      const resultRows = rows as any[];
+      return resultRows.length > 0 ? (resultRows[0] as Translation) : null;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async createTranslation(keyName: string, language: string, textValue: string): Promise<Translation> {
+    const conn = await pool.getConnection();
+    try {
+      // Prevent duplicates at DB layer by checking existing
+      const [existingRows] = await conn.execute(
+        "SELECT id FROM translations WHERE key_name = ? AND language = ?",
+        [keyName, language]
+      );
+      if ((existingRows as any[]).length > 0) {
+        throw new Error("duplicate");
+      }
+
+      const [result] = await conn.execute<any>(
+        "INSERT INTO translations (key_name, language, text_value, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())",
+        [keyName, language, textValue]
+      );
+
+      const insertId = result.insertId;
+      const [rows] = await conn.execute(
+        "SELECT * FROM translations WHERE id = ?",
+        [insertId]
+      );
+
+      const resultRows = rows as any[];
+      return resultRows[0] as Translation;
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     } finally {
       conn.release();
     }
@@ -1374,6 +1896,11 @@ export interface Translation {
   text_value: string;
   created_at: Date;
   updated_at: Date;
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 }
 
 export const storage = new MySQLStorage();

@@ -1,7 +1,27 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express, { Request, Response } from "express";
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+import type { Server } from "http";
+import type { Express } from "express";
+=======
+=======
+import type { Express } from "express";
+import type { Server } from "http";
+import { storage, DEFAULT_USER_ID } from "./storage";
+import { NotificationService } from "./notification-service";
+import { api } from "@shared/routes";
+import { z } from "zod";
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { api } from "../shared/routes.js";
@@ -224,7 +244,15 @@ export async function registerRoutes(
     if (user) {
       // Fetch fresh user data from database to include any new fields
       const [updatedRows] = await storage.db.execute(
+<<<<<<< HEAD
         'SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ?',
+=======
+<<<<<<< HEAD
+        'SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, avatar, avatar_original, avatar_crop, role, created_at FROM users WHERE id = ?',
+=======
+        'SELECT id, provider, name, email, designation, gmail_address, github_link, linkedin_link, role, created_at FROM users WHERE id = ?',
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         [user.id]
       );
 
@@ -232,6 +260,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'User not found' });
       }
 
+<<<<<<< HEAD
       // Fetch user skills
       const skillIds = await storage.getUserSkills(user.id);
       // Get full skill objects from database
@@ -242,16 +271,24 @@ export async function registerRoutes(
         skills = skillRows as any[];
       }
 
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
       const freshUser = {
         id: (updatedRows as any[])[0].id,
         provider: (updatedRows as any[])[0].provider,
         name: (updatedRows as any[])[0].name,
         email: (updatedRows as any[])[0].email,
         designation: (updatedRows as any[])[0].designation,
+<<<<<<< HEAD
         skills: skills,
         avatar: (updatedRows as any[])[0].avatar,
         avatar_original: (updatedRows as any[])[0].avatar_original,
         avatar_crop: (updatedRows as any[])[0].avatar_crop,
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         gmailAddress: (updatedRows as any[])[0].gmail_address,
         githubLink: (updatedRows as any[])[0].github_link,
         linkedinLink: (updatedRows as any[])[0].linkedin_link,
@@ -271,6 +308,10 @@ export async function registerRoutes(
     res.json(null);
   });
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   // Get available skills for selection
   app.get('/api/skills', async (req, res) => {
     try {
@@ -282,6 +323,11 @@ export async function registerRoutes(
     }
   });
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   app.get('/api/users/:id', async (req, res) => {
     try {
       const userId = Number(req.params.id);
@@ -291,18 +337,36 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'User not found' });
       }
 
+<<<<<<< HEAD
       // Get user skills
       const skills = await storage.getUserSkills(userId);
 
+=======
+<<<<<<< HEAD
+      // Get user skills
+      const skills = await storage.getUserSkills(userId);
+
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       // Return public user info (exclude password and sensitive data)
       const publicUser = {
         id: user.id,
         name: user.name,
         email: user.email,
+<<<<<<< HEAD
         gmailAddress: user.gmail_address,
         githubLink: user.github_link,
         linkedinLink: user.linkedin_link,
         skills: skills,
+<<<<<<< HEAD
+=======
+=======
+        gmailAddress: user.gmailAddress,
+        githubLink: user.githubLink,
+        linkedinLink: user.linkedinLink,
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         created_at: user.created_at,
       };
 
@@ -441,11 +505,19 @@ export async function registerRoutes(
       }
 
       // Validate skill IDs against available skills in database
+<<<<<<< HEAD
+=======
+      let validSkills: number[] = [];
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       if (skills.length > 0) {
         const placeholders = skills.map(() => '?').join(',');
         const [skillRows] = await pool.execute(`SELECT id FROM skills WHERE id IN (${placeholders})`, skills);
         const validSkillIds = (skillRows as any[]).map(row => row.id);
+<<<<<<< HEAD
         const validSkills = skills.filter(skillId => validSkillIds.includes(skillId));
+=======
+        validSkills = skills.filter(skillId => validSkillIds.includes(skillId));
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
         if (validSkills.length !== skills.length) {
           return res.status(400).json({ message: 'Invalid skill IDs provided' });
@@ -453,7 +525,7 @@ export async function registerRoutes(
       }
 
       // Update user skills
-      await storage.updateUserSkills(user.id, validSkills);
+      await storage.updateUserSkills(user.id, validSkills.map(id => id.toString()));
 
       res.json({ message: 'Skills updated successfully' });
     } catch (err) {
@@ -554,7 +626,11 @@ export async function registerRoutes(
 
       // Check if skill exists in database
       const [skillRows] = await pool.execute('SELECT id FROM skills WHERE id = ?', [skillId]);
+<<<<<<< HEAD
       if (skillRows.length === 0) {
+=======
+      if ((skillRows as any[]).length === 0) {
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         return res.status(404).json({ message: 'Skill not found' });
       }
 
@@ -660,12 +736,12 @@ export async function registerRoutes(
       // @ts-ignore
       const userId = req.session?.user?.id || DEFAULT_USER_ID;
 
-      const { title, content, codeBlockTheme, privacy } = req.body;
+      const { title, content, codeBlockTheme, privacy, titleAlignment } = req.body;
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
-      const post = await storage.createPost(userId, title, content, codeBlockTheme || 'dark', privacy || 'public');
+      const post = await storage.createPost(userId, title, content, codeBlockTheme || 'dark', privacy || 'public', titleAlignment || 'left');
 
       // Create notifications for friends if post is public or friends-only
       if (privacy === 'public' || privacy === 'friends') {
@@ -710,12 +786,28 @@ export async function registerRoutes(
         return res.status(403).json({ message: 'Forbidden' });
       }
 
+<<<<<<< HEAD
       const { title, content, privacy, titleAlignment } = req.body;
+=======
+<<<<<<< HEAD
+      const { title, content, privacy, titleAlignment } = req.body;
+=======
+      const { title, content, privacy } = req.body;
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
+<<<<<<< HEAD
       const updatedPost = await storage.updatePost(postId, title, content, privacy, titleAlignment);
+=======
+<<<<<<< HEAD
+      const updatedPost = await storage.updatePost(postId, title, content, privacy, titleAlignment);
+=======
+      const updatedPost = await storage.updatePost(postId, title, content, privacy);
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       res.json(updatedPost);
     } catch (err) {
       console.error(err);
@@ -1400,6 +1492,10 @@ export async function registerRoutes(
     }
   });
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   // Shares API
   app.get("/api/shares", async (req, res) => {
     try {
@@ -1607,6 +1703,12 @@ export async function registerRoutes(
       res.status(500).json({ message: "Failed to check saved status" });
     }
   });
+<<<<<<< HEAD
+=======
+=======
+  // Test endpoint to create sample notifications (for development)
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   app.post("/api/notifications/test", async (req, res) => {
     try {
       const userId = req.session?.user?.id;
@@ -1646,6 +1748,170 @@ export async function registerRoutes(
     }
   });
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+  // Bug Report API
+  app.post("/api/bug-reports", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { type, message } = req.body;
+      if (!type || !message) {
+        return res.status(400).json({ message: "Type and message are required" });
+      }
+
+      if (!["bug", "feature_request"].includes(type)) {
+        return res.status(400).json({ message: "Invalid type" });
+      }
+
+      const bugReport = await storage.createBugReport(userId, type, message);
+      res.json(bugReport);
+    } catch (err) {
+      console.error("Failed to create bug report:", err);
+      res.status(500).json({ message: "Failed to create bug report" });
+    }
+  });
+
+  app.get("/api/admin/bug-reports", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const bugReports = await storage.getBugReports();
+      res.json(bugReports);
+    } catch (err) {
+      console.error("Failed to fetch bug reports:", err);
+      res.status(500).json({ message: "Failed to fetch bug reports" });
+    }
+  });
+
+  app.put("/api/admin/bug-reports/:id", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const reportId = parseInt(req.params.id);
+      const { status, admin_response } = req.body;
+
+      const updates: any = {};
+      if (status !== undefined) updates.status = status;
+      if (admin_response !== undefined) updates.admin_response = admin_response;
+
+      const updatedReport = await storage.updateBugReport(reportId, updates);
+
+<<<<<<< HEAD
+      // Send notification to user when bug report is updated
+      const report = await storage.getBugReports().then(reports => reports.find(r => r.id === reportId));
+      if (report) {
+        let notificationMessage = `Your ${report.type === 'bug' ? 'bug report' : 'feature request'} has been updated.`;
+        let statusEmoji = '';
+        let statusColor = '';
+
+        if (status && status !== report.status) {
+          switch (status) {
+            case 'open':
+              statusEmoji = '🟢';
+              statusColor = 'green';
+              break;
+            case 'in_progress':
+              statusEmoji = '🟡';
+              statusColor = 'yellow';
+              break;
+            case 'resolved':
+              statusEmoji = '✅';
+              statusColor = 'green';
+              break;
+            case 'closed':
+              statusEmoji = '❌';
+              statusColor = 'red';
+              break;
+            default:
+              statusEmoji = '📝';
+              statusColor = 'blue';
+          }
+          notificationMessage += ` Status: ${statusEmoji} ${status.replace('_', ' ').toUpperCase()}`;
+        }
+
+        if (admin_response !== undefined && admin_response.trim() !== '') {
+          notificationMessage += ` • New admin response: "${admin_response}"`;
+        }
+
+        await storage.createNotification({
+          user_id: report.user_id,
+          type: "system",
+          title: `Bug Report Update: ${report.type === 'bug' ? 'Bug' : 'Feature Request'}`,
+          message: notificationMessage,
+          data: { bugReportId: reportId, status, statusColor },
+          is_read: false
+        });
+=======
+      // If admin_response is provided, send notification to user
+      if (admin_response) {
+        const report = await storage.getBugReports().then(reports => reports.find(r => r.id === reportId));
+        if (report) {
+          await storage.createNotification({
+            user_id: report.user_id,
+            type: "system",
+            title: `Bug Report Update: ${report.type === 'bug' ? 'Bug' : 'Feature Request'}`,
+            message: `Your ${report.type === 'bug' ? 'bug report' : 'feature request'} has been updated: ${admin_response}`,
+            data: { bugReportId: reportId }
+          });
+        }
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+      }
+
+      res.json(updatedReport);
+    } catch (err) {
+      console.error("Failed to update bug report:", err);
+      res.status(500).json({ message: "Failed to update bug report" });
+    }
+  });
+
+  app.delete("/api/admin/bug-reports/:id", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const reportId = parseInt(req.params.id);
+      await storage.deleteBugReport(reportId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Failed to delete bug report:", err);
+      res.status(500).json({ message: "Failed to delete bug report" });
+    }
+  });
+
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
   // Seed data
   const existingTasks = await storage.getTasks();
   if (existingTasks.length === 0) {
@@ -1726,6 +1992,42 @@ export async function registerRoutes(
     }
   });
 
+<<<<<<< HEAD
+=======
+  app.post('/api/admin/translations', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const { key_name, language, text_value } = req.body;
+      console.log('[admin/translations POST] userId=', userId, 'body=', { key_name, language, text_value });
+      if (!key_name || !language || !text_value) {
+        return res.status(400).json({ message: 'key_name, language and text_value are required' });
+      }
+
+      try {
+        const created = await storage.createTranslation(key_name, language, text_value);
+        res.status(201).json(created);
+      } catch (err: any) {
+        if (err.message === 'duplicate') {
+          return res.status(409).json({ message: 'Translation for this key and language already exists' });
+        }
+        throw err;
+      }
+    } catch (err) {
+      console.error('Failed to create translation:', err);
+      res.status(500).json({ message: 'Failed to create translation' });
+    }
+  });
+
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   app.get('/api/translations/:language', async (req, res) => {
     try {
       const language = req.params.language;
@@ -1741,5 +2043,128 @@ export async function registerRoutes(
     }
   });
 
+<<<<<<< HEAD
+=======
+  // Admin-only: scan client source for translation keys used (e.g. t('nav.link_ups'))
+  app.get('/api/admin/translation-keys', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+
+      const translationsFile = path.resolve(process.cwd(), 'client', 'src', 'lib', 'translations.ts');
+      const clientDir = path.resolve(process.cwd(), 'client', 'src');
+      console.log('[translation-keys] Scanning translations file:', translationsFile);
+      const keys = new Set<string>();
+      const keyUsages: Record<string, string[]> = {};
+
+      // First, scan translations.ts for all defined keys
+      if (fs.existsSync(translationsFile)) {
+        try {
+          const txt = fs.readFileSync(translationsFile, 'utf8');
+          // Extract all string keys from the translations object
+          // Look for patterns like: key: "value", or 'key': "value", or key: 'value'
+          const keyPatterns = [
+            /(\w+): ['"`](.*?)['"`]/g,  // key: "value"
+            /['"`](\w+)['"`]: ['"`](.*?)['"`]/g,  // "key": "value"
+          ];
+
+          for (const pattern of keyPatterns) {
+            let m;
+            while ((m = pattern.exec(txt))) {
+              keys.add(m[1]);
+              console.log('[translation-keys] Found key in translations:', m[1]);
+            }
+          }
+
+          console.log(`[translation-keys] Total unique keys from translations file: ${keys.size}`);
+        } catch (e) {
+          console.error('[translation-keys] Error reading translations file:', e);
+        }
+      } else {
+        console.error('[translation-keys] Translations file not found:', translationsFile);
+      }
+
+      // Also scan client source code for t() calls to find keys that are used but not yet in translations
+      const walkForKeys = (dir: string) => {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const ent of entries) {
+          const full = path.join(dir, ent.name);
+          if (ent.isDirectory()) {
+            walkForKeys(full);
+          } else if (/\.(ts|tsx|js|jsx)$/.test(ent.name)) {
+            try {
+              const txt = fs.readFileSync(full, 'utf8');
+              // Find t() calls and extract keys
+              const re = /t\(\s*['"`]([^'"`]+?)['"`]\s*\)/g;
+              let m: RegExpExecArray | null;
+              while ((m = re.exec(txt))) {
+                const key = m[1];
+                keys.add(key);
+                console.log('[translation-keys] Found key in code:', key, 'in', path.relative(clientDir, full));
+              }
+            } catch (e) {
+              console.error('read file error', full, e);
+            }
+          }
+        }
+      };
+
+      if (fs.existsSync(clientDir)) {
+        walkForKeys(clientDir);
+        console.log(`[translation-keys] Total unique keys after scanning code: ${keys.size}`);
+      }
+
+      // Then scan client source for usage locations
+      const walk = (dir: string) => {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const ent of entries) {
+          const full = path.join(dir, ent.name);
+          if (ent.isDirectory()) {
+            walk(full);
+          } else if (/\.(ts|tsx|js|jsx)$/.test(ent.name)) {
+            try {
+              const txt = fs.readFileSync(full, 'utf8');
+              const relativePath = path.relative(clientDir, full);
+              // Find t() calls and record usage locations
+              const re = /t\(\s*['"`]([^'"`]+?)['"`]\s*\)/g;
+              let m: RegExpExecArray | null;
+              while ((m = re.exec(txt))) {
+                const key = m[1];
+                if (keys.has(key)) {
+                  if (!keyUsages[key]) {
+                    keyUsages[key] = [];
+                  }
+                  if (!keyUsages[key].includes(relativePath)) {
+                    keyUsages[key].push(relativePath);
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('read file error', full, e);
+            }
+          }
+        }
+      };
+
+      if (fs.existsSync(clientDir)) {
+        walk(clientDir);
+      }
+
+      // Return both keys and their usage information
+      const result = Array.from(keys).sort().map(key => ({
+        key,
+        usages: keyUsages[key] || []
+      }));
+
+      res.json(result);
+    } catch (err) {
+      console.error('Failed to scan translation keys:', err);
+      res.status(500).json({ message: 'Failed to scan translation keys' });
+    }
+  });
+
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   return httpServer;
 }

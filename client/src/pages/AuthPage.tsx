@@ -41,6 +41,9 @@ export default function AuthPage() {
 
       const data = await response.json();
       
+      // Set flag to show logged in message on posts page
+      sessionStorage.setItem('showLoggedInMessage', 'true');
+      
       // Redirect based on user role
       if (data.user?.role === "admin") {
         setLocation("/");
@@ -70,6 +73,9 @@ export default function AuthPage() {
         const error = await response.json();
         throw new Error(error.message || "Registration failed");
       }
+
+      // Set flag to show logged in message on posts page after registration
+      sessionStorage.setItem('showLoggedInMessage', 'true');
 
       // Redirect to posts after registration
       setLocation("/posts");
