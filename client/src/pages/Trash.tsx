@@ -61,11 +61,17 @@ export default function Trash() {
       const notes = await notesRes.json();
       const folders = await foldersRes.json();
       const posts = await postsRes.json();
-      setDeletedNotes(notes);
-      setDeletedFolders(folders);
-      setDeletedPosts(posts);
+      
+      // Ensure we always set arrays, even if API returns unexpected data
+      setDeletedNotes(Array.isArray(notes) ? notes : []);
+      setDeletedFolders(Array.isArray(folders) ? folders : []);
+      setDeletedPosts(Array.isArray(posts) ? posts : []);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading trash:", err);
+      // Set empty arrays on error
+      setDeletedNotes([]);
+      setDeletedFolders([]);
+      setDeletedPosts([]);
     }
   };
 
@@ -151,9 +157,9 @@ export default function Trash() {
 
   const selectAll = () => {
     const allItems = new Set<string>();
-    deletedNotes.forEach(note => allItems.add(`note-${note.id}`));
-    deletedFolders.forEach(folder => allItems.add(`folder-${folder.id}`));
-    deletedPosts.forEach(post => allItems.add(`post-${post.id}`));
+    (deletedNotes || []).forEach(note => allItems.add(`note-${note.id}`));
+    (deletedFolders || []).forEach(folder => allItems.add(`folder-${folder.id}`));
+    (deletedPosts || []).forEach(post => allItems.add(`post-${post.id}`));
     setSelectedItems(allItems);
   };
 
@@ -161,7 +167,7 @@ export default function Trash() {
     setSelectedItems(new Set());
   };
 
-  const allItems = [...deletedNotes.map(n => ({ type: 'note' as const, item: n })), ...deletedFolders.map(f => ({ type: 'folder' as const, item: f })), ...deletedPosts.map(p => ({ type: 'post' as const, item: p }))];
+  const allItems = [...(deletedNotes || []).map(n => ({ type: 'note' as const, item: n })), ...(deletedFolders || []).map(f => ({ type: 'folder' as const, item: f })), ...(deletedPosts || []).map(p => ({ type: 'post' as const, item: p }))];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">

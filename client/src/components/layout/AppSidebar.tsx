@@ -15,9 +15,18 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NotificationDropdown } from "@/components/NotificationDropdown";
+<<<<<<< HEAD
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
+=======
+<<<<<<< HEAD
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { capitalizeFirstLetter } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,11 +51,21 @@ import {
   LogOut,
   ChevronUp,
   Command,
-  FileText
-  , X,
+  FileText,
+  X,
   Trash2,
   Newspaper,
+<<<<<<< HEAD
+  Users,
+  Bug
+=======
+<<<<<<< HEAD
+  Users,
+  Bug
+=======
   Users
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -84,20 +103,60 @@ export function AppSidebar() {
 
   // Show dashboard only for admins, My Tasks for all users, Settings only for admins
   const menuItems = [
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+    ...(currentUser?.role === "admin" 
+      ? [{ titleKey: 'nav.dashboard', url: "/", icon: LayoutDashboard }]
+      : []),
+    ...(currentUser?.role === "admin" 
+<<<<<<< HEAD
+      ? [{ titleKey: 'nav.bug_messages', url: "/admin/bug-messages", icon: Bug }]
+=======
+      ? [{ title: t('nav.bug_messages'), url: "/admin/bug-messages", icon: Bug }]
+=======
+    { title: "Feed", url: "/posts", icon: Newspaper },
+    { title: "Link Ups", url: "/friends", icon: Users },
+    { title: "My Tasks", url: "/tasks", icon: CheckSquare },
+    { title: "Notes", url: "/notes", icon: FileText },
+    { title: "Trash", url: "/trash", icon: Trash2 },
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     ...(currentUser?.role === "admin" 
       ? [{ title: t('nav.dashboard'), url: "/", icon: LayoutDashboard }]
       : []),
     ...(currentUser?.role === "admin" 
+<<<<<<< HEAD
       ? [
           { title: t('nav.admin'), url: "/panel-settings", icon: Settings },
           { title: t('bugMessage'), url: '/admin/bug-reports', icon: FileText }
         ]
+=======
+<<<<<<< HEAD
+      ? [{ title: t('nav.admin'), url: "/panel-settings", icon: Settings }]
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
       : []),
     { title: t('nav.posts'), url: "/posts", icon: Newspaper },
     { title: t('nav.friends'), url: "/friends", icon: Users },
     { title: t('nav.tasks'), url: "/tasks", icon: CheckSquare },
     { title: t('nav.notes'), url: "/notes", icon: FileText },
     { title: t('nav.trash'), url: "/trash", icon: Trash2 },
+=======
+      ? [{ title: "Settings", url: "/settings", icon: Settings }]
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+      : []),
+    ...(currentUser?.role === "admin" 
+      ? [{ title: t('nav.admin'), url: "/panel-settings", icon: Settings }]
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+      : []),
+    ...(currentUser?.role === "admin" 
+      ? [{ titleKey: 'nav.admin', url: "/panel-settings", icon: Settings }]
+      : []),
+    { titleKey: 'nav.posts', url: "/posts", icon: Newspaper },
+    { titleKey: 'nav.friends', url: "/friends", icon: Users },
+    { titleKey: 'nav.tasks', url: "/tasks", icon: CheckSquare },
+    { titleKey: 'nav.notes', url: "/notes", icon: FileText },
+    { titleKey: 'nav.trash', url: "/trash", icon: Trash2 },
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   ];
 
   return (
@@ -130,16 +189,17 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.titleKey}>
                   <SidebarMenuButton 
                     asChild 
                     isActive={location === item.url}
-                    tooltip={item.title}
+                    tooltip={t(item.titleKey!)}
                     className={`
                       group relative rounded-xl sm:rounded-2xl transition-all duration-300 ease-out h-11 sm:h-12 px-4 sm:px-5
                       focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-primary/5
                       hover:scale-[1.02] hover:shadow-md
                       ${location === item.url 
+<<<<<<< HEAD
                         ? 'bg-gradient-to-r from-primary/15 to-primary/10 text-primary font-semibold shadow-lg shadow-primary/20 border border-primary/20' 
                         : item.title === 'Notes'
                         ? 'text-amber-600 hover:bg-gradient-to-r hover:from-amber-50 hover:to-amber-25 hover:text-amber-700 focus:bg-amber-50 font-medium hover:shadow-amber-100/50'
@@ -163,6 +223,20 @@ export function AppSidebar() {
                       {location === item.url && (
                         <div className="absolute right-2 w-1.5 h-6 bg-primary rounded-full animate-pulse"></div>
                       )}
+=======
+                        ? 'bg-primary/10 text-primary font-medium shadow-sm' 
+                        : item.titleKey === 'nav.notes'
+                        ? 'text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 focus:bg-yellow-50 font-medium'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground focus:bg-muted'
+                      }
+                    `}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className={`h-4 w-4 sm:h-4 sm:w-4 ${location === item.url ? "text-primary" : item.titleKey === 'nav.notes' ? "text-yellow-600" : ""}`} />
+                      <span className="text-sm sm:text-sm">
+                        {t(item.titleKey!)}
+                      </span>
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

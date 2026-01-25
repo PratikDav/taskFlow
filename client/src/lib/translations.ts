@@ -5,7 +5,11 @@ export const translations = {
     tasks: "Tasks",
     notes: "Notes",
     posts: "Posts",
+<<<<<<< HEAD
     friends: "Friends",
+=======
+    link_ups: "Link Ups",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "Profile",
     settings: "Settings",
     trash: "Trash",
@@ -138,6 +142,7 @@ export const translations = {
     deleted: "Deleted",
     created: "Created",
     updated: "Updated",
+<<<<<<< HEAD
     taskCreatedSuccessfully: "Task created successfully",
     profilePictureUpdated: "Profile picture updated",
     failedToUploadAvatar: "Failed to upload avatar",
@@ -204,6 +209,35 @@ export const translations = {
     trashIsEmpty: "Trash is empty",
     deletedItemsWillAppearHere: "Deleted items will appear here. Items are automatically removed after 30 days.",
     itemsKeptFor30Days: "Items are kept for 30 days before permanent deletion",
+=======
+<<<<<<< HEAD
+=======
+
+    // Friends/Link Ups
+    friends: {
+      friends: "Link Ups",
+      manage_connections: "Manage your professional connections and network",
+      login_required: "Please log in to view your link ups",
+      link_up_requests: "Link Up Requests",
+      pending_requests: "pending requests",
+      pending_request: "pending request",
+      no_pending_requests: "No pending link up requests",
+      accept: "Accept",
+      reject: "Reject",
+      your_link_ups: "Your Link Ups",
+      no_link_ups_yet: "No link ups yet. Start connecting with others!",
+      search_link_ups: "Search link ups...",
+      name: "Name",
+      email: "Email",
+      recent: "Recent",
+      no_link_ups_found: "No link ups found for",
+      remove: "Remove",
+      showing: "Showing",
+      of: "of",
+      previous: "Previous"
+    }
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
   },
   es: {
     // Navigation
@@ -211,7 +245,11 @@ export const translations = {
     tasks: "Tareas",
     notes: "Notas",
     posts: "Publicaciones",
+<<<<<<< HEAD
     friends: "Amigos",
+=======
+    link_ups: "Conexiones",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "Perfil",
     settings: "Configuración",
     trash: "Papelera",
@@ -406,7 +444,11 @@ export const translations = {
     tasks: "Tâches",
     notes: "Notes",
     posts: "Publications",
+<<<<<<< HEAD
     friends: "Amis",
+=======
+    link_ups: "Connexions",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "Profil",
     settings: "Paramètres",
     trash: "Corbeille",
@@ -601,7 +643,11 @@ export const translations = {
     tasks: "Aufgaben",
     notes: "Notizen",
     posts: "Beiträge",
+<<<<<<< HEAD
     friends: "Freunde",
+=======
+    link_ups: "Verbindungen",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "Profil",
     settings: "Einstellungen",
     trash: "Papierkorb",
@@ -796,7 +842,11 @@ export const translations = {
     tasks: "Compiti",
     notes: "Note",
     posts: "Post",
+<<<<<<< HEAD
     friends: "Amici",
+=======
+    link_ups: "Connessioni",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "Profilo",
     settings: "Impostazioni",
     trash: "Cestino",
@@ -934,7 +984,11 @@ export const translations = {
     tasks: "Tarefas",
     notes: "Notas",
     posts: "Publicações",
+<<<<<<< HEAD
     friends: "Amigos",
+=======
+    link_ups: "Conexões",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "Perfil",
     settings: "Configurações",
     trash: "Lixeira",
@@ -1072,7 +1126,11 @@ export const translations = {
     tasks: "Задачи",
     notes: "Заметки",
     posts: "Публикации",
+<<<<<<< HEAD
     friends: "Друзья",
+=======
+    link_ups: "Связь",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "Профиль",
     settings: "Настройки",
     trash: "Корзина",
@@ -1210,7 +1268,11 @@ export const translations = {
     tasks: "タスク",
     notes: "ノート",
     posts: "投稿",
+<<<<<<< HEAD
     friends: "友達",
+=======
+    link_ups: "リンクアップ",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "プロフィール",
     settings: "設定",
     trash: "ゴミ箱",
@@ -1348,7 +1410,11 @@ export const translations = {
     tasks: "작업",
     notes: "노트",
     posts: "게시물",
+<<<<<<< HEAD
     friends: "친구",
+=======
+    link_ups: "링크업",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "프로필",
     settings: "설정",
     trash: "휴지통",
@@ -1486,7 +1552,11 @@ export const translations = {
     tasks: "任务",
     notes: "笔记",
     posts: "帖子",
+<<<<<<< HEAD
     friends: "朋友",
+=======
+    link_ups: "链接",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "个人资料",
     settings: "设置",
     trash: "回收站",
@@ -1629,7 +1699,11 @@ export const translations = {
     tasks: "কাজ",
     notes: "নোট",
     posts: "পোস্ট",
+<<<<<<< HEAD
     friends: "বন্ধু",
+=======
+    link_ups: "লিঙ্ক আপ",
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     profile: "প্রোফাইল",
     settings: "সেটিংস",
     trash: "ট্র্যাশ",

@@ -1,22 +1,53 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
+=======
+<<<<<<< HEAD
+import React, { useState, useEffect } from 'react';
+=======
+import React, { useState } from 'react';
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+<<<<<<< HEAD
 import { fetchAvailableSkills, getSkillById, getSkillsByCategory, getSkillCategories, type Skill } from '@/lib/skills';
+=======
+<<<<<<< HEAD
+import { fetchAvailableSkills, getSkillById, getSkillsByCategory, getSkillCategories, type Skill } from '@/lib/skills';
+=======
+import { AVAILABLE_SKILLS, getSkillById, getSkillsByCategory, getSkillCategories, type Skill } from '@/lib/skills';
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
 interface SkillSlotProps {
   skill?: Skill;
   onSelect: (skill: Skill) => void;
   onRemove: () => void;
   size?: 'sm' | 'md' | 'lg';
+<<<<<<< HEAD
   tooltipStyle?: React.CSSProperties;
   showRemove?: boolean;
   isLeft?: boolean;
 }
 
 const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size = 'md', tooltipStyle, showRemove = true, isLeft = false }) => {
+=======
+<<<<<<< HEAD
+  tooltipStyle?: React.CSSProperties;
+  showRemove?: boolean;
+  isLeft?: boolean;
+}
+
+const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size = 'md', tooltipStyle, showRemove = true, isLeft = false }) => {
+=======
+}
+
+const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size = 'md' }) => {
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   const [isHovered, setIsHovered] = useState(false);
 
   const sizeClasses = {
@@ -33,14 +64,25 @@ const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size =
 
   return (
     <div
+<<<<<<< HEAD
       className={`relative ${sizeClasses[size]} rounded-full border-2 border-white shadow-lg transition-all duration-300 ${skill ? 'hover:scale-110 hover:shadow-xl group' : ''}`}
       style={{ backgroundColor: skill && !skill.logoUrl ? skill.color : '#f1f5f9' }}
       onMouseEnter={skill ? () => setIsHovered(true) : undefined}
       onMouseLeave={skill ? () => setIsHovered(false) : undefined}
+=======
+      className={`relative ${sizeClasses[size]} rounded-full border-2 border-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group`}
+      style={{ backgroundColor: skill ? skill.color : '#f1f5f9' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
     >
       {skill ? (
         <>
           {/* Skill Icon */}
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
           <div className="w-full h-full rounded-full flex items-center justify-center text-white overflow-hidden">
             {skill.logoUrl ? (
               <img
@@ -63,6 +105,8 @@ const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size =
                 }}
               />
             ) : (
+<<<<<<< HEAD
+=======
               <div className="w-full h-full rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
                 {skill.name.charAt(0)}
               </div>
@@ -71,29 +115,78 @@ const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size =
 
           {/* Remove button on hover */}
           {showRemove && (
+=======
+          <div className="w-full h-full rounded-full flex items-center justify-center text-white">
+            <div className={iconSizes[size]} style={{ color: 'white' }}>
+              {/* For now, we'll use a simple circle. In a real app, you'd use actual icons */}
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+              <div className="w-full h-full rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                {skill.name.charAt(0)}
+              </div>
+            )}
+          </div>
+
+          {/* Remove button on hover */}
+<<<<<<< HEAD
+          {showRemove && (
+=======
+          {isHovered && (
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove();
               }}
+<<<<<<< HEAD
               className={`absolute -top-2 ${isLeft ? '-left-2' : '-right-2'} w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-700 transition-colors shadow-lg z-30 opacity-0 group-hover:opacity-100`}
               aria-label="Remove skill"
               title="Remove skill"
             >
               <X className="h-4 w-4" />
+=======
+<<<<<<< HEAD
+              className={`absolute -top-2 ${isLeft ? '-left-2' : '-right-2'} w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-700 transition-colors shadow-lg z-30 opacity-0 group-hover:opacity-100`}
+              aria-label="Remove skill"
+              title="Remove skill"
+            >
+              <X className="h-4 w-4" />
+=======
+              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+            >
+              <X className="h-3 w-3" />
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
             </button>
           )}
 
           {/* Tooltip */}
+<<<<<<< HEAD
           <div className="absolute inset-0 flex items-center justify-center px-1 py-1 bg-black/80 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
             <span className="truncate max-w-full text-center font-medium">{skill.name}</span>
+=======
+<<<<<<< HEAD
+          <div className="absolute px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20" style={tooltipStyle ?? {}}>
+=======
+<<<<<<< HEAD
+          <div className="absolute px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20" style={tooltipStyle ?? {}}>
+=======
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+            {skill.name}
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
           </div>
         </>
       ) : (
         /* Empty slot with plus icon */
         <button
           onClick={() => onSelect({} as Skill)} // This will trigger the skill selection dialog
+<<<<<<< HEAD
           className="w-full h-full rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors pointer-events-auto"
+=======
+          className="w-full h-full rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
         >
           <Plus className={iconSizes[size]} />
         </button>
@@ -117,6 +210,11 @@ const SkillSelectionDialog: React.FC<SkillSelectionDialogProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+<<<<<<< HEAD
+  const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
+=======
+<<<<<<< HEAD
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -141,6 +239,35 @@ const SkillSelectionDialog: React.FC<SkillSelectionDialogProps> = ({
   const selectedSkillIds = selectedSkills.map(skill => skill.id);
 
   const filteredSkills = availableSkills.filter(skill => {
+=======
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+
+  useEffect(() => {
+    const loadSkills = async () => {
+      try {
+        const skills = await fetchAvailableSkills();
+        setAvailableSkills(skills);
+      } catch (error) {
+        console.error('Failed to load skills:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      loadSkills();
+    }
+  }, [isOpen]);
+
+  const categories = ['All', ...getSkillCategories(availableSkills)];
+  const selectedSkillIds = selectedSkills.map(skill => skill.id);
+
+<<<<<<< HEAD
+  const filteredSkills = availableSkills.filter(skill => {
+=======
+  const filteredSkills = AVAILABLE_SKILLS.filter(skill => {
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     const matchesSearch = skill.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || skill.category === selectedCategory;
     const notSelected = !selectedSkillIds.includes(skill.id);
@@ -179,6 +306,10 @@ const SkillSelectionDialog: React.FC<SkillSelectionDialogProps> = ({
 
           {/* Skills Grid */}
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-96 overflow-y-auto">
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
             {loading ? (
               <div className="col-span-full text-center py-8 text-muted-foreground">
                 Loading skills...
@@ -192,6 +323,7 @@ const SkillSelectionDialog: React.FC<SkillSelectionDialogProps> = ({
                     onClose();
                   }}
                   className="flex flex-col items-center p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors group"
+<<<<<<< HEAD
                 >
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold mb-2 overflow-hidden"
@@ -226,6 +358,64 @@ const SkillSelectionDialog: React.FC<SkillSelectionDialogProps> = ({
                 </button>
               ))
             )}
+=======
+                >
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold mb-2 overflow-hidden"
+                    style={{ backgroundColor: skill.logoUrl ? 'transparent' : skill.color }}
+                  >
+                    {skill.logoUrl ? (
+                      <img
+                        src={skill.logoUrl}
+                        alt={skill.name}
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => {
+                          // Fallback to first letter if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.style.backgroundColor = skill.color;
+                            parent.innerHTML = skill.name.charAt(0);
+                            parent.style.display = 'flex';
+                            parent.style.alignItems = 'center';
+                            parent.style.justifyContent = 'center';
+                          }
+                        }}
+                      />
+                    ) : (
+                      skill.name.charAt(0)
+                    )}
+                  </div>
+                  <span className="text-xs text-center group-hover:text-primary transition-colors">
+                    {skill.name}
+                  </span>
+                </button>
+              ))
+            )}
+=======
+            {filteredSkills.map(skill => (
+              <button
+                key={skill.id}
+                onClick={() => {
+                  onSelectSkill(skill);
+                  onClose();
+                }}
+                className="flex flex-col items-center p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors group"
+              >
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold mb-2"
+                  style={{ backgroundColor: skill.color }}
+                >
+                  {skill.name.charAt(0)}
+                </div>
+                <span className="text-xs text-center group-hover:text-primary transition-colors">
+                  {skill.name}
+                </span>
+              </button>
+            ))}
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
           </div>
 
           {filteredSkills.length === 0 && (
@@ -258,23 +448,62 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
 
   // Calculate how many slots to show
   const filledSlots = userSkills.length;
+<<<<<<< HEAD
   const visibleSlots = Math.min(maxSlots, Math.max(2, filledSlots + 1));
+=======
+  const visibleSlots = Math.min(
+    maxSlots,
+    Math.max(4, filledSlots + (filledSlots % 2 === 0 ? 2 : 0)) // Show at least 4, then add 2 more when current set is filled
+  );
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 
   const leftSlots = Math.ceil(visibleSlots / 2);
   const rightSlots = visibleSlots - leftSlots;
 
   const handleSkillSelect = (skill: Skill) => {
+<<<<<<< HEAD
+    console.log('handleSkillSelect called with skill:', skill);
+=======
+<<<<<<< HEAD
+    console.log('handleSkillSelect called with skill:', skill);
     if (skill.id) {
-      // Adding a skill
+      // Adding a skill - let parent handle the update
+      console.log('Adding skill:', skill);
       onUpdateSkills([...userSkills, skill]);
     } else {
       // Opening dialog for selection
+      console.log('Opening skill dialog');
+=======
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+    if (skill.id) {
+      // Adding a skill - let parent handle the update
+      console.log('Adding skill:', skill);
+      onUpdateSkills([...userSkills, skill]);
+    } else {
+      // Opening dialog for selection
+<<<<<<< HEAD
+      console.log('Opening skill dialog');
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
       setShowSkillDialog(true);
     }
   };
 
   const handleSkillRemove = (index: number) => {
+<<<<<<< HEAD
+    console.log('handleSkillRemove called with index:', index);
     const newSkills = userSkills.filter((_, i) => i !== index);
+    console.log('New skills after removal:', newSkills);
+=======
+<<<<<<< HEAD
+    console.log('handleSkillRemove called with index:', index);
+    const newSkills = userSkills.filter((_, i) => i !== index);
+    console.log('New skills after removal:', newSkills);
+=======
+    const newSkills = userSkills.filter((_, i) => i !== index);
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
     onUpdateSkills(newSkills);
   };
 
@@ -284,6 +513,7 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
   };
 
   return (
+<<<<<<< HEAD
     <div className="relative flex items-center justify-center w-80 h-80">
       {/* Circular slots around the center - top semicircle only to avoid extending below */}
       {Array.from({ length: visibleSlots }, (_, i) => {
@@ -317,7 +547,7 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
 
         return (
           <div
-            key={`slot-${i}`}
+            key={i < userSkills.length ? `skill-${userSkills[i].id}` : `empty-${i}`}
             className="absolute animate-fade-in"
             style={{
               left: '50%',
@@ -325,12 +555,28 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
               transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
               animationDelay: `${i * 100}ms`,
               zIndex: 5,
+=======
+    <div className="relative flex items-center justify-center">
+      {/* Left side slots */}
+      <div className="absolute left-0 flex flex-col gap-3">
+        {Array.from({ length: leftSlots }, (_, i) => (
+          <div
+            key={`left-${i}`}
+            className="transform -translate-x-8 animate-fade-in"
+            style={{
+              animationDelay: `${i * 100}ms`,
+              marginTop: i * 20 // Stagger vertically
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
             }}
           >
             <SkillSlot
               skill={i < userSkills.length ? userSkills[i] : undefined}
               onSelect={handleSkillSelect}
               onRemove={() => handleSkillRemove(i)}
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
               tooltipStyle={tooltipStyle}
               showRemove={!readOnly}
               isLeft={isLeft}
@@ -339,6 +585,37 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
           </div>
         );
       })}
+=======
+              size="md"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Right side slots */}
+      <div className="absolute right-0 flex flex-col gap-3">
+        {Array.from({ length: rightSlots }, (_, i) => {
+          const skillIndex = leftSlots + i;
+          return (
+            <div
+              key={`right-${i}`}
+              className="transform translate-x-8 animate-fade-in"
+              style={{
+                animationDelay: `${(leftSlots + i) * 100}ms`,
+                marginTop: i * 20 // Stagger vertically
+              }}
+            >
+              <SkillSlot
+                skill={skillIndex < userSkills.length ? userSkills[skillIndex] : undefined}
+                onSelect={handleSkillSelect}
+                onRemove={() => handleSkillRemove(skillIndex)}
+                size="md"
+              />
+            </div>
+          );
+        })}
+      </div>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 
       {/* Skill Selection Dialog */}
       <SkillSelectionDialog

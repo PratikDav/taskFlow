@@ -9,9 +9,19 @@ import { User, Mail, Github, Linkedin, UserPlus, Users, UserCheck, Calendar, Map
 import { useToast } from "@/hooks/use-toast";
 import { useFriends } from "@/hooks/use-friends";
 import { useFriendsContent } from "@/hooks/use-friends-content";
+<<<<<<< HEAD
 import { capitalizeFirstLetter } from "@/lib/utils";
+<<<<<<< HEAD
 import { FloatingSkillSlots } from "@/components/FloatingSkillSlots";
 import { type Skill } from "@/lib/skills";
+=======
+=======
+<<<<<<< HEAD
+import { capitalizeFirstLetter } from "@/lib/utils";
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
 
 interface UserProfile {
   id: number;
@@ -26,6 +36,17 @@ interface UserProfile {
   gmailAddress?: string;
   githubLink?: string;
   linkedinLink?: string;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+  skills?: string[];
+=======
+<<<<<<< HEAD
+  skills?: string[];
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
   created_at: string;
 }
 
@@ -149,6 +170,7 @@ export default function UserProfile() {
   }
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Hero Section */}
@@ -301,8 +323,24 @@ export default function UserProfile() {
               </div>
             </CardContent>
           </Card>
+=======
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between">
+        <div>
+<<<<<<< HEAD
+          <h1 className="text-4xl font-display font-bold text-foreground">{capitalizeFirstLetter(user.name)}'s Profile</h1>
+=======
+<<<<<<< HEAD
+          <h1 className="text-4xl font-display font-bold text-foreground">{capitalizeFirstLetter(user.name)}'s Profile</h1>
+=======
+          <h1 className="text-4xl font-display font-bold text-foreground">{user.name}'s Profile</h1>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+          <p className="text-muted-foreground mt-1">View profile and connect.</p>
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
         </div>
 
+<<<<<<< HEAD
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - About & Skills */}
@@ -318,6 +356,86 @@ export default function UserProfile() {
                     <CardTitle className="text-2xl">About</CardTitle>
                     <CardDescription>Professional background and details</CardDescription>
                   </div>
+=======
+<<<<<<< HEAD
+      <div className="grid md:grid-cols-3 gap-6">
+=======
+<<<<<<< HEAD
+      <div className="grid md:grid-cols-3 gap-6">
+=======
+      <div className="grid md:grid-cols-2 gap-6">
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+        {/* Basic Information */}
+        <Card className="rounded-2xl shadow-sm border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                <User className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle>Basic Information</CardTitle>
+                <CardDescription>Profile details.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Full Name</Label>
+<<<<<<< HEAD
+              <p className="text-sm">{capitalizeFirstLetter(user.name)}</p>
+=======
+<<<<<<< HEAD
+              <p className="text-sm">{capitalizeFirstLetter(user.name)}</p>
+=======
+              <p className="text-sm">{user.name}</p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Email</Label>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm">{user.email}</p>
+              </div>
+            </div>
+            {user.gmailAddress && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Gmail</Label>
+                <p className="text-sm">{user.gmailAddress}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Social Links */}
+        <Card className="rounded-2xl shadow-sm border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle>Social Links</CardTitle>
+                <CardDescription>Connect on other platforms.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {user.githubLink && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">GitHub</Label>
+                <div className="flex items-center gap-2">
+                  <Github className="h-4 w-4 text-muted-foreground" />
+                  <a
+                    href={user.githubLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    {user.githubLink}
+                  </a>
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -385,10 +503,60 @@ export default function UserProfile() {
                     )}
                   </div>
                 </div>
+<<<<<<< HEAD
               </CardContent>
             </Card>
 
             {/* Skills section intentionally removed per design request */}
+=======
+              </div>
+            )}
+            {(!user.githubLink && !user.linkedinLink) && (
+              <p className="text-sm text-muted-foreground">No social links provided.</p>
+            )}
+          </CardContent>
+        </Card>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+
+        {/* Skills */}
+        <Card className="rounded-2xl shadow-sm border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-500/10 rounded-xl text-green-500">
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <CardTitle>Skills</CardTitle>
+                <CardDescription>Technical expertise.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {user.skills && user.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {user.skills.map((skill, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No skills specified.</p>
+            )}
+          </CardContent>
+        </Card>
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+      </div>
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
 
             {/* Recent Activity - Show user's recent posts to everyone */}
             <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
@@ -440,6 +608,7 @@ export default function UserProfile() {
             </Card>
           </div>
 
+<<<<<<< HEAD
           {/* Right Column - Activity & Stats */}
           <div className="space-y-8">
             {/* Quick Stats */}
@@ -457,6 +626,51 @@ export default function UserProfile() {
                     <div>
                       <p className="text-sm font-medium text-slate-700">Connections</p>
                       <p className="text-2xl font-bold text-blue-600">{friends.length}</p>
+=======
+          <Card className="rounded-2xl shadow-sm border-border/50">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+<<<<<<< HEAD
+                  <CardTitle>{capitalizeFirstLetter(user.name)}'s Shared Content</CardTitle>
+=======
+<<<<<<< HEAD
+                  <CardTitle>{capitalizeFirstLetter(user.name)}'s Shared Content</CardTitle>
+=======
+                  <CardTitle>{user.name}'s Shared Content</CardTitle>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+                  <CardDescription>Link up-only posts and notes.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            {friendsContentLoading ? (
+              <CardContent>
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <span className="ml-2 text-muted-foreground">Loading content...</span>
+                </div>
+              </CardContent>
+            ) : (friendsPosts.filter(p => p.user_id === user.id).length > 0 || friendsNotes.filter(n => n.user_id === user.id).length > 0) ? (
+              <CardContent className="space-y-6">
+                {/* User's Posts */}
+                {friendsPosts.filter(p => p.user_id === user.id).length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Recent Posts</h3>
+                    <div className="space-y-4">
+                      {friendsPosts.filter(p => p.user_id === user.id).slice(0, 5).map((post) => (
+                        <div key={post.id} className="p-4 border rounded-xl">
+                          <h4 className="font-medium mb-2">{post.title}</h4>
+                          <p className="text-sm text-muted-foreground line-clamp-3">{post.content}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {new Date(post.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
                     </div>
                   </div>
                 </div>

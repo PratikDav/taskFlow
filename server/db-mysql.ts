@@ -96,6 +96,10 @@ export async function initDatabase() {
       }
     }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     // Add avatar column if it doesn't exist
     try {
       await conn.execute(`
@@ -151,6 +155,11 @@ export async function initDatabase() {
       `, [skill.id, skill.name, skill.category, skill.color, skill.logoUrl || null]);
     }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     // Create user_skills table
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS user_skills (
@@ -159,7 +168,14 @@ export async function initDatabase() {
         skill_id VARCHAR(50) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+<<<<<<< HEAD
         FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE,
+=======
+<<<<<<< HEAD
+        FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE,
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
         UNIQUE KEY unique_user_skill (user_id, skill_id)
       )
     `);
@@ -277,6 +293,10 @@ export async function initDatabase() {
       }
     }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     // Add title_alignment column to posts table
     try {
       await conn.execute(`
@@ -289,6 +309,11 @@ export async function initDatabase() {
       }
     }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
     // Add privacy column to notes table
     try {
       await conn.execute(`
@@ -336,6 +361,10 @@ export async function initDatabase() {
     `);
 
     console.log("Notifications table created");
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
     // Create shares table
     await conn.execute(`
@@ -416,11 +445,17 @@ export async function initDatabase() {
 
     console.log("Translations table created");
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
     // Create bug_reports table
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS bug_reports (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
+<<<<<<< HEAD
         type ENUM('bug', 'feature') NOT NULL,
         title VARCHAR(255) NOT NULL,
         description TEXT NOT NULL,
@@ -431,11 +466,21 @@ export async function initDatabase() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_status (status),
         INDEX idx_created_at (created_at)
+=======
+        type ENUM('bug', 'feature_request') NOT NULL,
+        message TEXT NOT NULL,
+        status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open',
+        admin_response TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
       )
     `);
 
     console.log("Bug reports table created");
 
+<<<<<<< HEAD
     // Check if admin_message column exists, add it if not
     try {
       await conn.execute(`ALTER TABLE bug_reports ADD COLUMN admin_message TEXT`);
@@ -503,6 +548,9 @@ export async function initDatabase() {
       console.log("Error updating null types:", err.message);
     }
 
+=======
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
     // Seed default translations
     const defaultTranslations = [
       // English translations
@@ -515,6 +563,10 @@ export async function initDatabase() {
       { key: 'nav.settings', lang: 'en', text: 'Settings' },
       { key: 'nav.profile', lang: 'en', text: 'Profile' },
       { key: 'nav.admin', lang: 'en', text: 'Admin' },
+<<<<<<< HEAD
+=======
+      { key: 'nav.bug_messages', lang: 'en', text: 'Bug Messages' },
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       { key: 'nav.logout', lang: 'en', text: 'Logout' },
       { key: 'bugMessage', lang: 'en', text: 'Bug Messages' },
       { key: 'profile.my_profile', lang: 'en', text: 'My Profile' },
@@ -736,6 +788,10 @@ export async function initDatabase() {
       { key: 'nav.settings', lang: 'bn', text: 'সেটিংস' },
       { key: 'nav.profile', lang: 'bn', text: 'প্রোফাইল' },
       { key: 'nav.admin', lang: 'bn', text: 'অ্যাডমিন' },
+<<<<<<< HEAD
+=======
+      { key: 'nav.bug_messages', lang: 'bn', text: 'বাগ মেসেজ' },
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
       { key: 'nav.logout', lang: 'bn', text: 'লগ আউট' },
       { key: 'bugMessage', lang: 'bn', text: 'বাগ মেসেজ' },
       { key: 'profile.my_profile', lang: 'bn', text: 'আমার প্রোফাইল' },
@@ -947,6 +1003,7 @@ export async function initDatabase() {
       { key: 'profile.no_saved_posts', lang: 'bn', text: 'এখনও কোন সংরক্ষিত পোস্ট নেই।' },
     ];
 
+<<<<<<< HEAD
     for (const translation of defaultTranslations) {
       await conn.execute(`
         INSERT IGNORE INTO translations (key_name, language, text_value)
@@ -955,6 +1012,7 @@ export async function initDatabase() {
     }
 
     console.log("Default translations seeded");
+<<<<<<< HEAD
 
     // Create bug_reports table
     await conn.execute(`
@@ -988,6 +1046,26 @@ export async function initDatabase() {
 
     console.log("Bug responses table created");
 
+=======
+=======
+    console.log(`Starting to seed ${defaultTranslations.length} translations...`);
+    let seededCount = 0;
+    for (const translation of defaultTranslations) {
+      await conn.execute(`
+        INSERT IGNORE INTO translations (key_name, language, text_value, created_at, updated_at)
+        VALUES (?, ?, ?, NOW(), NOW())
+      `, [translation.key, translation.lang, translation.text]);
+      seededCount++;
+      if (seededCount % 50 === 0) {
+        console.log(`Seeded ${seededCount}/${defaultTranslations.length} translations...`);
+      }
+    }
+
+    console.log("Default translations seeded");
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
     const [users] = await conn.execute<any[]>("SELECT * FROM users WHERE id = 1");
     if (users.length === 0) {
       const hashedPassword = await bcrypt.hash("user123", 10);

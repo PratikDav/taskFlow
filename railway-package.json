@@ -2,11 +2,11 @@
   "name": "taskflow-backend",
   "version": "1.0.0",
   "description": "TaskFlow Backend API",
-  "main": "index.js",
+  "main": "server/index.ts",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js",
+    "start": "node --loader tsx/esm server/index.ts",
+    "dev": "node --loader tsx/esm server/index.ts",
     "build": "echo 'No build step required'"
   },
   "dependencies": {

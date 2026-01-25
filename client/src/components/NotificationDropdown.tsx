@@ -23,7 +23,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: {
   const [location, setLocation] = useLocation();
   const { acceptFriendRequest, rejectFriendRequest } = useFriends();
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: string, data?: any) => {
     switch (type) {
       case 'friend_request':
         return '👋';
@@ -44,6 +44,21 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: {
       case 'reaction':
         return '👍';
       case 'system':
+        // For bug report notifications, use status-based icons
+        if (data?.bugReportId) {
+          switch (data.status) {
+            case 'open':
+              return '🟢';
+            case 'in_progress':
+              return '🟡';
+            case 'resolved':
+              return '✅';
+            case 'closed':
+              return '❌';
+            default:
+              return '📝';
+          }
+        }
         return '⚙️';
       default:
         return '🔔';
@@ -101,12 +116,34 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: {
       onClick={handleNotificationClick}
     >
       <div className="flex items-start gap-3">
-        <div className="text-lg">{getNotificationIcon(notification.type)}</div>
+        <div className="text-lg">{getNotificationIcon(notification.type, notification.data)}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               <p className="font-medium text-sm text-slate-800">{notification.title}</p>
               <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
+              
+              {/* Status badge for bug report notifications */}
+              {notification.data?.bugReportId && notification.data?.status && (
+                <div className="mt-2">
+                  <Badge
+                    variant={
+                      notification.data.status === 'open' ? 'default' :
+                      notification.data.status === 'in_progress' ? 'secondary' :
+                      notification.data.status === 'resolved' ? 'outline' :
+                      'destructive'
+                    }
+                    className="text-xs"
+                  >
+                    {notification.data.status === 'open' && '🟢 '}
+                    {notification.data.status === 'in_progress' && '🟡 '}
+                    {notification.data.status === 'resolved' && '✅ '}
+                    {notification.data.status === 'closed' && '❌ '}
+                    {notification.data.status.replace('_', ' ').toUpperCase()}
+                  </Badge>
+                </div>
+              )}
+              
               <p className="text-xs text-slate-500 mt-1">
                 {formatDistanceToNow(notification.created_at, { addSuffix: true })}
               </p>

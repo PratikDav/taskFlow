@@ -5,6 +5,7 @@ export interface Skill {
   icon: string; // Lucide icon name or custom icon
   category: string;
   color: string;
+<<<<<<< HEAD
   logoUrl?: string; // Optional custom logo URL
 }
 
@@ -37,6 +38,46 @@ export const clearSkillsCache = () => {
 };
 
 // Predefined skill collection (fallback)
+=======
+<<<<<<< HEAD
+  logoUrl?: string; // Optional custom logo URL
+}
+
+// Cache for skills data
+let skillsCache: Skill[] | null = null;
+
+// Fetch skills from server
+export const fetchAvailableSkills = async (): Promise<Skill[]> => {
+  if (skillsCache) {
+    return skillsCache;
+  }
+
+  try {
+    const response = await fetch('/api/skills');
+    if (!response.ok) {
+      throw new Error('Failed to fetch skills');
+    }
+    skillsCache = await response.json();
+    return skillsCache || [];
+  } catch (error) {
+    console.error('Error fetching skills:', error);
+    // Fallback to hardcoded skills if server is unavailable
+    return AVAILABLE_SKILLS;
+  }
+};
+
+// Clear skills cache (useful for logout)
+export const clearSkillsCache = () => {
+  skillsCache = null;
+};
+
+// Predefined skill collection (fallback)
+=======
+}
+
+// Predefined skill collection
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 export const AVAILABLE_SKILLS: Skill[] = [
   // Frontend
   { id: 'react', name: 'React.js', icon: 'React', category: 'Frontend', color: '#61DAFB' },
@@ -58,7 +99,11 @@ export const AVAILABLE_SKILLS: Skill[] = [
   { id: 'php', name: 'PHP', icon: 'Php', category: 'Backend', color: '#777BB4' },
   { id: 'ruby', name: 'Ruby', icon: 'Ruby', category: 'Language', color: '#CC342D' },
   { id: 'go', name: 'Go', icon: 'Go', category: 'Language', color: '#00ADD8' },
+<<<<<<< HEAD
   { id: 'rust', name: 'Rust', icon: 'Rust', category: 'Language', color: '#000000' },
+=======
+  { id: 'rust', name: 'Rust', icon: 'Language', color: 'Rust', category: 'Language', color: '#000000' },
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
 
   // Database
   { id: 'mysql', name: 'MySQL', icon: 'Database', category: 'Database', color: '#4479A1' },
@@ -84,6 +129,12 @@ export const AVAILABLE_SKILLS: Skill[] = [
 ];
 
 // Get skill by ID
+<<<<<<< HEAD
+export const getSkillById = (id: string, skills?: Skill[]): Skill | undefined => {
+  const skillList = skills || skillsCache || AVAILABLE_SKILLS;
+  return skillList.find(skill => skill.id === id);
+=======
+<<<<<<< HEAD
 export const getSkillById = (id: string, skills?: Skill[]): Skill | undefined => {
   const skillList = skills || skillsCache || AVAILABLE_SKILLS;
   return skillList.find(skill => skill.id === id);
@@ -99,4 +150,26 @@ export const getSkillsByCategory = (category: string, skills?: Skill[]): Skill[]
 export const getSkillCategories = (skills?: Skill[]): string[] => {
   const skillList = skills || skillsCache || AVAILABLE_SKILLS;
   return Array.from(new Set(skillList.map(skill => skill.category)));
+=======
+export const getSkillById = (id: string): Skill | undefined => {
+  return AVAILABLE_SKILLS.find(skill => skill.id === id);
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+};
+
+// Get skills by category
+export const getSkillsByCategory = (category: string, skills?: Skill[]): Skill[] => {
+  const skillList = skills || skillsCache || AVAILABLE_SKILLS;
+  return skillList.filter(skill => skill.category === category);
+};
+
+// Get all categories
+<<<<<<< HEAD
+export const getSkillCategories = (skills?: Skill[]): string[] => {
+  const skillList = skills || skillsCache || AVAILABLE_SKILLS;
+  return Array.from(new Set(skillList.map(skill => skill.category)));
+=======
+export const getSkillCategories = (): string[] => {
+  return Array.from(new Set(AVAILABLE_SKILLS.map(skill => skill.category)));
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 };

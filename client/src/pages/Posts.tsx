@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { UserPlus, Trash2, User, Trophy, Medal, Award, MessageCircle, Plus, MoreHorizontal, Bookmark, Send } from "lucide-react";
 import { useFriends } from "@/hooks/use-friends";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
+=======
+<<<<<<< HEAD
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { UserPlus, MoreHorizontal, Trash2, Bookmark, BookmarkCheck, User, ChevronDown, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { useFriends } from "@/hooks/use-friends";
+import { capitalizeFirstLetter } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
+=======
+import { UserPlus } from "lucide-react";
+import { useFriends } from "@/hooks/use-friends";
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
 
 export default function Posts() {
   const [, setLocation] = useLocation();
@@ -16,12 +29,27 @@ export default function Posts() {
   const [loading, setLoading] = useState(false);
   const [newPost, setNewPost] = useState({ title: "", content: "" });
   const { friends, sendFriendRequest } = useFriends();
+<<<<<<< HEAD
   const [postReactions, setPostReactions] = useState<Record<number, { gold: number; silver: number; bronze: number }>>({});
   const [userReactions, setUserReactions] = useState<Record<number, string | null>>({});
   const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
   const [comments, setComments] = useState<Record<number, any[]>>({});
   const [newComments, setNewComments] = useState<Record<number, string>>({});
   const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
+=======
+<<<<<<< HEAD
+  const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
+=======
+<<<<<<< HEAD
+  const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
+<<<<<<< HEAD
+  const [showLoggedInMessage, setShowLoggedInMessage] = useState(false);
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> d71d32f177fe4c2b8ae1b91763d41c1b8c70d04b
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
 
   // Check if user is logged in
   const isLoggedIn = !!me;
@@ -32,6 +60,12 @@ export default function Posts() {
         const meRes = await fetch("/api/me", { credentials: "include" });
         const meData = await meRes.json();
         setMe(meData); // will be null for guests
+
+        // Check if we should show logged in message
+        if (meData && sessionStorage.getItem('showLoggedInMessage') === 'true') {
+          setShowLoggedInMessage(true);
+          sessionStorage.removeItem('showLoggedInMessage');
+        }
 
         const postsRes = await fetch("/api/posts");
         const postsData = await postsRes.json();
@@ -136,6 +170,10 @@ export default function Posts() {
     }
   };
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   const handleSavePost = async (postId: number) => {
     if (!me) return;
 
@@ -195,12 +233,33 @@ export default function Posts() {
     }
   };
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
   const handleAddFriend = async (userId: number) => {
     await sendFriendRequest(userId);
   };
 
+<<<<<<< HEAD
   const handleReaction = async (postId: number, reactionType: "gold" | "silver" | "bronze") => {
     if (!me) return;
+=======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+  const handleTitleAlignmentChange = async (postId: number, alignment: string) => {
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titleAlignment: alignment }),
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("Failed to update title alignment");
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
 
     try {
       const currentReaction = userReactions[postId];
@@ -247,6 +306,7 @@ export default function Posts() {
     }
   };
 
+<<<<<<< HEAD
   const handleCreateComment = async (postId: number, e: React.FormEvent) => {
     e.preventDefault();
     const content = newComments[postId]?.trim();
@@ -299,6 +359,13 @@ export default function Posts() {
     // Removed alignment functionality as requested
   };
 
+=======
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
   const applyThemeToElement = (element: HTMLElement, theme: string) => {
     // Minimal local theme map for code blocks. If you have a shared theme map,
     // replace this with an import from the shared file.
@@ -328,6 +395,7 @@ export default function Posts() {
     );
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header Section */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/50 sticky top-0 z-40">
@@ -352,6 +420,33 @@ export default function Posts() {
               </Button>
             )}
           </div>
+=======
+    <div className="max-w-2xl mx-auto p-8">
+      {/* Logged In Message */}
+      {showLoggedInMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+            <span className="text-green-800 font-medium">{t('posts.logged_in')}</span>
+          </div>
+          <button
+            onClick={() => setShowLoggedInMessage(false)}
+            className="text-green-600 hover:text-green-800 text-xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Header with User Info */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">{t('posts.posts_feed')}</h1>
+          <p className="text-muted-foreground mt-1">
+            {t('posts.welcome')}, {me?.name ? capitalizeFirstLetter(me.name) : 'Guest'} • {me?.role === "admin" ? "Admin" : "User"}
+            {isLoggedIn && <span className="ml-2 text-green-600">✓ {t('posts.logged_in')}</span>}
+          </p>
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
         </div>
       </div>
 
@@ -409,6 +504,7 @@ export default function Posts() {
             const canAddFriend = me && !isOwnPost && !isFriend;
 
             return (
+<<<<<<< HEAD
                 <article key={post.id} className="bg-white rounded-2xl shadow-sm border border-slate-200/50 hover:shadow-lg transition-all duration-300 overflow-hidden">
                   {/* Post Header */}
                   <div className="p-6 pb-4">
@@ -428,6 +524,207 @@ export default function Posts() {
                                 }
                               }}
                             />
+=======
+              <div key={post.id} 
+                   className="p-4 border rounded-lg bg-card hover:shadow-md transition">
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+                {/* Post Header with User Info */}
+                <div className="flex items-center justify-center mb-4 pb-3 border-b border-border/50">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white shadow-md overflow-hidden flex-shrink-0">
+                      {post.userAvatar ? (
+                        <img
+                          src={post.userAvatar}
+                          alt={post.userName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = '<div class="w-full h-full rounded-full bg-gradient-to-tr from-violet-500 to-purple-500 flex items-center justify-center text-white"><svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg></div>';
+                            }
+                          }}
+                        />
+                      ) : (
+                        <User className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setLocation(`/profile/${post.user_id}`)}
+                          className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer text-sm"
+                        >
+                          {capitalizeFirstLetter(post.userName)}
+                        </button>
+                        {isFriend && !isOwnPost && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded inline-block">
+                            {t('posts.linked_up')}
+                          </span>
+                        )}
+                        {isOwnPost && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded inline-block">
+                            {t('posts.your_post')}
+                          </span>
+                        )}
+<<<<<<< HEAD
+=======
+                        {canAddFriend && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleAddFriend(post.user_id)}
+                            className="h-7 w-7 p-0 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-md transition-all duration-200 rounded-full"
+                            title="Add friend"
+                          >
+                            <UserPlus className="h-3.5 w-3.5 text-blue-600 hover:text-blue-700 transition-colors" />
+                          </Button>
+                        )}
+                        {me && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-50">
+                                <MoreHorizontal className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40 bg-white border border-gray-200 shadow-lg">
+                              {isOwnPost && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeletePost(post.id)}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  {t('posts.delete')}
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => savedPosts.has(post.id) ? handleUnsavePost(post.id) : handleSavePost(post.id)}
+                              >
+                                {savedPosts.has(post.id) ? (
+                                  <>
+                                    <BookmarkCheck className="h-4 w-4 mr-2" />
+                                    {t('posts.unsave')}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Bookmark className="h-4 w-4 mr-2" />
+                                    {t('posts.save')}
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(post.created_at).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+<<<<<<< HEAD
+=======
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className={`font-semibold text-lg flex-1 ${post.title_alignment === 'center' ? 'text-center' : post.title_alignment === 'right' ? 'text-right' : 'text-left'}`}>{post.title}</h3>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-start mt-2">
+                  <p className="flex-1 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
+                </div>
+                
+=======
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className={`font-semibold text-lg flex-1 ${post.title_alignment === 'center' ? 'text-center' : post.title_alignment === 'right' ? 'text-right' : 'text-left'}`}>{post.title}</h3>
+                      {isOwnPost && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 bg-white border border-gray-200 hover:bg-gray-50">
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg">
+                            <DropdownMenuItem 
+                              onClick={() => handleTitleAlignmentChange(post.id, 'left')}
+                              className="hover:bg-gray-50 focus:bg-gray-50"
+                            >
+                              <AlignLeft className="h-4 w-4 mr-2" />
+                              {t('create_post.left')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleTitleAlignmentChange(post.id, 'center')}
+                              className="hover:bg-gray-50 focus:bg-gray-50"
+                            >
+                              <AlignCenter className="h-4 w-4 mr-2" />
+                              {t('create_post.center')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleTitleAlignmentChange(post.id, 'right')}
+                              className="hover:bg-gray-50 focus:bg-gray-50"
+                            >
+                              <AlignRight className="h-4 w-4 mr-2" />
+                              {t('create_post.right')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      {canAddFriend && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleAddFriend(post.user_id)}
+                          className="h-6 w-6 p-0 hover:bg-primary/10"
+                          title="Add friend"
+                        >
+                          <UserPlus className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {me && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40 bg-white border border-gray-200 shadow-lg">
+                        {isOwnPost && (
+                          <DropdownMenuItem
+                            onClick={() => handleDeletePost(post.id)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {t('posts.delete')}
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => savedPosts.has(post.id) ? handleUnsavePost(post.id) : handleSavePost(post.id)}
+                        >
+                          {savedPosts.has(post.id) ? (
+                            <>
+                              <BookmarkCheck className="h-4 w-4 mr-2" />
+                              {t('posts.unsave')}
+                            </>
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
                           ) : (
                             <User className="h-5 w-5" />
                           )}
@@ -662,6 +959,7 @@ export default function Posts() {
                       </div>
                     </div>
                   )}
+<<<<<<< HEAD
 
                   {/* Expanded Comments Section */}
                   {me && expandedComments.has(post.id) && (
@@ -771,6 +1069,24 @@ export default function Posts() {
                     </div>
                   )}
                 </article>
+=======
+                </div>
+                <p className="mt-3 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: post.content }}></p>
+<<<<<<< HEAD
+                
+=======
+                <p className="text-xs text-muted-foreground mt-3">
+                  {new Date(post.created_at).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+>>>>>>> d883f5e3692e24fcd7e92efaea72219ca938424f
+>>>>>>> e0fbc1d5f0f9aca9a16a08f28f51385ddb425180
+              </div>
+>>>>>>> 847b20290ac654e0dd9fe8d9811ddeb0089668c2
             );
           })
         )}
