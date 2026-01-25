@@ -116,22 +116,10 @@ export type InsertBugReport = z.infer<typeof insertBugReportSchema>;
 export interface BugReport extends InsertBugReport {
   id: number;
   user_id: number;
+  admin_message?: string;
   status: "open" | "in_progress" | "resolved" | "closed";
   created_at: Date;
   updated_at: Date;
-}
-
-export const insertBugResponseSchema = z.object({
-  message: z.string().min(1, "Message is required"),
-});
-
-export type InsertBugResponse = z.infer<typeof insertBugResponseSchema>;
-
-export interface BugResponse extends InsertBugResponse {
-  id: number;
-  bug_report_id: number;
-  user_id: number;
-  created_at: Date;
 }
 
 export const insertPostReactionSchema = z.object({
@@ -145,4 +133,18 @@ export interface PostReaction extends InsertPostReaction {
   id: number;
   user_id: number;
   created_at: Date;
+}
+
+export const insertCommentSchema = z.object({
+  post_id: z.number(),
+  content: z.string().min(1, "Content is required"),
+});
+
+export type InsertComment = z.infer<typeof insertCommentSchema>;
+
+export interface Comment extends InsertComment {
+  id: number;
+  user_id: number;
+  created_at: Date;
+  updated_at: Date;
 }

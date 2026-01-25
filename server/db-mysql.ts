@@ -385,6 +385,22 @@ export async function initDatabase() {
 
     console.log("Post reactions table created");
 
+    // Create comments table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        post_id INT NOT NULL,
+        content LONGTEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+      )
+    `);
+
+    console.log("Comments table created");
+
     // Create translations table
     await conn.execute(`
       CREATE TABLE IF NOT EXISTS translations (
@@ -400,6 +416,93 @@ export async function initDatabase() {
 
     console.log("Translations table created");
 
+    // Create bug_reports table
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS bug_reports (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type ENUM('bug', 'feature') NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        admin_message TEXT,
+        status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_status (status),
+        INDEX idx_created_at (created_at)
+      )
+    `);
+
+    console.log("Bug reports table created");
+
+    // Check if admin_message column exists, add it if not
+    try {
+      await conn.execute(`ALTER TABLE bug_reports ADD COLUMN admin_message TEXT`);
+      console.log("Added admin_message column to bug_reports table");
+    } catch (err: any) {
+      // Column might already exist, which is fine
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        console.log("admin_message column already exists");
+      }
+    }
+
+    // Check if title column exists, add it if not
+    try {
+      await conn.execute(`ALTER TABLE bug_reports ADD COLUMN title VARCHAR(255) NOT NULL`);
+      console.log("Added title column to bug_reports table");
+    } catch (err: any) {
+      // Column might already exist, which is fine
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        console.log("title column already exists");
+      }
+    }
+
+    // Check if description column exists, add it if not
+    try {
+      await conn.execute(`ALTER TABLE bug_reports ADD COLUMN description TEXT NOT NULL`);
+      console.log("Added description column to bug_reports table");
+    } catch (err: any) {
+      // Column might already exist, which is fine
+      if (err.code !== "ER_DUP_FIELDNAME") {
+        console.log("description column already exists");
+      }
+    }
+
+    // Check if type column exists, add it if not
+    try {
+      await conn.execute(`ALTER TABLE bug_reports ADD COLUMN type ENUM('bug', 'feature') NOT NULL DEFAULT 'bug'`);
+      console.log("Added type column to bug_reports table");
+    } catch (err: any) {
+      // Column might already exist, try to modify it
+      if (err.code === "ER_DUP_FIELDNAME") {
+        console.log("Type column already exists, modifying it");
+        try {
+          await conn.execute(`ALTER TABLE bug_reports MODIFY COLUMN type ENUM('bug', 'feature') NOT NULL DEFAULT 'bug'`);
+          console.log("Modified type column in bug_reports table");
+        } catch (modifyErr: any) {
+          console.log("Error modifying type column:", modifyErr.message);
+        }
+      } else {
+        console.log("Error adding type column:", err.message);
+      }
+    }
+
+    // Update any bug reports with null type based on title
+    try {
+      await conn.execute(`
+        UPDATE bug_reports 
+        SET type = CASE 
+          WHEN title LIKE '%feature%' OR title LIKE '%request%' THEN 'feature'
+          ELSE 'bug'
+        END
+        WHERE type IS NULL
+      `);
+      console.log("Updated null types in bug_reports table based on title");
+    } catch (err: any) {
+      console.log("Error updating null types:", err.message);
+    }
+
     // Seed default translations
     const defaultTranslations = [
       // English translations
@@ -413,6 +516,7 @@ export async function initDatabase() {
       { key: 'nav.profile', lang: 'en', text: 'Profile' },
       { key: 'nav.admin', lang: 'en', text: 'Admin' },
       { key: 'nav.logout', lang: 'en', text: 'Logout' },
+      { key: 'bugMessage', lang: 'en', text: 'Bug Messages' },
       { key: 'profile.my_profile', lang: 'en', text: 'My Profile' },
       { key: 'profile.edit_profile', lang: 'en', text: 'Edit Profile' },
       { key: 'profile.save_changes', lang: 'en', text: 'Save Changes' },
@@ -461,14 +565,21 @@ export async function initDatabase() {
       { key: 'posts.logged_in', lang: 'en', text: 'Logged In' },
       { key: 'posts.share_thoughts', lang: 'en', text: 'Share Your Thoughts' },
       { key: 'posts.create_post', lang: 'en', text: 'Create Post' },
+      { key: 'posts.create_post_description', lang: 'en', text: 'Click the button to write a new post on a dedicated page.' },
       { key: 'posts.all_posts', lang: 'en', text: 'All Posts' },
       { key: 'posts.no_posts', lang: 'en', text: 'No posts yet. Be the first to share!' },
+      { key: 'posts.get_started', lang: 'en', text: 'Get started by creating your first post.' },
       { key: 'posts.by', lang: 'en', text: 'By' },
       { key: 'posts.linked_up', lang: 'en', text: 'Linked up' },
       { key: 'posts.your_post', lang: 'en', text: 'Your Post' },
       { key: 'posts.delete', lang: 'en', text: 'Delete' },
       { key: 'posts.save', lang: 'en', text: 'Save' },
       { key: 'posts.unsave', lang: 'en', text: 'Unsave' },
+      { key: 'add_friend', lang: 'en', text: 'Add Friend' },
+      { key: 'savePost', lang: 'en', text: 'Save Post' },
+      { key: 'unsavePost', lang: 'en', text: 'Unsave Post' },
+      { key: 'sharePost', lang: 'en', text: 'Share Post' },
+      { key: 'login', lang: 'en', text: 'Login' },
       { key: 'create_post.create_post', lang: 'en', text: 'Create Post' },
       { key: 'create_post.title', lang: 'en', text: 'Title' },
       { key: 'create_post.content', lang: 'en', text: 'Content' },
@@ -500,6 +611,8 @@ export async function initDatabase() {
       { key: 'friends.search_link_ups', lang: 'en', text: 'Search link ups...' },
       { key: 'friends.no_link_ups_found', lang: 'en', text: 'No link ups found matching' },
       { key: 'friends.no_link_ups_yet', lang: 'en', text: 'No link ups yet. Send some link up requests!' },
+      { key: 'friends.noConnectionsYet', lang: 'en', text: 'No Connections Yet' },
+      { key: 'friends.startConnecting', lang: 'en', text: 'Start Connecting' },
       { key: 'friends.view_profile', lang: 'en', text: 'View Profile' },
       { key: 'friends.remove', lang: 'en', text: 'Remove' },
       { key: 'friends.showing', lang: 'en', text: 'Showing' },
@@ -542,6 +655,15 @@ export async function initDatabase() {
       { key: 'notes.notes', lang: 'en', text: 'notes' },
       { key: 'notes.download_zip', lang: 'en', text: 'Download as ZIP' },
       { key: 'notes.download_pdf', lang: 'en', text: 'Download as PDF' },
+      { key: 'trash', lang: 'en', text: 'Trash' },
+      { key: 'itemsInTrashKeptFor30Days', lang: 'en', text: 'Items in trash are kept for 30 days' },
+      { key: 'selected', lang: 'en', text: 'selected' },
+      { key: 'clear', lang: 'en', text: 'Clear' },
+      { key: 'restore', lang: 'en', text: 'Restore' },
+      { key: 'permanentDelete', lang: 'en', text: 'Permanent Delete' },
+      { key: 'trashIsEmpty', lang: 'en', text: 'Trash is Empty' },
+      { key: 'deletedItemsWillAppearHere', lang: 'en', text: 'Deleted items will appear here. Items are automatically removed after 30 days.' },
+      { key: 'itemsKeptFor30Days', lang: 'en', text: 'Items are kept for 30 days before permanent deletion.' },
       { key: 'notes.download_word', lang: 'en', text: 'Download as Word' },
       { key: 'notes.move_to_folder', lang: 'en', text: 'Move to folder' },
       { key: 'notes.info', lang: 'en', text: 'Info' },
@@ -577,6 +699,16 @@ export async function initDatabase() {
       { key: 'admin.admin_dashboard', lang: 'en', text: 'Admin Dashboard' },
       { key: 'admin.welcome', lang: 'en', text: 'Welcome' },
       { key: 'admin.sign_out', lang: 'en', text: 'Sign Out' },
+      { key: 'admin.admin', lang: 'en', text: 'Admin' },
+      { key: 'admin.adminResponse', lang: 'en', text: 'Admin Response' },
+      { key: 'admin.updateResponse', lang: 'en', text: 'Update Response' },
+      { key: 'admin.noResponseYet', lang: 'en', text: 'No response yet' },
+      { key: 'admin.addResponse', lang: 'en', text: 'Add Response' },
+      { key: 'admin.sendResponse', lang: 'en', text: 'Send Response' },
+      { key: 'admin.updateResponse', lang: 'en', text: 'Update Response' },
+      { key: 'admin.response', lang: 'en', text: 'Response' },
+      { key: 'admin.failedToAddResponse', lang: 'en', text: 'Failed to add response' },
+      { key: 'admin.typeYourResponse', lang: 'en', text: 'Type your response here...' },
       { key: 'common.loading', lang: 'en', text: 'Loading...' },
       { key: 'common.save', lang: 'en', text: 'Save' },
       { key: 'common.cancel', lang: 'en', text: 'Cancel' },
@@ -605,6 +737,7 @@ export async function initDatabase() {
       { key: 'nav.profile', lang: 'bn', text: 'প্রোফাইল' },
       { key: 'nav.admin', lang: 'bn', text: 'অ্যাডমিন' },
       { key: 'nav.logout', lang: 'bn', text: 'লগ আউট' },
+      { key: 'bugMessage', lang: 'bn', text: 'বাগ মেসেজ' },
       { key: 'profile.my_profile', lang: 'bn', text: 'আমার প্রোফাইল' },
       { key: 'profile.edit_profile', lang: 'bn', text: 'প্রোফাইল সম্পাদনা' },
       { key: 'profile.save_changes', lang: 'bn', text: 'পরিবর্তন সংরক্ষণ' },
@@ -653,14 +786,21 @@ export async function initDatabase() {
       { key: 'posts.logged_in', lang: 'bn', text: 'লগ ইন করা' },
       { key: 'posts.share_thoughts', lang: 'bn', text: 'আপনার চিন্তা শেয়ার করুন' },
       { key: 'posts.create_post', lang: 'bn', text: 'পোস্ট তৈরি করুন' },
+      { key: 'posts.create_post_description', lang: 'bn', text: 'একটি ডেডিকেটেড পেজে একটি নতুন পোস্ট লিখতে বাটনে ক্লিক করুন।' },
       { key: 'posts.all_posts', lang: 'bn', text: 'সব পোস্ট' },
       { key: 'posts.no_posts', lang: 'bn', text: 'এখনও কোন পোস্ট নেই। প্রথম শেয়ার করুন!' },
+      { key: 'posts.get_started', lang: 'bn', text: 'আপনার প্রথম পোস্ট তৈরি করে শুরু করুন।' },
       { key: 'posts.by', lang: 'bn', text: 'দ্বারা' },
       { key: 'posts.linked_up', lang: 'bn', text: 'লিঙ্কড আপ' },
       { key: 'posts.your_post', lang: 'bn', text: 'আপনার পোস্ট' },
       { key: 'posts.delete', lang: 'bn', text: 'মুছুন' },
       { key: 'posts.save', lang: 'bn', text: 'সংরক্ষণ করুন' },
       { key: 'posts.unsave', lang: 'bn', text: 'সংরক্ষণ বাতিল করুন' },
+      { key: 'add_friend', lang: 'bn', text: 'বন্ধু যোগ করুন' },
+      { key: 'savePost', lang: 'bn', text: 'পোস্ট সংরক্ষণ করুন' },
+      { key: 'unsavePost', lang: 'bn', text: 'পোস্ট সংরক্ষণ বাতিল করুন' },
+      { key: 'sharePost', lang: 'bn', text: 'পোস্ট শেয়ার করুন' },
+      { key: 'login', lang: 'bn', text: 'লগ ইন' },
       { key: 'create_post.create_post', lang: 'bn', text: 'পোস্ট তৈরি করুন' },
       { key: 'create_post.title', lang: 'bn', text: 'শিরোনাম' },
       { key: 'create_post.content', lang: 'bn', text: 'বিষয়বস্তু' },
@@ -691,6 +831,9 @@ export async function initDatabase() {
       { key: 'friends.your_link_ups', lang: 'bn', text: 'আপনার লিঙ্ক আপ' },
       { key: 'friends.search_link_ups', lang: 'bn', text: 'লিঙ্ক আপ খুঁজুন...' },
       { key: 'friends.no_link_ups_found', lang: 'bn', text: 'কোন লিঙ্ক আপ পাওয়া যায়নি' },
+      { key: 'friends.no_link_ups_yet', lang: 'bn', text: 'এখনও কোন লিঙ্ক আপ নেই। কিছু লিঙ্ক আপ অনুরোধ পাঠান!' },
+      { key: 'friends.noConnectionsYet', lang: 'bn', text: 'এখনও কোন সংযোগ নেই' },
+      { key: 'friends.startConnecting', lang: 'bn', text: 'সংযোগ শুরু করুন' },
       { key: 'friends.view_profile', lang: 'bn', text: 'প্রোফাইল দেখুন' },
       { key: 'friends.remove', lang: 'bn', text: 'সরান' },
       { key: 'friends.showing', lang: 'bn', text: 'দেখাচ্ছে' },
@@ -739,9 +882,27 @@ export async function initDatabase() {
       { key: 'notes.creating', lang: 'bn', text: 'তৈরি হচ্ছে...' },
       { key: 'notes.create_note', lang: 'bn', text: 'নোট তৈরি করুন' },
       { key: 'notes.export', lang: 'bn', text: 'এক্সপোর্ট' },
+      { key: 'trash', lang: 'bn', text: 'ট্র্যাশ' },
+      { key: 'itemsInTrashKeptFor30Days', lang: 'bn', text: 'ট্র্যাশের আইটেমগুলি 30 দিন রাখা হয়' },
+      { key: 'selected', lang: 'bn', text: 'নির্বাচিত' },
+      { key: 'clear', lang: 'bn', text: 'পরিষ্কার' },
+      { key: 'restore', lang: 'bn', text: 'পুনরুদ্ধার' },
+      { key: 'permanentDelete', lang: 'bn', text: 'স্থায়ীভাবে মুছুন' },
+      { key: 'trashIsEmpty', lang: 'bn', text: 'ট্র্যাশ খালি' },
+      { key: 'deletedItemsWillAppearHere', lang: 'bn', text: 'মুছে ফেলা আইটেমগুলি এখানে প্রদর্শিত হবে। 30 দিন পর আইটেমগুলি স্বয়ংক্রিয়ভাবে সরানো হয়।' },
+      { key: 'itemsKeptFor30Days', lang: 'bn', text: 'স্থায়ী মুছে ফেলার আগে আইটেমগুলি 30 দিন রাখা হয়।' },
       { key: 'admin.admin_dashboard', lang: 'bn', text: 'অ্যাডমিন ড্যাশবোর্ড' },
       { key: 'admin.welcome', lang: 'bn', text: 'স্বাগতম' },
       { key: 'admin.sign_out', lang: 'bn', text: 'সাইন আউট' },
+      { key: 'admin.admin', lang: 'bn', text: 'অ্যাডমিন' },
+      { key: 'admin.adminResponse', lang: 'bn', text: 'অ্যাডমিনের উত্তর' },
+      { key: 'admin.updateResponse', lang: 'bn', text: 'উত্তর আপডেট করুন' },
+      { key: 'admin.noResponseYet', lang: 'bn', text: 'এখনও কোন উত্তর নেই' },
+      { key: 'admin.addResponse', lang: 'bn', text: 'উত্তর যোগ করুন' },
+      { key: 'admin.sendResponse', lang: 'bn', text: 'উত্তর পাঠান' },
+      { key: 'admin.response', lang: 'bn', text: 'উত্তর' },
+      { key: 'admin.failedToAddResponse', lang: 'bn', text: 'উত্তর যোগ করতে ব্যর্থ হয়েছে' },
+      { key: 'admin.typeYourResponse', lang: 'bn', text: 'আপনার উত্তর এখানে টাইপ করুন...' },
       { key: 'common.loading', lang: 'bn', text: 'লোড হচ্ছে...' },
       { key: 'common.save', lang: 'bn', text: 'সংরক্ষণ' },
       { key: 'common.cancel', lang: 'bn', text: 'বাতিল' },

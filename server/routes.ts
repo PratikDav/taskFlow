@@ -300,6 +300,8 @@ export async function registerRoutes(
         id: user.id,
         name: user.name,
         email: user.email,
+        designation: user.designation,
+        avatar: user.avatar,
         gmailAddress: user.gmail_address,
         githubLink: user.github_link,
         linkedinLink: user.linkedin_link,
@@ -664,12 +666,12 @@ export async function registerRoutes(
       // @ts-ignore
       const userId = req.session?.user?.id || DEFAULT_USER_ID;
 
-      const { title, content, codeBlockTheme, privacy } = req.body;
+      const { title, content, codeBlockTheme, privacy, titleAlignment } = req.body;
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
-      const post = await storage.createPost(userId, title, content, codeBlockTheme || 'dark', privacy || 'public');
+      const post = await storage.createPost(userId, title, content, codeBlockTheme || 'dark', privacy || 'public', titleAlignment || 'left');
 
       // Create notifications for friends if post is public or friends-only
       if (privacy === 'public' || privacy === 'friends') {
@@ -841,6 +843,89 @@ export async function registerRoutes(
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Failed to fetch user reaction' });
+    }
+  });
+
+  // Comments API
+  app.get('/api/posts/:postId/comments', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      const postId = Number(req.params.postId);
+
+      const comments = await storage.getComments(postId, userId);
+      res.json(comments);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to fetch comments' });
+    }
+  });
+
+  app.post('/api/posts/:postId/comments', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const postId = Number(req.params.postId);
+      const { content } = req.body;
+
+      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        return res.status(400).json({ message: 'Comment content is required' });
+      }
+
+      const comment = await storage.createComment(userId, postId, content.trim());
+
+      // Create notification for post author if it's not their own comment
+      try {
+        const post = await storage.getPostById(postId);
+        if (post && post.user_id !== userId) {
+          const commenter = await storage.getUserById(userId);
+          if (commenter) {
+            await NotificationService.createCommentNotification(
+              post.user_id,
+              commenter.name,
+              post.title
+            );
+          }
+        }
+      } catch (notificationErr) {
+        console.error('Failed to create comment notification:', notificationErr);
+        // Don't fail the comment creation if notifications fail
+      }
+
+      res.status(201).json(comment);
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error && err.message === 'Cannot comment on this post') {
+        return res.status(403).json({ message: err.message });
+      }
+      res.status(500).json({ message: 'Failed to create comment' });
+    }
+  });
+
+  app.delete('/api/posts/:postId/comments/:commentId', async (req, res) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const commentId = Number(req.params.commentId);
+      await storage.deleteComment(commentId, userId);
+      res.status(204).send();
+    } catch (err) {
+      console.error(err);
+      if (err instanceof Error && (err.message === 'Comment not found' || err.message === 'Cannot delete this comment')) {
+        return res.status(403).json({ message: err.message });
+      }
+      res.status(500).json({ message: 'Failed to delete comment' });
     }
   });
 
@@ -1842,6 +1927,11 @@ export async function registerRoutes(
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
       const { type, title, description } = req.body;
       const bugReport = await storage.createBugReport({
         user_id: userId,
@@ -1850,13 +1940,26 @@ export async function registerRoutes(
         description
       });
 
-      // Send notification to admin
+      // Send notification to admins (but not to the submitting admin if they are an admin)
       const admins = await storage.getUsersByRole('admin');
-      await NotificationService.createSystemNotification(
-        admins.map(a => a.id),
-        "New Bug Report/Feature Request",
-        `${req.session.user.name} submitted a ${type}: ${title}`
-      );
+      const adminIdsToNotify = user.role === 'admin' 
+        ? admins.filter(a => a.id !== userId).map(a => a.id)
+        : admins.map(a => a.id);
+
+      if (adminIdsToNotify.length > 0) {
+        const notificationTitle = user.role === 'admin' 
+          ? "Admin Bug Report/Feature Request" 
+          : "New Bug Report/Feature Request";
+        const notificationMessage = user.role === 'admin'
+          ? `Admin ${user.name} submitted a ${type}: ${title}`
+          : `${user.name} submitted a ${type}: ${title}`;
+
+        await NotificationService.createSystemNotification(
+          adminIdsToNotify,
+          notificationTitle,
+          notificationMessage
+        );
+      }
 
       res.json(bugReport);
     } catch (err) {
@@ -1903,8 +2006,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Bug report not found' });
       }
 
-      const responses = await storage.getBugResponses(bugReportId);
-      res.json({ ...bugReport, responses });
+      res.json(bugReport);
     } catch (err) {
       console.error('Failed to fetch bug report:', err);
       res.status(500).json({ message: 'Failed to fetch bug report' });
@@ -1945,7 +2047,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post('/api/admin/bug-reports/:id/responses', async (req, res) => {
+  app.post('/api/admin/bug-reports/:id/response', async (req, res) => {
     try {
       const userId = req.session?.user?.id;
       if (!userId) {
@@ -1960,11 +2062,7 @@ export async function registerRoutes(
       const bugReportId = parseInt(req.params.id);
       const { message } = req.body;
 
-      const response = await storage.createBugResponse({
-        bug_report_id: bugReportId,
-        user_id: userId,
-        message
-      });
+      await storage.updateBugReportAdminMessage(bugReportId, message);
 
       // Send notification to the user who reported
       const bugReport = await storage.getBugReportById(bugReportId);
@@ -1976,10 +2074,95 @@ export async function registerRoutes(
         );
       }
 
-      res.json(response);
+      res.json({ success: true, message: 'Response added successfully' });
     } catch (err) {
-      console.error('Failed to create bug response:', err);
-      res.status(500).json({ message: 'Failed to create response' });
+      console.error('Failed to update bug report:', err);
+      res.status(500).json({ message: 'Failed to add response' });
+    }
+  });
+
+  app.delete('/api/admin/bug-reports/:id', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const bugReportId = parseInt(req.params.id);
+      await storage.deleteBugReport(bugReportId);
+
+      res.json({ success: true, message: 'Bug report deleted successfully' });
+    } catch (err) {
+      console.error('Failed to delete bug report:', err);
+      res.status(500).json({ message: 'Failed to delete bug report' });
+    }
+  });
+
+  // Save post API
+  app.post('/api/posts/:id/save', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const postId = parseInt(req.params.id);
+      
+      // Check if post exists
+      const post = await storage.getPostById(postId);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+
+      // Check if already saved
+      const isSaved = await storage.isPostSaved(userId, postId);
+      if (isSaved) {
+        return res.status(400).json({ message: 'Post already saved' });
+      }
+
+      const savedPost = await storage.savePost(userId, postId);
+      res.status(201).json(savedPost);
+    } catch (err) {
+      console.error('Failed to save post:', err);
+      res.status(500).json({ message: 'Failed to save post' });
+    }
+  });
+
+  // Unsave post API
+  app.delete('/api/posts/:id/save', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const postId = parseInt(req.params.id);
+      await storage.unsavePost(userId, postId);
+      res.status(204).send();
+    } catch (err) {
+      console.error('Failed to unsave post:', err);
+      res.status(500).json({ message: 'Failed to unsave post' });
+    }
+  });
+
+  // Get saved posts API
+  app.get('/api/saved-posts', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const savedPosts = await storage.getSavedPosts(userId);
+      res.json(savedPosts);
+    } catch (err) {
+      console.error('Failed to get saved posts:', err);
+      res.status(500).json({ message: 'Failed to get saved posts' });
     }
   });
 

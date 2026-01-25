@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { UserPlus, MoreHorizontal, Trash2, Bookmark, BookmarkCheck, User, Trophy, Medal, Award, MessageCircle, Plus } from "lucide-react";
+import { UserPlus, Trash2, User, Trophy, Medal, Award, MessageCircle, Plus, MoreHorizontal, Bookmark, Send } from "lucide-react";
 import { useFriends } from "@/hooks/use-friends";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
@@ -16,9 +16,12 @@ export default function Posts() {
   const [loading, setLoading] = useState(false);
   const [newPost, setNewPost] = useState({ title: "", content: "" });
   const { friends, sendFriendRequest } = useFriends();
-  const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
   const [postReactions, setPostReactions] = useState<Record<number, { gold: number; silver: number; bronze: number }>>({});
   const [userReactions, setUserReactions] = useState<Record<number, string | null>>({});
+  const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
+  const [comments, setComments] = useState<Record<number, any[]>>({});
+  const [newComments, setNewComments] = useState<Record<number, string>>({});
+  const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
 
   // Check if user is logged in
   const isLoggedIn = !!me;
@@ -34,19 +37,8 @@ export default function Posts() {
         const postsData = await postsRes.json();
         setPosts(postsData);
 
-        // Load saved posts status and reactions if logged in
+        // Load reactions if logged in
         if (meData) {
-          const savedStatuses = await Promise.all(
-            postsData.map((post: any) =>
-              fetch(`/api/saved-posts/check/${post.id}`, { credentials: "include" })
-                .then(res => res.json())
-                .then(data => ({ postId: post.id, saved: data.saved }))
-                .catch(() => ({ postId: post.id, saved: false }))
-            )
-          );
-          const savedSet = new Set(savedStatuses.filter(s => s.saved).map(s => s.postId));
-          setSavedPosts(savedSet);
-
           // Load reaction counts and user reactions
           const reactionPromises = postsData.map(async (post: any) => {
             const [countsRes, userReactionRes] = await Promise.all([
@@ -73,6 +65,31 @@ export default function Posts() {
 
           setPostReactions(reactionsMap);
           setUserReactions(userReactionsMap);
+
+          // Load saved posts
+          const savedPostsRes = await fetch('/api/saved-posts', { credentials: 'include' });
+          if (savedPostsRes.ok) {
+            const savedPostsData = await savedPostsRes.json();
+            const savedPostIds = new Set<number>(savedPostsData.map((post: any) => post.id));
+            setSavedPosts(savedPostIds);
+          }
+
+          // Load comments for each post
+          const commentPromises = postsData.map(async (post: any) => {
+            const commentsRes = await fetch(`/api/posts/${post.id}/comments`);
+            if (commentsRes.ok) {
+              const commentsData = await commentsRes.json();
+              return { postId: post.id, comments: commentsData };
+            }
+            return { postId: post.id, comments: [] };
+          });
+
+          const commentData = await Promise.all(commentPromises);
+          const commentsMap: Record<number, any[]> = {};
+          commentData.forEach(({ postId, comments: postComments }) => {
+            commentsMap[postId] = postComments;
+          });
+          setComments(commentsMap);
         }
       } catch (err) {
         console.error(err);
@@ -120,38 +137,61 @@ export default function Posts() {
   };
 
   const handleSavePost = async (postId: number) => {
-    try {
-      const res = await fetch("/api/saved-posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ post_id: postId }),
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error("Failed to save post");
+    if (!me) return;
 
-      setSavedPosts(prev => new Set(Array.from(prev).concat(postId)));
+    try {
+      if (savedPosts.has(postId)) {
+        // Unsave the post
+        const res = await fetch(`/api/posts/${postId}/save`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        
+        if (res.ok) {
+          setSavedPosts(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(postId);
+            return newSet;
+          });
+          alert("Post unsaved successfully!");
+        } else {
+          throw new Error("Failed to unsave post");
+        }
+      } else {
+        // Save the post
+        const res = await fetch(`/api/posts/${postId}/save`, {
+          method: "POST",
+          credentials: "include",
+        });
+        
+        if (res.ok) {
+          setSavedPosts(prev => new Set([...Array.from(prev), postId]));
+          alert("Post saved successfully!");
+        } else {
+          const error = await res.json();
+          if (error.message === 'Post already saved') {
+            setSavedPosts(prev => new Set([...Array.from(prev), postId]));
+            alert("Post was already saved!");
+          } else {
+            throw new Error("Failed to save post");
+          }
+        }
+      }
     } catch (err) {
       console.error(err);
-      alert("Failed to save post");
+      alert("Failed to update saved status");
     }
   };
 
-  const handleUnsavePost = async (postId: number) => {
+  const handleSharePost = async (postId: number) => {
     try {
-      const res = await fetch(`/api/saved-posts/${postId}`, {
-        method: "DELETE",
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error("Failed to unsave post");
-
-      setSavedPosts(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(postId);
-        return newSet;
-      });
+      // Copy post URL to clipboard
+      const postUrl = `${window.location.origin}/posts/${postId}`;
+      await navigator.clipboard.writeText(postUrl);
+      alert("Post link copied to clipboard!");
     } catch (err) {
       console.error(err);
-      alert("Failed to unsave post");
+      alert("Failed to share post");
     }
   };
 
@@ -204,6 +244,54 @@ export default function Posts() {
     } catch (err) {
       console.error(err);
       alert("Failed to update reaction");
+    }
+  };
+
+  const handleCreateComment = async (postId: number, e: React.FormEvent) => {
+    e.preventDefault();
+    const content = newComments[postId]?.trim();
+    if (!content || !me) return;
+
+    try {
+      const res = await fetch(`/api/posts/${postId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+        credentials: "include"
+      });
+
+      if (!res.ok) throw new Error("Failed to create comment");
+
+      const newComment = await res.json();
+      setComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), newComment]
+      }));
+      setNewComments(prev => ({ ...prev, [postId]: "" }));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create comment");
+    }
+  };
+
+  const handleDeleteComment = async (postId: number, commentId: number) => {
+    if (!confirm("Delete this comment?")) return;
+
+    try {
+      const res = await fetch(`/api/posts/${postId}/comments/${commentId}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+
+      if (!res.ok) throw new Error("Failed to delete comment");
+
+      setComments(prev => ({
+        ...prev,
+        [postId]: prev[postId].filter(comment => comment.id !== commentId)
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete comment");
     }
   };
 
@@ -326,7 +414,7 @@ export default function Posts() {
                   <div className="p-6 pb-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-md overflow-hidden flex-shrink-0">
+                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-md overflow-hidden flex-shrink-0 cursor-pointer hover:scale-110 transition-transform duration-200" onClick={() => setLocation(`/user/${post.user_id}`)}>
                           {post.userAvatar ? (
                             <img
                               src={post.userAvatar}
@@ -347,7 +435,7 @@ export default function Posts() {
                         <div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => setLocation(`/profile/${post.user_id}`)}
+                              onClick={() => setLocation(`/user/${post.user_id}`)}
                               className="font-semibold text-slate-800 hover:text-blue-600 transition-colors text-sm"
                             >
                               {capitalizeFirstLetter(post.userName)}
@@ -385,6 +473,20 @@ export default function Posts() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-lg rounded-xl">
+                                  <DropdownMenuItem
+                                    onClick={() => handleSavePost(post.id)}
+                                    className="rounded-lg mx-1"
+                                  >
+                                    <Bookmark className={`h-4 w-4 mr-2 ${savedPosts.has(post.id) ? 'fill-current' : ''}`} />
+                                    {savedPosts.has(post.id) ? t('unsavePost') || 'Unsave Post' : t('savePost')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleSharePost(post.id)}
+                                    className="rounded-lg mx-1"
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    {t('sharePost')}
+                                  </DropdownMenuItem>
                                   {isOwnPost && (
                                     <DropdownMenuItem
                                       onClick={() => handleDeletePost(post.id)}
@@ -394,22 +496,6 @@ export default function Posts() {
                                       {t('posts.delete')}
                                     </DropdownMenuItem>
                                   )}
-                                  <DropdownMenuItem
-                                    onClick={() => savedPosts.has(post.id) ? handleUnsavePost(post.id) : handleSavePost(post.id)}
-                                    className="rounded-lg mx-1"
-                                  >
-                                    {savedPosts.has(post.id) ? (
-                                      <>
-                                        <BookmarkCheck className="h-4 w-4 mr-2" />
-                                        {t('posts.unsave')}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Bookmark className="h-4 w-4 mr-2" />
-                                        {t('posts.save')}
-                                      </>
-                                    )}
-                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             )}
@@ -430,7 +516,7 @@ export default function Posts() {
 
                   {/* Post Content */}
                   <div className="px-6 pb-4">
-                    <h3 className="font-bold text-xl text-slate-800 mb-3 leading-tight">{post.title}</h3>
+                    <h3 className={`font-bold text-xl text-slate-800 mb-3 leading-tight ${post.title_alignment === 'center' ? 'text-center' : post.title_alignment === 'right' ? 'text-right' : 'text-left'}`}>{post.title}</h3>
                     <div
                       className="text-slate-700 leading-relaxed prose prose-sm max-w-none"
                       dangerouslySetInnerHTML={{ __html: post.content }}
@@ -441,12 +527,58 @@ export default function Posts() {
                   {me && (
                     <div className="px-6 pb-6">
                       <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                        {/* Trophy Reactions */}
+                        {/* Comments Section - Left Side */}
                         <div className="flex items-center gap-3">
-                          {/* Gold Trophy - Position 1 */}
+                          <button
+                            onClick={() => {
+                              setExpandedComments(prev => {
+                                const newSet = new Set(prev);
+                                if (newSet.has(post.id)) {
+                                  newSet.delete(post.id);
+                                } else {
+                                  newSet.add(post.id);
+                                }
+                                return newSet;
+                              });
+                              // Focus comment input when expanding
+                              if (!expandedComments.has(post.id)) {
+                                setTimeout(() => {
+                                  const commentInput = document.querySelector(`#comment-input-${post.id}`) as HTMLInputElement;
+                                  if (commentInput) commentInput.focus();
+                                }, 100);
+                              }
+                            }}
+                            className={`group flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 hover:scale-105 ${
+                              expandedComments.has(post.id) ? 'bg-blue-50 shadow-md' : 'hover:bg-blue-50'
+                            }`}
+                            title={expandedComments.has(post.id) ? "Hide Echoes" : "Show Echoes"}
+                          >
+                            <div className="relative">
+                              <MessageCircle className={`h-5 w-5 transition-colors duration-300 ${
+                                expandedComments.has(post.id) ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-500'
+                              }`} />
+                              {comments[post.id]?.length > 0 && (
+                                <span className={`absolute -top-1 -right-1 text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center transition-colors duration-300 ${
+                                  expandedComments.has(post.id) ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+                                }`}>
+                                  {comments[post.id].length}
+                                </span>
+                              )}
+                            </div>
+                            <span className={`text-sm font-medium transition-colors duration-300 ${
+                              expandedComments.has(post.id) ? 'text-blue-600' : 'text-slate-600 group-hover:text-blue-600'
+                            }`}>
+                              Echo
+                            </span>
+                          </button>
+                        </div>
+
+                        {/* Trophy Reactions - Right Side */}
+                        <div className="flex items-center gap-2">
+                          {/* Gold Trophy */}
                           <button
                             onClick={() => handleReaction(post.id, "gold")}
-                            className={`group relative p-2 rounded-xl transition-all duration-300 hover:scale-110 ${
+                            className={`group relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 ${
                               userReactions[post.id] === "gold"
                                 ? "bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg shadow-yellow-500/30"
                                 : "hover:bg-yellow-50"
@@ -471,10 +603,10 @@ export default function Posts() {
                             )}
                           </button>
 
-                          {/* Bronze Trophy - Position 2 */}
+                          {/* Bronze Trophy */}
                           <button
                             onClick={() => handleReaction(post.id, "bronze")}
-                            className={`group relative p-2 rounded-xl transition-all duration-300 hover:scale-110 ${
+                            className={`group relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 ${
                               userReactions[post.id] === "bronze"
                                 ? "bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg shadow-amber-500/30"
                                 : "hover:bg-amber-50"
@@ -499,10 +631,10 @@ export default function Posts() {
                             )}
                           </button>
 
-                          {/* Silver Trophy - Position 3 */}
+                          {/* Silver Trophy */}
                           <button
                             onClick={() => handleReaction(post.id, "silver")}
-                            className={`group relative p-2 rounded-xl transition-all duration-300 hover:scale-110 ${
+                            className={`group relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 ${
                               userReactions[post.id] === "silver"
                                 ? "bg-gradient-to-br from-slate-400 to-slate-600 shadow-lg shadow-slate-500/30"
                                 : "hover:bg-slate-50"
@@ -527,46 +659,114 @@ export default function Posts() {
                             )}
                           </button>
                         </div>
+                      </div>
+                    </div>
+                  )}
 
-                        {/* Save Button */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 hover:bg-slate-100 rounded-full opacity-60 hover:opacity-100 transition-opacity"
-                            >
-                              <MoreHorizontal className="h-4 w-4 text-slate-600" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-lg rounded-xl">
-                            {isOwnPost && (
-                              <DropdownMenuItem
-                                onClick={() => handleDeletePost(post.id)}
-                                className="text-red-600 focus:text-red-600 focus:bg-red-50 rounded-lg mx-1"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                {t('posts.delete')}
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => savedPosts.has(post.id) ? handleUnsavePost(post.id) : handleSavePost(post.id)}
-                              className="rounded-lg mx-1"
-                            >
-                              {savedPosts.has(post.id) ? (
-                                <>
-                                  <BookmarkCheck className="h-4 w-4 mr-2" />
-                                  {t('posts.unsave')}
-                                </>
+                  {/* Expanded Comments Section */}
+                  {me && expandedComments.has(post.id) && (
+                    <div className="px-6 pb-6">
+                      <div className="border-t border-slate-100 pt-4">
+                        {/* Comments List */}
+                        <div className="space-y-4 mb-4 max-h-96 overflow-y-auto">
+                          {comments[post.id]?.map((comment) => (
+                            <div key={comment.id} className="group flex gap-3 p-4 bg-gradient-to-r from-slate-50 to-blue-50/30 rounded-xl border border-slate-200/50 hover:shadow-md transition-all duration-300">
+                              <div className="h-9 w-9 rounded-full flex-shrink-0 shadow-md overflow-hidden cursor-pointer hover:scale-110 transition-transform duration-200" onClick={() => setLocation(`/user/${comment.user_id}`)}>
+                                {comment.userAvatar ? (
+                                  <img
+                                    src={comment.userAvatar}
+                                    alt={comment.userName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = '<div class="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">' + (comment.userName?.charAt(0).toUpperCase() || 'U') + '</div>';
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
+                                    {comment.userName?.charAt(0).toUpperCase() || 'U'}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <button
+                                    onClick={() => setLocation(`/user/${comment.user_id}`)}
+                                    className="text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors"
+                                  >
+                                    {comment.userName}
+                                  </button>
+                                  <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                                    {new Date(comment.created_at).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                  {comment.user_id === me.id && (
+                                    <button
+                                      onClick={() => handleDeleteComment(post.id, comment.id)}
+                                      className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity ml-auto p-1 hover:bg-red-50 rounded-md"
+                                      title="Delete comment"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                                <p className="text-sm text-slate-700 leading-relaxed break-words">{comment.content}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Compact Add Comment Form */}
+                        <div className="relative">
+                          <form onSubmit={(e) => handleCreateComment(post.id, e)} className="flex gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-white hover:shadow-sm transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-300">
+                            <div className="h-8 w-8 rounded-full flex-shrink-0 shadow-sm overflow-hidden">
+                              {me.avatar ? (
+                                <img
+                                  src={me.avatar}
+                                  alt={me.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = '<div class="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold">' + (me.name?.charAt(0).toUpperCase() || 'U') + '</div>';
+                                    }
+                                  }}
+                                />
                               ) : (
-                                <>
-                                  <Bookmark className="h-4 w-4 mr-2" />
-                                  {t('posts.save')}
-                                </>
+                                <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold">
+                                  {me.name?.charAt(0).toUpperCase() || 'U'}
+                                </div>
                               )}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            </div>
+                            <div className="flex-1 flex gap-2 items-center">
+                              <input
+                                id={`comment-input-${post.id}`}
+                                type="text"
+                                value={newComments[post.id] || ""}
+                                onChange={(e) => setNewComments(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                placeholder="Share your echo..."
+                                className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 placeholder:text-slate-400 text-sm text-slate-700"
+                                maxLength={500}
+                              />
+                              <Button
+                                type="submit"
+                                size="sm"
+                                disabled={!newComments[post.id]?.trim()}
+                                className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs font-medium rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </form>
+                        </div>
                       </div>
                     </div>
                   )}

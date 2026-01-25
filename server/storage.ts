@@ -12,10 +12,10 @@ import {
   type SavedPost,
   type InsertBugReport,
   type BugReport,
-  type InsertBugResponse,
-  type BugResponse,
   type InsertPostReaction,
-  type PostReaction
+  type PostReaction,
+  type InsertComment,
+  type Comment
 } from "@shared/schema";
 
 export interface User {
@@ -152,8 +152,7 @@ export interface IStorage {
   getBugReports(): Promise<BugReport[]>;
   getBugReportById(id: number): Promise<BugReport | null>;
   updateBugReportStatus(id: number, status: string): Promise<void>;
-  createBugResponse(response: InsertBugResponse & { bug_report_id: number, user_id: number }): Promise<BugResponse>;
-  getBugResponses(bugReportId: number): Promise<BugResponse[]>;
+  updateBugReportAdminMessage(id: number, adminMessage: string): Promise<void>;
 
   // Post reaction operations
   addPostReaction(userId: number, postId: number, reactionType: "gold" | "silver" | "bronze"): Promise<PostReaction>;
@@ -161,6 +160,11 @@ export interface IStorage {
   getPostReactions(postId: number): Promise<PostReaction[]>;
   getUserPostReaction(userId: number, postId: number): Promise<PostReaction | null>;
   getPostReactionCounts(postId: number): Promise<{ gold: number; silver: number; bronze: number }>;
+
+  // Comment operations
+  getComments(postId: number, userId?: number): Promise<(Comment & { userName: string; userAvatar: string | null })[]>;
+  createComment(userId: number, postId: number, content: string): Promise<Comment>;
+  deleteComment(commentId: number, userId: number): Promise<void>;
 }
 
 export class MySQLStorage implements IStorage {
@@ -1389,79 +1393,6 @@ export class MySQLStorage implements IStorage {
     }
   }
 
-  // Bug report operations
-  async createBugReport(bugReport: InsertBugReport & { user_id: number }): Promise<BugReport> {
-    const conn = await this.db.getConnection();
-    try {
-      const [result] = await conn.execute(
-        "INSERT INTO bug_reports (user_id, type, title, description) VALUES (?, ?, ?, ?)",
-        [bugReport.user_id, bugReport.type, bugReport.title, bugReport.description]
-      );
-      const insertId = (result as any).insertId;
-      const [rows] = await conn.execute("SELECT * FROM bug_reports WHERE id = ?", [insertId]);
-      return (rows as any[])[0] as BugReport;
-    } finally {
-      conn.release();
-    }
-  }
-
-  async getBugReports(): Promise<BugReport[]> {
-    const conn = await this.db.getConnection();
-    try {
-      const [rows] = await conn.execute("SELECT * FROM bug_reports ORDER BY created_at DESC");
-      return (rows as any[]) as BugReport[];
-    } finally {
-      conn.release();
-    }
-  }
-
-  async getBugReportById(id: number): Promise<BugReport | null> {
-    const conn = await this.db.getConnection();
-    try {
-      const [rows] = await conn.execute("SELECT * FROM bug_reports WHERE id = ?", [id]);
-      return (rows as any[]).length > 0 ? ((rows as any[])[0] as BugReport) : null;
-    } finally {
-      conn.release();
-    }
-  }
-
-  async updateBugReportStatus(id: number, status: string): Promise<void> {
-    const conn = await this.db.getConnection();
-    try {
-      await conn.execute("UPDATE bug_reports SET status = ?, updated_at = NOW() WHERE id = ?", [status, id]);
-    } finally {
-      conn.release();
-    }
-  }
-
-  async createBugResponse(response: InsertBugResponse & { bug_report_id: number, user_id: number }): Promise<BugResponse> {
-    const conn = await this.db.getConnection();
-    try {
-      const [result] = await conn.execute(
-        "INSERT INTO bug_responses (bug_report_id, user_id, message) VALUES (?, ?, ?)",
-        [response.bug_report_id, response.user_id, response.message]
-      );
-      const insertId = (result as any).insertId;
-      const [rows] = await conn.execute("SELECT * FROM bug_responses WHERE id = ?", [insertId]);
-      return (rows as any[])[0] as BugResponse;
-    } finally {
-      conn.release();
-    }
-  }
-
-  async getBugResponses(bugReportId: number): Promise<BugResponse[]> {
-    const conn = await this.db.getConnection();
-    try {
-      const [rows] = await conn.execute(
-        "SELECT br.*, u.name as user_name FROM bug_responses br JOIN users u ON br.user_id = u.id WHERE br.bug_report_id = ? ORDER BY br.created_at ASC",
-        [bugReportId]
-      );
-      return (rows as any[]) as BugResponse[];
-    } finally {
-      conn.release();
-    }
-  }
-
   // Post reaction operations
   async addPostReaction(userId: number, postId: number, reactionType: "gold" | "silver" | "bronze"): Promise<PostReaction> {
     const conn = await this.db.getConnection();
@@ -1559,6 +1490,237 @@ export class MySQLStorage implements IStorage {
         silver: row.silver_count || 0,
         bronze: row.bronze_count || 0
       };
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Comment operations
+  async getComments(postId: number, userId?: number): Promise<(Comment & { userName: string; userAvatar: string | null })[]> {
+    const conn = await this.db.getConnection();
+    try {
+      // First check if the post is accessible to the user
+      const post = await this.getPostById(postId);
+      if (!post) {
+        return [];
+      }
+
+      // Check privacy - if userId is provided, check if they can see comments
+      if (userId) {
+        const canSeePost = await this.canUserSeePost(userId, postId);
+        if (!canSeePost) {
+          return [];
+        }
+      } else {
+        // For anonymous users, only show public post comments
+        if (post.privacy !== 'public') {
+          return [];
+        }
+      }
+
+      const [rows] = await conn.execute<any[]>(
+        `SELECT c.*, u.name as userName, u.avatar as userAvatar 
+         FROM comments c
+         LEFT JOIN users u ON c.user_id = u.id
+         WHERE c.post_id = ?
+         ORDER BY c.created_at ASC`,
+        [postId]
+      );
+      return rows;
+    } finally {
+      conn.release();
+    }
+  }
+
+  async createComment(userId: number, postId: number, content: string): Promise<Comment> {
+    const conn = await this.db.getConnection();
+    try {
+      // Check if user can comment on this post
+      const canSeePost = await this.canUserSeePost(userId, postId);
+      if (!canSeePost) {
+        throw new Error('Cannot comment on this post');
+      }
+
+      const [result] = await conn.execute<any>(
+        "INSERT INTO comments (user_id, post_id, content) VALUES (?, ?, ?)",
+        [userId, postId, content]
+      );
+
+      const [rows] = await conn.execute<any[]>(
+        "SELECT * FROM comments WHERE id = ?",
+        [result.insertId]
+      );
+
+      return rows[0];
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteComment(commentId: number, userId: number): Promise<void> {
+    const conn = await this.db.getConnection();
+    try {
+      // Check if the comment belongs to the user
+      const [rows] = await conn.execute<any[]>(
+        "SELECT user_id FROM comments WHERE id = ?",
+        [commentId]
+      );
+
+      if (rows.length === 0) {
+        throw new Error('Comment not found');
+      }
+
+      if (rows[0].user_id !== userId) {
+        throw new Error('Cannot delete this comment');
+      }
+
+      await conn.execute(
+        "DELETE FROM comments WHERE id = ?",
+        [commentId]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Helper method to check if user can see a post
+  private async canUserSeePost(userId: number, postId: number): Promise<boolean> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute<any[]>(
+        `SELECT p.privacy, p.user_id FROM posts p WHERE p.id = ? AND p.deleted_at IS NULL`,
+        [postId]
+      );
+
+      if (rows.length === 0) {
+        return false;
+      }
+
+      const post = rows[0];
+
+      if (post.privacy === 'public') {
+        return true;
+      }
+
+      if (post.user_id === userId) {
+        return true; // User can see their own posts
+      }
+
+      if (post.privacy === 'friends') {
+        const friends = await this.getFriends(userId);
+        return friends.some(friend => friend.id === post.user_id);
+      }
+
+      return false; // Private posts
+    } finally {
+      conn.release();
+    }
+  }
+
+  // Bug report operations
+  async createBugReport(bugReport: InsertBugReport & { user_id: number }): Promise<BugReport> {
+    const conn = await this.db.getConnection();
+    try {
+      const [result] = await conn.execute(
+        'INSERT INTO bug_reports (user_id, type, title, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
+        [bugReport.user_id, bugReport.type, bugReport.title, bugReport.description, 'open']
+      );
+      const insertId = (result as any).insertId;
+      
+      return {
+        id: insertId,
+        user_id: bugReport.user_id,
+        type: bugReport.type,
+        title: bugReport.title,
+        description: bugReport.description,
+        admin_message: undefined,
+        status: 'open',
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugReports(): Promise<BugReport[]> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        'SELECT * FROM bug_reports ORDER BY created_at DESC'
+      );
+      return (rows as any[]).map(row => ({
+        id: row.id,
+        user_id: row.user_id,
+        type: row.type,
+        title: row.title,
+        description: row.description,
+        admin_message: row.admin_message,
+        status: row.status,
+        created_at: new Date(row.created_at),
+        updated_at: new Date(row.updated_at)
+      }));
+    } finally {
+      conn.release();
+    }
+  }
+
+  async getBugReportById(id: number): Promise<BugReport | null> {
+    const conn = await this.db.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        'SELECT * FROM bug_reports WHERE id = ?',
+        [id]
+      );
+      if ((rows as any[]).length === 0) return null;
+      const row = (rows as any[])[0];
+      return {
+        id: row.id,
+        user_id: row.user_id,
+        type: row.type,
+        title: row.title,
+        description: row.description,
+        admin_message: row.admin_message,
+        status: row.status,
+        created_at: new Date(row.created_at),
+        updated_at: new Date(row.updated_at)
+      };
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateBugReportStatus(id: number, status: string): Promise<void> {
+    const conn = await this.db.getConnection();
+    try {
+      await conn.execute(
+        'UPDATE bug_reports SET status = ?, updated_at = NOW() WHERE id = ?',
+        [status, id]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async updateBugReportAdminMessage(id: number, adminMessage: string): Promise<void> {
+    const conn = await this.db.getConnection();
+    try {
+      await conn.execute(
+        'UPDATE bug_reports SET admin_message = ?, updated_at = NOW() WHERE id = ?',
+        [adminMessage, id]
+      );
+    } finally {
+      conn.release();
+    }
+  }
+
+  async deleteBugReport(id: number): Promise<void> {
+    const conn = await this.db.getConnection();
+    try {
+      await conn.execute(
+        'DELETE FROM bug_reports WHERE id = ?',
+        [id]
+      );
     } finally {
       conn.release();
     }

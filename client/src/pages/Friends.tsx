@@ -21,7 +21,9 @@ import {
   ChevronLeft, 
   ChevronRight,
   SortAsc,
-  SortDesc
+  SortDesc,
+  Check,
+  X
 } from "lucide-react";
 import {
   Select,
@@ -173,7 +175,7 @@ export default function Friends() {
   };
 
   const handleViewProfile = (friendId: number) => {
-    setLocation(`/profile/${friendId}`);
+    setLocation(`/user/${friendId}`);
   };
 
   if (me === undefined) {
@@ -340,14 +342,14 @@ export default function Friends() {
                   <div className="w-20 h-20 bg-gradient-to-br from-slate-200 to-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <Users className="h-10 w-10 text-slate-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-700 mb-2">No Connections Yet</h3>
+                  <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('friends.noConnectionsYet')}</h3>
                   <p className="text-slate-500 mb-6">{t('friends.no_link_ups_yet')}</p>
                   <Button 
                     onClick={() => setLocation('/friends')}
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Start Connecting
+                    {t('friends.startConnecting')}
                   </Button>
                 </div>
               ) : (
@@ -650,15 +652,12 @@ export default function Friends() {
                       <div>
                         <p className="font-semibold text-slate-800 text-lg">{capitalizeFirstLetter(request.name)}</p>
                         <p className="text-sm text-slate-500">{request.email}</p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Sent {new Date(request.createdAt).toLocaleDateString()}
-                        </p>
                       </div>
                     </div>
                     <div className="flex gap-3">
                       <Button
                         size="sm"
-                        onClick={() => handleAcceptRequest(request.id)}
+                        onClick={() => acceptFriendRequest(request.id)}
                         disabled={loading}
                         className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-300 rounded-lg px-4"
                       >
@@ -668,7 +667,7 @@ export default function Friends() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDeclineRequest(request.id)}
+                        onClick={() => rejectFriendRequest(request.id)}
                         disabled={loading}
                         className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-lg px-4"
                       >

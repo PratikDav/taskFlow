@@ -85,8 +85,8 @@ const SkillSlot: React.FC<SkillSlotProps> = ({ skill, onSelect, onRemove, size =
           )}
 
           {/* Tooltip */}
-          <div className="absolute px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20" style={tooltipStyle ?? {}}>
-            {skill.name}
+          <div className="absolute inset-0 flex items-center justify-center px-1 py-1 bg-black/80 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+            <span className="truncate max-w-full text-center font-medium">{skill.name}</span>
           </div>
         </>
       ) : (
@@ -243,12 +243,16 @@ interface FloatingSkillSlotsProps {
   userSkills: Skill[];
   onUpdateSkills: (skills: Skill[]) => void;
   maxSlots?: number;
+  shiftLeft?: boolean;
+  readOnly?: boolean;
 }
 
 export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
   userSkills,
   onUpdateSkills,
-  maxSlots = 8
+  maxSlots = 8,
+  shiftLeft = false,
+  readOnly = false
 }) => {
   const [showSkillDialog, setShowSkillDialog] = useState(false);
 
@@ -287,7 +291,7 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
         const startAngle = -Math.PI / 2 - Math.PI / 2; // Start from top-left (rotated 90 degrees left)
         const angle = startAngle + (i / Math.max(1, visibleSlots - 1)) * angleRange;
         const radius = 120; // Closer radius for better proximity to profile
-        const x = Math.cos(angle) * radius;
+        const x = Math.cos(angle) * radius + (shiftLeft ? 10 : 0);
         const y = Math.sin(angle) * radius;
 
         // Determine tooltip position based on circle location
@@ -328,7 +332,7 @@ export const FloatingSkillSlots: React.FC<FloatingSkillSlotsProps> = ({
               onSelect={handleSkillSelect}
               onRemove={() => handleSkillRemove(i)}
               tooltipStyle={tooltipStyle}
-              showRemove={true}
+              showRemove={!readOnly}
               isLeft={isLeft}
               size="md"
             />

@@ -10,24 +10,15 @@ import { useTranslation } from "@/lib/LanguageContext";
 function BugReportCard({ report, onStatusUpdate }: { report: any; onStatusUpdate: () => void }) {
   const { t } = useTranslation();
   const [status, setStatus] = useState(report.status);
-  const [responses, setResponses] = useState<any[]>([]);
   const [newResponse, setNewResponse] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetch(`/api/admin/bug-reports/${report.id}`)
-        .then(res => res.json())
-        .then(data => setResponses(data.responses || []));
-    }
-  }, [isOpen, report.id]);
 
   // When updating status: if there's a message written, send it as a response too.
   const handleStatusChange = async (newStatus: string) => {
     try {
       if (newResponse && newResponse.trim()) {
         // send response first
-        await fetch(`/api/admin/bug-reports/${report.id}/responses`, {
+        await fetch(`/api/admin/bug-reports/${report.id}/response`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: newResponse }),
@@ -42,12 +33,6 @@ function BugReportCard({ report, onStatusUpdate }: { report: any; onStatusUpdate
       });
       setStatus(newStatus);
       onStatusUpdate();
-      // refresh responses if open
-      if (isOpen) {
-        const res = await fetch(`/api/admin/bug-reports/${report.id}`);
-        const data = await res.json();
-        setResponses(data.responses || []);
-      }
     } catch (err) {
       console.error(err);
       alert(t('failedToUpdateStatus'));
@@ -57,20 +42,29 @@ function BugReportCard({ report, onStatusUpdate }: { report: any; onStatusUpdate
   const handleAddResponse = async () => {
     if (!newResponse.trim()) return;
     try {
-      await fetch(`/api/admin/bug-reports/${report.id}/responses`, {
+      await fetch(`/api/admin/bug-reports/${report.id}/response`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: newResponse }),
       });
       setNewResponse("");
-      // Reload responses
-      const res = await fetch(`/api/admin/bug-reports/${report.id}`);
-      const data = await res.json();
-      setResponses(data.responses || []);
       onStatusUpdate();
     } catch (err) {
       console.error(err);
       alert(t('failedToAddResponse'));
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(t('confirmDeleteBugReport'))) return;
+    try {
+      await fetch(`/api/admin/bug-reports/${report.id}`, {
+        method: "DELETE",
+      });
+      onStatusUpdate();
+    } catch (err) {
+      console.error(err);
+      alert(t('failedToDeleteBugReport'));
     }
   };
 
@@ -100,13 +94,21 @@ function BugReportCard({ report, onStatusUpdate }: { report: any; onStatusUpdate
               <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
-              <span className="truncate">{t('reporter')}: <strong>{report.reporterName || 'Unknown'}</strong> ({report.reporterEmail || '—'})</span>
+              <span className="truncate">
+                {t('reporter')}: <strong>{report.reporterName || 'Unknown'}</strong>
+                {report.reporterRole === 'admin' && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 ml-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    {t('admin')}
+                  </span>
+                )}
+                ({report.reporterEmail || '—'})
+              </span>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
               {new Date(report.created_at).toLocaleDateString()} at {new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
-          <div className="flex items-start ml-3">
+          <div className="flex items-start ml-3 gap-2">
             <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-36 h-8 text-xs bg-white border-gray-300 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <SelectValue />
@@ -118,6 +120,17 @@ function BugReportCard({ report, onStatusUpdate }: { report: any; onStatusUpdate
                 <SelectItem value="closed" className="hover:bg-blue-50 focus:bg-blue-50">{t('closed')}</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="h-8 w-8 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200 rounded-md"
+              title={t('delete')}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </Button>
           </div>
         </div>
         <p className="text-sm text-gray-700 leading-relaxed mb-3">{report.description}</p>
@@ -137,36 +150,29 @@ function BugReportCard({ report, onStatusUpdate }: { report: any; onStatusUpdate
       {/* Collapsible Details */}
       {isOpen && (
         <div className="p-4 bg-gray-50">
-          {/* Responses */}
+          {/* Admin Response */}
           <div className="mb-4">
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('responses')} ({responses.length})</h4>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {responses.length === 0 ? (
-                <p className="text-gray-500 italic text-sm">{t('noResponsesYet')}</p>
-              ) : (
-                responses.map((response) => (
-                  <div key={response.id} className="flex gap-2">
-                    <div className="flex-shrink-0">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                        A
-                      </div>
-                    </div>
-                    <div className="flex-1 bg-white rounded-md p-2 shadow-sm border">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="font-medium text-gray-900 text-sm">{response.user_name} ({t('admin')})</p>
-                        <p className="text-xs text-gray-500">{new Date(response.created_at).toLocaleString()}</p>
-                      </div>
-                      <p className="text-gray-700 text-sm">{response.message}</p>
-                    </div>
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('adminResponse')}</h4>
+            <div className="bg-white rounded-md p-3 shadow-sm border">
+              {report.admin_message ? (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium text-gray-900 text-sm">{t('admin')}</p>
+                    <p className="text-xs text-gray-500">{t('response')}</p>
                   </div>
-                ))
+                  <p className="text-gray-700 text-sm">{report.admin_message}</p>
+                </div>
+              ) : (
+                <p className="text-gray-500 italic text-sm">{t('noResponseYet')}</p>
               )}
             </div>
           </div>
 
-          {/* Add Response */}
+          {/* Add/Update Response */}
           <div>
-            <Label className="text-sm font-semibold text-gray-900 mb-1 block">{t('addResponse')}</Label>
+            <Label className="text-sm font-semibold text-gray-900 mb-1 block">
+              {report.admin_message ? t('updateResponse') : t('addResponse')}
+            </Label>
             <Textarea
               value={newResponse}
               onChange={(e) => setNewResponse(e.target.value)}
@@ -176,7 +182,7 @@ function BugReportCard({ report, onStatusUpdate }: { report: any; onStatusUpdate
             />
             <div className="flex gap-2">
               <Button onClick={handleAddResponse} disabled={!newResponse.trim()} className="bg-blue-600 hover:bg-blue-700 text-sm h-8">
-                {t('sendResponse')}
+                {report.admin_message ? t('updateResponse') : t('sendResponse')}
               </Button>
               <Button variant="outline" onClick={() => setNewResponse('')} className="text-sm h-8">
                 {t('clear')}
@@ -205,7 +211,7 @@ export default function Admin() {
           const uRes = await fetch(`/api/users/${r.user_id}`);
           if (!uRes.ok) return { ...r };
           const u = await uRes.json();
-          return { ...r, reporterName: u.name, reporterEmail: u.email };
+          return { ...r, reporterName: u.name, reporterEmail: u.email, reporterRole: u.role };
         } catch (e) {
           return { ...r };
         }

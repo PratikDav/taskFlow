@@ -779,7 +779,7 @@ export default function Notes() {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-20 sm:pb-0">
+      <div className="flex-1 overflow-y-auto pb-20 sm:pb-0 custom-scrollbar">
         {showCreateFolder && (
         <Card className="mb-6">
           <CardHeader>
@@ -1114,7 +1114,7 @@ export default function Notes() {
                       className="pl-10"
                     />
                   </div>
-                  <div className="mt-2 max-h-32 overflow-y-auto space-y-1">
+                  <div className="mt-2 max-h-32 overflow-y-auto space-y-1 custom-scrollbar">
                     {friends
                       .filter(friend => 
                         friend.name.toLowerCase().includes(shareSearchQuery.toLowerCase()) ||

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Bug, Lightbulb, MessageSquare, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/lib/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function BugReportIcon() {
   const { t } = useTranslation();
@@ -16,16 +15,65 @@ export default function BugReportIcon() {
   const [type, setType] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipTimeout, setTooltipTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+      }
+    };
+  }, [tooltipTimeout]);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        const user = await res.json();
+        setIsLoggedIn(!!user);
+      } catch (err) {
+        setIsLoggedIn(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const handleMouseEnter = () => {
+    const timeout = setTimeout(() => setShowTooltip(true), 300); // 300ms delay
+    setTooltipTimeout(timeout);
+  };
+
+  const handleMouseLeave = () => {
+    if (tooltipTimeout) {
+      clearTimeout(tooltipTimeout);
+      setTooltipTimeout(null);
+    }
+    setShowTooltip(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!type || !description.trim()) return;
+
+    // Check if user is logged in
+    if (isLoggedIn === false) {
+      toast({
+        title: t('error'),
+        description: "You must be logged in to submit bug reports.",
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setLoading(true);
     try {
       const res = await fetch("/api/bug-reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           type,
           title: type === "bug" ? "Bug Report" : "Feature Request",
@@ -57,22 +105,53 @@ export default function BugReportIcon() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-white/20 hover:border-white/40 hover:scale-105"
-          onMouseEnter={() => {
-            toast({
-              title: t('reportBugOrFeature'),
-              description: t('bugReportToastMessage'),
-            });
-          }}
-        >
-          <Bug className="h-6 w-6" />
-        </Button>
-      </DialogTrigger>
+    <>
+      {/* Custom Tooltip */}
+      {showTooltip && (
+        <div className="fixed bottom-20 right-4 z-50 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+          <div className="relative">
+            {/* Tooltip Arrow */}
+            <div className="absolute bottom-[-6px] right-6 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-white shadow-sm"></div>
+
+            {/* Tooltip Content */}
+            <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200/50 p-4 max-w-xs ring-1 ring-black/5">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <Bug className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-1 leading-tight">
+                    {t('reportBugOrFeature')}
+                  </h4>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {t('bugReportToastMessage')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Subtle hint */}
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <p className="text-xs text-gray-500 text-center">
+                  Click to report issues or suggest features
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-white/20 hover:border-white/40 hover:scale-105"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <Bug className="h-6 w-6" />
+          </Button>
+        </DialogTrigger>
       <DialogContent className="sm:max-w-md p-0 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 border-0 shadow-2xl">
         <div className="relative">
           {/* Custom Close Button */}
@@ -101,6 +180,13 @@ export default function BugReportIcon() {
 
           {/* Form content */}
           <div className="p-4">
+            {isLoggedIn === false && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800 text-center">
+                  You must be logged in to submit bug reports or feature requests.
+                </p>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Type Selection */}
               <div className="space-y-3">
@@ -189,7 +275,7 @@ export default function BugReportIcon() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading || !type || !description.trim()}
+                  disabled={loading || !type || !description.trim() || isLoggedIn === false}
                   className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
@@ -197,6 +283,8 @@ export default function BugReportIcon() {
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       {t('submitting')}
                     </>
+                  ) : isLoggedIn === false ? (
+                    "Login Required"
                   ) : (
                     <>
                       <Send className="h-4 w-4" />
@@ -210,5 +298,6 @@ export default function BugReportIcon() {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

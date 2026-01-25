@@ -1026,7 +1026,7 @@ export default function Profile() {
                       <div className="flex items-center gap-2 mb-2">
                         <Badge variant="secondary" className="text-xs">{post.userName}</Badge>
                       </div>
-                      <h4 className="text-sm font-medium text-slate-800 mb-1 line-clamp-1">{post.title}</h4>
+                      <h4 className={`text-sm font-medium text-slate-800 mb-1 line-clamp-1 ${post.title_alignment === 'center' ? 'text-center' : post.title_alignment === 'right' ? 'text-right' : 'text-left'}`}>{post.title}</h4>
                       <p className="text-xs text-slate-600 line-clamp-2">{post.content}</p>
                     </div>
                   ))}
@@ -1127,7 +1127,7 @@ export default function Profile() {
                     {savedPosts.slice(0, 4).map((post) => (
                       <div key={post.id} className="p-2 rounded-md bg-slate-50 flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{post.title}</p>
+                          <p className={`text-sm font-medium truncate ${post.title_alignment === 'center' ? 'text-center' : post.title_alignment === 'right' ? 'text-right' : 'text-left'}`}>{post.title}</p>
                           <p className="text-xs text-slate-500">{t('profile.by')} {post.userName}</p>
                         </div>
                         <div className="text-xs text-slate-400">{new Date(post.savedAt).toLocaleDateString()}</div>

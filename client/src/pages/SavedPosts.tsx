@@ -186,7 +186,7 @@ export default function SavedPosts() {
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{post.title}</CardTitle>
+                      <CardTitle className={`text-lg ${post.title_alignment === 'center' ? 'text-center' : post.title_alignment === 'right' ? 'text-right' : 'text-left'}`}>{post.title}</CardTitle>
                       <div className="flex items-center gap-2 mt-1">
                         <button
                           onClick={() => setLocation(`/profile/${post.user_id}`)}
